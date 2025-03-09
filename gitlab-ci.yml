@@ -1,0 +1,55 @@
+# Official Python image to run the pipeline jobs
+image: python:latest
+
+# Set the pip cache directory
+variables:
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+
+# Caching pip dependencies
+cache:
+  paths:
+    - .cache/pip
+    - .venv/
+
+# Install dependencies and create virtual environment
+before_script:
+  - python --version ; pip --version  # For debugging
+  - python -m venv .venv  # Create a virtual environment
+  - source .venv/bin/activate  # Activate the virtual environmen
+  - pip install --upgrade pip
+  - pip install -r requirements.txt  # Install all dependencies in the requirements file
+  - pip install httpx
+
+stages:
+  - lint
+  - tests
+  - coverage
+
+# Linting stage
+lint:
+  stage: lint
+  script:
+    - pip install ruff  # Install ruff for linting
+    - ruff check .  # Lint the project files
+  allow_failure: true  # If linting fails, we continue the pipeline (optional)
+
+# Testing stage
+test:
+  stage: tests
+  script:
+    - pip install pytest  # Install pytest for testing
+    - pytest
+  allow_failure: false  # Fail the pipeline if tests don't pass
+
+#Coverage stage
+coverage:
+  stage: coverage
+  script: 
+    - pip install coverage  # Install coverage
+    - coverage run -m pytest  # Run tests with coverage tracking
+    - coverage report  # Show the coverage report
+    - coverage html  # Optionally generate an HTML coverage report
+  artifacts:
+    paths:
+      - htmlcov/  # Optionally save HTML coverage report as an artifact
+  allow_failure: false
