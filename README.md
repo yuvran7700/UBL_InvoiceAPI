@@ -414,20 +414,19 @@ The SENG2011 Invoicing Task involves building a simple invoicing system using Py
 The project follows a standard Python project structure:
 
 ```
-invoiceapi/
-├── src/
-│   ├── main.py              # Entry point for the Flask application
-│   ├── routes/              # Contains API route definitions
-│   │   ├── __init__.py
-│   │   └── invoice_routes.py
-│   └── models/              # Contains data models (e.g., Invoice)
-│       ├── __init__.py
-│       └── invoice.py
-├── tests/                   # Contains unit and integration tests
-│   ├── __init__.py
-│   └── test_main.py
-├── requirements.txt         # Lists project dependencies
-└── README.md                # Project documentation
+project-root/
+│── src/                    
+│   │── routes/             # 📂 API route handlers
+│   │── models/             # 📂 Pydantic models for data validation
+│   │── services/           # 📂 Business logic & CRUD operations
+│   │── db/                 # 📂 Database connection & queries (DynamoDB)
+│   │── utils/              # 📂 Helper utilities (parsers, validators, etc.)
+│   │── validators/             
+│   │── exceptions/   
+│── tests/                  
+│   │── fixtures/           # 📂 Stores reusable pytest fixtures
+│── test_data/
+
 ```
 
 ### 4.4. Testing
