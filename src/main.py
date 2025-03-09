@@ -4,7 +4,7 @@ app = FastAPI()
 
 @app.get("/")
 def read_root():
-    return {"message": "Invoice API is running"}
+    return {"message": "UBL Invoice API is running"}
 
 if __name__ == "__main__":
     import uvicorn
