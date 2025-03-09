@@ -1,93 +1,258 @@
-# invoiceApi
+# 🕛 Git Setup & GitLab Crash Course <!-- omit in toc -->
 
+- [1. Git Setup](#1-git-setup)
+  - [1.1. Generating an SSH key and adding it to GitLab](#11-generating-an-ssh-key-and-adding-it-to-gitlab)
+  - [1.2. Setting your Git Identity](#12-setting-your-git-identity)
+- [2. Using Git and GitLab](#2-using-git-and-gitlab)
+  - [2.1. Cloning](#21-cloning)
+  - [2.2. Making a Commit](#22-making-a-commit)
+  - [2.3. Working With Others](#23-working-with-others)
+  - [2.4. Summary](#24-summary)
+  - [2.5. Branching](#25-branching)
+  - [2.6. Merging](#26-merging)
+  - [2.7. Merge Conflicts](#27-merge-conflicts)
+  - [2.8. Resolving a Merge Conflict](#28-resolving-a-merge-conflict)
 
+# 1. Git Setup
 
-## Getting started
+> This will need to be done on any machine you want to git clone from.
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
+You will need to have installed Git on your local machine if it doesn't already have it.
 
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
+## 1.1. Generating an SSH key and adding it to GitLab
 
-## Add your files
+> You can skip this if you have already generated a key and added it to GitLab.
 
-- [ ] [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
-- [ ] [Add files using the command line](https://docs.gitlab.com/ee/gitlab-basics/add-file.html#add-a-file-using-the-command-line) or push an existing Git repository with the following command:
+1. Run `ssh-keygen -t ed25519` in your terminal and hit enter until it stops prompting. Note the path where it is creating the key.
+2. Navigate to the path where the key has been created. This will typically be in `~/.ssh`.
+3. Print the public key to the terminal so it can be copied by running `cat ~/.ssh/id_ed25519.pub`
+
+The key should look like the following:
+
+```bash
+ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKkgchK4ok0W+GvU+q7jjnQ51dr2ztCowMxbwoFItT/h DESKTOP-ATFKE8N
+```
+
+> **NOTE: Do not share your private key with anyone**
+
+4. Add the copied key to [https://nw-syd-gitlab.cseunsw.tech/-/profile/keys](https://nw-syd-gitlab.cseunsw.tech/-/profile/keys).
+
+## 1.2. Setting your Git Identity
+
+Whenever you make a commit, your current identity is associated with it.
+
+To properly set up your identity so your commits are tagged with your name and email, run the following commands (replacing the place holders with your information)
+
+```bash
+git config --global user.name "Your Name"
+git config --global user.email "yourName@student.unsw.edu.au"
+```
+
+# 2. Using Git and GitLab
+
+> If you've taken COMP1531 recently and/or are relatively fluent in git, then feel free to move on and skip this.
+
+## 2.1. Cloning
+
+Cloning a _repository_ (a repository or repo is just a directory that is linked with git) copies to your computer all the files in the repo as well as a complete history of what changes, or _commits_, created those files. Cloning a repo is necessary before you can start making your own changes.
+
+For each lab and assignment in this course, a repo will be created for you on _GitLab_. You will use it to store your work as you complete it. To clone this week's repo run:
+
+```bash
+git clone git@nw-syd-gitlab.cseunsw.tech:COMP2511/24T2/students/z5555555/lab01.git
+```
+
+## 2.2. Making a Commit
+
+Now that you have cloned the repo, you are ready to work on the codebase locally.
+
+A commit represents a set of changes to the files in a repository as well as a message describing those changes for human readers. A good use of git involves a lot of commits with detailed messages.
+
+Before you can commit, you have to _stage_ your changes, effectively telling git what changes you actually want to commit and what changes you don't.
+
+Making commits doesn't actually replicate your changes to the remote repository on GitLab. For that you need to _push_ your commits, uploading them to the remote server. When collaborating with others, it is important not only to commit frequently, but also to push often.
+
+In general, the commands to commit and push are as follows:
+
+```bash
+git add [files_to_commit] # Stage
+git commit -m"Detailed message describing the changes" # Commit
+git push # Push
+```
+
+Follow these steps to see them in action:
+
+1. Add a new file called `HelloWorld.java` in the repo directory
+2. Add the following lines of code to the file using your favourite text editor and save.
+
+```java
+class HelloWorld {
+    public static void main(String[] args) {
+        System.out.println("Hello, Welcome to COMP2511!");
+    }
+}
+```
+
+3. Go back to your terminal and enter the following commands:
+
+```bash
+git add HelloWorld.java
+git commit -m "Created first java program HelloWorld.java"
+git push
+```
+
+4. **MAKE SURE YOU UNDERSTAND THE PURPOSE OF EACH OF THE 3 ABOVE COMMANDS!** If you are unsure about any of them, ask your tutor or lab assistant.
+5. Go back to GitLab and confirm that your changes have been pushed to the server.
+
+## 2.3. Working With Others
+
+Usually when you are using git, it is in a team. That means that you will not be the only one who is making the changes. If someone else makes a change and pushes it to the server, your local repo will not have the most up-to-date version of the files. Luckily, git makes it easy to update our local copy with the `git pull` command.
+
+This command checks the remote server that your local repo is linked to and makes sure that all of your files are up to date. This ensures that you don't accidentally do things like implement the same thing someone else has already done and also lets you use other people's work (e.g. new functions) when developing.
+
+Pulling regularly is one of the **most important practices** in git!
+
+Unfortunately, at the moment you are just working individually. But GitLab still gives us a nice way to practice a `git pull`.
+
+## 2.4. Summary
+
+1. View your repo on GitLab.
+2. Click on the `HelloWorld.java` file
+3. Click 'Edit' on the right-hand side.
+4. Add a Java comment to the top of the file as shown below and click the 'Commit Changes' button at the bottom of the screen
+
+```java
+// A simple Java Program
+```
+
+5. This will have changed the `HelloWorld.java` file on the server but not on your local environment. To fetch these changes use the git pull command from your terminal
+6. Confirm that your version of `HelloWorld.java` now has the changes you made on the web page
+
+## 2.5. Branching
+
+**Branches** are a vital part of git and are used so people can work on separate parts of the codebase and not interfere with one another or risk breaking a product that is visible to the client. Breaking something on one branch does not have an impact on any other.
+
+Good use of git will involve separating parts of the project that can be worked on separately and having them in their own feature branch. These branches can then be merged when they are ready.
+
+Useful commands for branches:
+
+```bash
+git checkout -b [new_branch_name] # Create a new branch and switch to it
+git branch                        # List all current branches
+git checkout [branch_name]        # Switch to an existing branch
+```
+
+Follow these instructions to create a branch:
+
+1. Make your new branch with: `git checkout -b first_new_branch`
+2. List your branches to see that you have indeed swapped (use the above commands)
+3. Open the `HelloWorld.java` file and change the comment at the top of the file to Javadoc style comment as shown below:
+
+```java
+/**
+* A simple java program that prints a hello world message to the console
+*/
+```
+
+4. Try to push your changes to the server using the commands you learnt in the _Making a commit_ section
+5. The above step should have given you the following error:
 
 ```
-cd existing_repo
-git remote add origin https://nw-syd-gitlab.cseunsw.tech/z5418978/invoiceapi.git
-git branch -M main
-git push -uf origin main
+fatal: The current branch first_new_branch has no upstream branch.
 ```
 
-## Integrate with your tools
+This means that the branch you tried to make a change on doesn’t exist on the server yet which makes sense because we only created it on our local machine.
 
-- [ ] [Set up project integrations](https://nw-syd-gitlab.cseunsw.tech/z5418978/invoiceapi/-/settings/integrations)
+6. To fix this, we need to add a copy of our branch on the server and link them up so git knows that this new branch maps to a corresponding branch on the server
 
-## Collaborate with your team
+```bash
+git push -u origin first_new_branch
+```
 
-- [ ] [Invite team members and collaborators](https://docs.gitlab.com/ee/user/project/members/)
-- [ ] [Create a new merge request](https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
-- [ ] [Automatically close issues from merge requests](https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#closing-issues-automatically)
-- [ ] [Enable merge request approvals](https://docs.gitlab.com/ee/user/project/merge_requests/approvals/)
-- [ ] [Set auto-merge](https://docs.gitlab.com/ee/user/project/merge_requests/merge_when_pipeline_succeeds.html)
+**Note**: The final step only needs to be done for the first time you try to push using a new branch. After you have run this once, you should go back to simply using git push
 
-## Test and Deploy
+## 2.6. Merging
 
-Use the built-in continuous integration in GitLab.
+Merging branches is used to combine the work done on two different branches and is where git's magic really comes in. Git will compare the changes done on both branches and decide (based on what changes were done to what sections of the file and when) what to keep. Merges are most often done when a feature branch is complete and ready to be integrated with the master branch.
 
-- [ ] [Get started with GitLab CI/CD](https://docs.gitlab.com/ee/ci/quick_start/)
-- [ ] [Analyze your code for known vulnerabilities with Static Application Security Testing (SAST)](https://docs.gitlab.com/ee/user/application_security/sast/)
-- [ ] [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-- [ ] [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/ee/user/clusters/agent/)
-- [ ] [Set up protected environments](https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
+Since we have finished all that we are going to do (and think there are no bugs) on our _first_new_branch_ we can merge it back into master.
 
-***
+**NOTE**: It is strongly recommended, both in this course and in general, to always ensure the code on the `master` branch compiles and is free of bugs. The latter is naturally harder to achieve than the former, but you should endeavour to keep master as _stable_ as possible.
 
-# Editing this README
+Another recommendation is to merge master into your branch before merging your branch into master as this will ensure that any merge into master will go smoothly.
 
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thanks to [makeareadme.com](https://www.makeareadme.com/) for this template.
+In general, merges are done by:
 
-## Suggestions for a good README
+```bash
+git merge [target] # Merge the target branch into current
+```
 
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
+**Note**: A successful merge automatically uses the commits from the source branch. This means that the commits have already been made, you just need to push these to the server (`git push`)
 
-## Name
-Choose a self-explaining name for your project.
+To merge your changes from above:
 
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
+1. Switch back to the master branch using one of the commands from the above section
+2. Merge in the changes you made in the other branch `git merge first_new_branch`
+3. Push the successful merge to the server to update the master branch on the server
 
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
+## 2.7. Merge Conflicts
 
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
+Merge conflicts are the one necessary downside to git. Luckily, they can be avoided most of the time through good use of techniques like branches and regular commits, pushes and pulls. They happen when git cannot work out which particular change to a file you really want.
 
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
+For this step we will engineer one so you can get a taste of what they are, how they occur and how to fix them. This will be the LAST time you will want one. The process may seem involved but it is quite common when multiple people are working at a time.
 
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
+Follow these steps:
 
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
+1. Change line 3 of `HelloWorld.java` to
 
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
+```java
+System.out.println("Hello, Welcome to Java!");
+```
 
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
+2. Add, commit and push your changes
+3. Switch to your `first_new_branch`
+4. Change line 3 of `HelloWorld.java`
 
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
+```java
+System.out.println("Hello, Welcome to merge conflicts!");
+```
 
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
+5. Add, commit and push your changes
+6. Merge master into your current branch
+7. This sequence of steps should make a merge conflict at the third line of `HelloWorld.java`
 
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
+## 2.8. Resolving a Merge Conflict
 
-## License
-For open source projects, say how it is licensed.
+Resolving a merge conflict is as simple as editing the file normally, choosing what you want to have in the places git wasn't sure.
 
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+A merge conflict is physically shown in the file in which it occurs. `<<<<<<<` marks the beginning of the conflicting changes made on the **current** (merged into) branch. `=======` marks the beginning of the conflicting changes made on the **target** (merged) branch. `>>>>>>>` marks the end of the conflict zone.
+
+e.g.,
+
+```
+This line could be merged automatically.
+There was no change here either
+<<<<<<< current:sample.txt
+Merges are too hard. This change was on the 'merged into' branch
+=======
+Merges are easy. This change was made on the 'merged' branch
+>>>>>>> target:sample.txt
+This is another line that could be merged automatically
+```
+
+This above example could be solved in many ways, one way would be to just use the changes made on the target branch and delete those made on the current branch. Once we have decided on this we just need to remove the syntax. The resolved file would be as follows
+
+```
+This line could be merged automatically.
+There was no change here either
+Merges are easy. This change was made on the 'merged' branch
+This is another line that could be merged automatically
+```
+
+We would then just commit the resolved file and the merge conflict is finished!
+
+To fix the conflict you created:
+
+1. Open the `HelloWorld.java` file and decide which change you want to keep
+2. Remove the merge conflict syntax
+3. Add, commit and push the resolved merge conflict
