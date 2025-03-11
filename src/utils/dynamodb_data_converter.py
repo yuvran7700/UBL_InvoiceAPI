@@ -1,3 +1,6 @@
+#utils/dynamodb_data_converter.py
+# Author - Date 
+#purpose: 
 from decimal import Decimal
 from datetime import date
 

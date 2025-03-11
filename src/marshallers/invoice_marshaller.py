@@ -1,3 +1,4 @@
+#marshallers/invoice_marshaller.py
 """
 Invoice Marshaller.
 Handles the transformation (marshalling) of an OrderType into an InvoiceType.
@@ -6,8 +7,8 @@ Handles the transformation (marshalling) of an OrderType into an InvoiceType.
 from datetime import date
 import random
 import uuid
-from models.order_type import OrderType
-from models.invoice_type import InvoiceType, Party, InvoiceLine, ClassifiedTaxCategory
+from src.models.order_type import OrderType
+from src.models.invoice_type import InvoiceType, Party, InvoiceLine, ClassifiedTaxCategory
 
 class InvoiceMarshaller:
     @staticmethod

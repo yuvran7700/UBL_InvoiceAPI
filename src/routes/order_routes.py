@@ -1,3 +1,4 @@
+#routes/order_routes.py
 """
 API route handler for order upload.
 This endpoint accepts a UBL XML order document, extracts its data,
@@ -7,7 +8,7 @@ and creates a draft invoice.
 from fastapi import APIRouter, UploadFile, File, HTTPException
 from src.utils.order_parser import OrderParser
 from src.services.invoice_service import create_invoice
-from models.invoice_type import InvoiceType
+from src.models.invoice_type import InvoiceType
 
 router = APIRouter()
 

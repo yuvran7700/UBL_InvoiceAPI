@@ -1,3 +1,4 @@
+#models/invoice_type.py
 """
 Pydantic models for the UBL/A‑NZ invoice.
 These models define the structure for the generated invoice, including header, parties,
@@ -35,8 +36,10 @@ class Party(BaseModel):
     name: str
     account: str
     address: str
+    country_code: Optional[str] = None  # NEW FIELD
     tax_identifier: Optional[str] = None
     electronic_address: Optional[str] = None
+    scheme_id: Optional[str] = None  # NEW FIELD
 
 class InvoiceLine(BaseModel):
     """
@@ -81,9 +84,10 @@ class InvoiceType(BaseModel):
     invoice_type_code: str
     buyer_reference: Optional[str] = None
     order_reference: str
-    due_date: Optional[date] = None
+    due_date: Optional[date] = None  # NEW FIELD
     payment_means: Optional[str] = None
     seller: Party
     buyer: Party
     invoice_lines: List[InvoiceLine]
     legal_monetary_total: float
+    additional_document_reference_id: Optional[str] = None  # NEW FIELD

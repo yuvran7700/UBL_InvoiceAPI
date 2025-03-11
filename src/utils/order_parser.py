@@ -1,3 +1,4 @@
+#utils/order_parser.py
 """
 Utilities for parsing UBL order documents.
 Provides a function to parse an XML order document into an enriched OrderType.
@@ -5,7 +6,7 @@ Provides a function to parse an XML order document into an enriched OrderType.
 
 import xml.etree.ElementTree as ET
 from fastapi import HTTPException
-from models.order_type import OrderType, OrderLineType
+from src.models.order_type import OrderType, OrderLineType
 from datetime import datetime
 
 class OrderParser:
@@ -56,12 +57,14 @@ class OrderParser:
             "cac": "urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2"
         }
 
-        # Extract header fields.
+        # Extract Order details/ header fields.
         order_id = OrderParser.get_text(root, "./cbc:ID", ns)
         if not order_id:
             raise HTTPException(status_code=400, detail="Missing order ID in XML")
+        
         sales_order_id = OrderParser.get_text(root, "./cbc:SalesOrderID", ns) or ""
-        uuid = OrderParser.get_text(root, "./cbc:UUID", ns) or ""
+    
+        
         issue_date_str = OrderParser.get_text(root, "./cbc:IssueDate", ns)
         if not issue_date_str:
             raise HTTPException(status_code=400, detail="Missing IssueDate in XML")
@@ -75,13 +78,19 @@ class OrderParser:
         buyer_customer = root.find("./cac:BuyerCustomerParty", ns)
         if buyer_customer is None:
             raise HTTPException(status_code=400, detail="Missing BuyerCustomerParty in XML")
-        buyer_account = OrderParser.get_text(buyer_customer, "./cbc:CustomerAssignedAccountID", ns)
         buyer_name = OrderParser.get_text(buyer_customer, ".//cac:PartyName/cbc:Name", ns)
+        buyer_account = OrderParser.get_text(buyer_customer, "./cbc:CustomerAssignedAccountID", ns)
+        
         buyer_address_elem = buyer_customer.find(".//cac:PostalAddress", ns)
         buyer_address = OrderParser.format_address(buyer_address_elem, ns)
         if not buyer_account or not buyer_name:
             raise HTTPException(status_code=400, detail="Missing buyer details in XML")
 
+        buyer_electronic_address = OrderParser.get_text(buyer_customer, "./cac:Party/cbc:EndpointID", ns)
+        buyer_scheme_id = buyer_customer.find("./cac:Party/cbc:EndpointID", ns).get("schemeID") if buyer_electronic_address else None
+        buyer_country = OrderParser.get_text(buyer_address_elem, "./cac:Country/cbc:IdentificationCode", ns)
+        
+        
         # Extract seller details.
         seller_supplier = root.find("./cac:SellerSupplierParty", ns)
         if seller_supplier is None:
@@ -157,7 +166,6 @@ class OrderParser:
         return OrderType(
             order_id=order_id,
             sales_order_id=sales_order_id,
-            uuid=uuid,
             issue_date=issue_date,
             note=note,
             buyer_account=buyer_account,

@@ -7,7 +7,7 @@ from src.db.dynamodb_client import invoices_table
 from src.models.invoice_type import InvoiceType
 from src.utils.dynamodb_data_converter import convert_data_for_dynamodb
 from src.marshallers.invoice_marshaller import InvoiceMarshaller
-from models.order_type import OrderType  # Ensure proper import based on PYTHONPATH
+from src.models.order_type import OrderType  # Ensure proper import based on PYTHONPATH
 
 def create_invoice_helper(invoice: InvoiceType) -> None:
     """
@@ -41,3 +41,4 @@ def create_invoice(order: OrderType) -> InvoiceType:
     invoice = InvoiceMarshaller.marshall_order_to_invoice(order)
     create_invoice_helper(invoice)
     return invoice
+

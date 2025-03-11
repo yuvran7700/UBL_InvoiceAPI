@@ -5,6 +5,7 @@ def test_order_parser(sample_order_xml):
     """
     Test that the OrderParser correctly extracts and maps fields from the sample order XML.
     """
+    
     # Parse the XML order using the OrderParser.
     order = OrderParser.parse_xml_order(sample_order_xml)
 

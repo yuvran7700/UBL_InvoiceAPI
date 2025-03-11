@@ -4,7 +4,7 @@ Initializes the app and includes API routes.
 """
 
 from fastapi import FastAPI
-from routes.order_routes import router as order_upload_router
+from src.routes.order_routes import router as order_upload_router
 
 app = FastAPI()
 
