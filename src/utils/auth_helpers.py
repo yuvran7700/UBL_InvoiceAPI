@@ -1,5 +1,4 @@
 from passlib.context import CryptContext
-import boto3
 from fastapi import HTTPException, status
 from src.db.dynamodb_client import user_table
 #hash-password helper function 

@@ -1,8 +1,6 @@
 import uuid
 from passlib.context import CryptContext
-import abn
-import boto3
-from fastapi import HTTPException, status
+from fastapi import HTTPException
 from utils.auth_helpers import hash_password, save_user_to_dynamodb
 from src.validators.auth_validator import validate_abn, check_email_exists 
 
