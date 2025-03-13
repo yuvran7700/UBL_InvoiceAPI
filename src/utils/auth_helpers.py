@@ -20,4 +20,3 @@ def save_user_to_dynamodb(user_item: dict):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error saving user to DynamoDB: {str(e)}"
         )
-    
