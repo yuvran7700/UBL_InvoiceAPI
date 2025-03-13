@@ -18,4 +18,4 @@ def sample_user_json():
         raise FileNotFoundError(f"Test data file not found: {file_path}")
 
     with open(file_path, "r") as f:
-        return f.read()
+        return json.load(f)
