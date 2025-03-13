@@ -18,8 +18,6 @@ def test_register_user(mock_get_item, mock_put_item, sample_user):
 
     # Send POST request to register the user
     response = client.post("/v1/users/auth/register", json=sample_user)
-    
-    print(response.text)
 
     print("Response JSON:", response.json())
     # Assert the response status code is 201 (Created)

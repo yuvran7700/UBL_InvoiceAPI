@@ -3,9 +3,9 @@ from passlib.context import CryptContext
 import abn
 import boto3
 from fastapi import HTTPException, status
-from utils.auth_helpers import hash_password, save_user_to_dynamodb, save_session_to_dynamodb, get_item_using_email
+from utils.auth_helpers import hash_password, save_user_to_dynamodb, save_session_to_dynamodb, get_user
 from src.validators.auth_validator import validate_abn, check_email_exists
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -50,16 +50,15 @@ def register_user(request_data: dict):
 def create_session(email: str):
     try:
         session_id = str(uuid.uuid4())  # Generate a unique session token
-        expiration_time = datetime.now(datetime.timezone.utc)() + timedelta(minutes=SESSION_EXPIRE_MINUTES)
+        expiration_time = datetime.now(timezone.utc) + timedelta(minutes=SESSION_EXPIRE_MINUTES)
 
         session_item = {
             "session_id": session_id,  # Ensure "S" for string
-            "email": email,  # Ensure "S" for string (or "N" if it's a number)
             "expires_at": expiration_time.isoformat(),
         }
 
         # Store session in DynamoDB
-        save_session_to_dynamodb(session_item)
+        save_session_to_dynamodb(email, session_item)
 
         return session_id
 
@@ -70,14 +69,10 @@ def create_session(email: str):
 
 def authenticate_user(request_data: dict):
     """Validate user credentials and return a session token if successful."""
-    response = get_item_using_email(request_data['email'])
-    print(request_data)
-    print(request_data['email'])
-    print(response)
-    user = response.get("Item")
-    hashed_password = hash_password(request_data['password'])
-    print(hashed_password)
-    if not user or not verify_password(hashed_password, user["hashed_password"]):
+    response = get_user(request_data['email'])
+    if not response:
+        raise HTTPException(status_code=404, detail="User not found")
+    if not pwd_context.verify(request_data['password'], response['hashed_password']):
         return None
 
-    return create_session(user["email"])
+    return create_session(response["email"])

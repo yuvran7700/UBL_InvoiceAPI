@@ -16,6 +16,5 @@ def delete_all_user_items():
     # Batch delete (DynamoDB limits batch writes to 25 items per request)
     with table.batch_writer() as batch:
         for item in items:
-            batch.delete_item(Key={"user_id": item["user_id"]})  
+            batch.delete_item(Key={"email": item["email"]})  
 
-    print(f"Deleted {len(items)} items from {table_name}")

@@ -10,10 +10,7 @@ dynamodb = boto3.resource("dynamodb", region_name=AWS_REGION)
 # Reference the "invoices" table
 invoice_table = dynamodb.Table("invoices")
 
-# Reference the "sessions" table
-session_table = dynamodb.Table("sessions")
-
-# Reference the "sessions" table
+# Reference the "users" table
 user_table = dynamodb.Table("users")
 
 def initialize_invoice_dynamodb():
@@ -32,6 +29,6 @@ def initialize_session_dynamodb():
     """
     try:
         print("Checking DynamoDB connection...")
-        print("Invoices Table Status:", session_table.table_status)
+        print("Invoices Table Status:", user_table.table_status)
     except Exception as e:
         print("Error connecting to DynamoDB:", str(e))
