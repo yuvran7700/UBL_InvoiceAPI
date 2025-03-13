@@ -5,3 +5,5 @@ flake8==6.0.0
 coverage==6.5.0
 ruff==0.0.280
 httpx==0.24.1
+boto3
+abn
