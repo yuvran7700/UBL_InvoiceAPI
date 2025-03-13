@@ -73,9 +73,11 @@ def authenticate_user(request_data: dict):
     response = get_item_using_email(request_data['email'])
     print(request_data)
     print(request_data['email'])
+    print(response)
     user = response.get("Item")
     hashed_password = hash_password(request_data['password'])
-    if not user or not verify_password(request_data['password'], user["hashed_password"]):
+    print(hashed_password)
+    if not user or not verify_password(hashed_password, user["hashed_password"]):
         return None
 
     return create_session(user["email"])

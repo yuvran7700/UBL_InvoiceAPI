@@ -2,6 +2,7 @@ from fastapi.testclient import TestClient
 from src.main import app
 from unittest.mock import patch
 from tests.fixtures.user_fixtures import sample_user
+from tests.utils.utils_test import delete_all_user_items
 
 client = TestClient(app)
 
@@ -9,6 +10,7 @@ client = TestClient(app)
 @patch("src.db.dynamodb_client.user_table.put_item")
 @patch("src.db.dynamodb_client.user_table.get_item")
 def test_register_user(mock_get_item, mock_put_item, sample_user):
+    
     # Mock DynamoDB responses 
     # No item for email, meaning email doesn't exist
     mock_get_item.return_value = {}  

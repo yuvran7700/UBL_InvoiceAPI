@@ -3,20 +3,17 @@ from src.main import app
 from unittest.mock import patch
 from tests.fixtures.session_fixtures import sample_session
 from tests.fixtures.user_fixtures import sample_user
+from tests.utils.utils_test import delete_all_user_items
 
 client = TestClient(app)
 
 # Mocking DynamoDB methods
-@patch("src.db.dynamodb_client.user_table.query")
-@patch("src.db.dynamodb_client.user_table.put_item")
-@patch("src.db.dynamodb_client.user_table.get_item")
-def test_login_user(mock_query, mock_get_item, mock_put_item, sample_session, sample_user):
+
+def test_login_user(sample_session, sample_user):
     # Mock DynamoDB responses 
     # No item for email, meaning email doesn't exist
-    mock_put_item.return_value = {}
-    mock_query.return_value = {"Items": [{"email": sample_session["email"], "hashed_password": "hashed_correct_password"}]}
-    mock_get_item.return_value = {}
-    print(f"Mocked query response: {response}")
+
+    delete_all_user_items()
 
     response = client.post("/v1/users/auth/register", json=sample_user)
     

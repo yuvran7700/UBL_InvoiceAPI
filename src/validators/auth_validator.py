@@ -14,7 +14,6 @@ def validate_abn(abn_value: str):
             detail="Invalid ABN format"
         )
 
-#Checks if the user's email exists in the database
 def check_email_exists(email: str):
     response = user_table.get_item(Key={'email': email})
     if 'Item' in response:

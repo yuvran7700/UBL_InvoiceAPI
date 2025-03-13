@@ -31,7 +31,8 @@ def save_session_to_dynamodb(session_item: dict):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error saving session to DynamoDB: {str(e)}"
         )    
-    
+
+'''
 def get_item_using_email(email: str):
     try:
         response = user_table.query(
@@ -43,3 +44,4 @@ def get_item_using_email(email: str):
     except Exception as e:
         print(f"Error: {str(e)}")
         return {}
+'''
