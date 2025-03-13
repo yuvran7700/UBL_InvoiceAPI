@@ -11,7 +11,8 @@ def sample_user_json():
     Ensures it works regardless of the test execution directory.
     """
     # __file__ is in tests/fixtures, so we go up three levels to reach the project root.
-    project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    project_root = os.path.dirname(
+        os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     file_path = os.path.join(project_root, "test_data", "user.json")
 
     if not os.path.exists(file_path):
