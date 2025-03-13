@@ -3,7 +3,8 @@ import json
 import os
 
 # Define the path to the session data JSON file
-SESSION_DATA_PATH = os.path.join(os.path.dirname(__file__), '../../test_data/session.json')
+SESSION_DATA_PATH = (os.path.join(os.path.dirname(__file__),
+                                   '../../test_data/session.json'))
 
 @pytest.fixture
 def sample_session():

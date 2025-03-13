@@ -2,7 +2,6 @@ from fastapi.testclient import TestClient
 from src.main import app
 from unittest.mock import patch
 from tests.fixtures.user_fixtures import sample_user
-from tests.utils.utils_test import delete_all_user_items
 
 client = TestClient(app)
 

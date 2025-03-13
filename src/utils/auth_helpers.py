@@ -1,8 +1,6 @@
 from passlib.context import CryptContext
 from fastapi import HTTPException, status
 from src.db.dynamodb_client import user_table
-from boto3.dynamodb.conditions import Key
-import boto3
 #hash-password helper function 
 
 # Initialize the password hashing context
@@ -47,19 +45,4 @@ def get_user(email: str):
         response = user_table.get_item(Key={"email": email})
         return response["Item"]
     except Exception as e:
-        print(f"Error: {str(e)}")
         return {}
-
-'''
-def get_item_using_email(email: str):
-    try:
-        response = user_table.query(
-            IndexName="email-index",  # Name of the GSI
-            KeyConditionExpression=Key("email").eq(email)
-        )
-        items = response.get("Items", [])
-        return {"Items": items[0] if items else {}}
-    except Exception as e:
-        print(f"Error: {str(e)}")
-        return {}
-'''

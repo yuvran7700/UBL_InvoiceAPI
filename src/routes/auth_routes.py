@@ -36,9 +36,15 @@ async def login_user(request: SessionRequest):
         session_token = authenticate_user(request.dict())
 
         if not session_token:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED, 
+                detail="Invalid credentials"
+            )
 
-        return JSONResponse(status_code=status.HTTP_201_CREATED, content={"session_token": session_token})
+        return JSONResponse(
+                status_code=status.HTTP_201_CREATED, 
+                content={"session_token": session_token}
+            )
     except HTTPException as e:
         raise e
     except Exception as e:
@@ -46,3 +52,4 @@ async def login_user(request: SessionRequest):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"An error occurred: {str(e)}"
         )   
+    

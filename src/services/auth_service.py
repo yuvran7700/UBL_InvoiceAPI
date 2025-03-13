@@ -1,9 +1,11 @@
 import uuid
 from passlib.context import CryptContext
-import abn
 import boto3
-from fastapi import HTTPException, status
-from utils.auth_helpers import hash_password, save_user_to_dynamodb, save_session_to_dynamodb, get_user
+from fastapi import HTTPException
+from utils.auth_helpers import (hash_password, 
+                                save_user_to_dynamodb, 
+                                save_session_to_dynamodb, 
+                                get_user)
 from src.validators.auth_validator import validate_abn, check_email_exists
 from datetime import datetime, timedelta, timezone
 
@@ -50,7 +52,8 @@ def register_user(request_data: dict):
 def create_session(email: str):
     try:
         session_id = str(uuid.uuid4())  # Generate a unique session token
-        expiration_time = datetime.now(timezone.utc) + timedelta(minutes=SESSION_EXPIRE_MINUTES)
+        expiration_time = (datetime.now(timezone.utc) + 
+                           timedelta(minutes=SESSION_EXPIRE_MINUTES))
 
         session_item = {
             "session_id": session_id,  # Ensure "S" for string

@@ -7,19 +7,6 @@ from tests.utils.utils_test import delete_all_user_items
 
 client = TestClient(app)
 
-def test_login_user_success(sample_session, sample_user):
-    # Mock DynamoDB responses 
-    # No item for email, meaning email doesn't exist
-
-    delete_all_user_items()
-
-    response = client.post("/v1/users/auth/register", json=sample_user)
-
-    # Send POST request to login the user
-    response = client.post("/v1/users/auth/login", json=sample_session)
-    assert response.status_code == 201
-    assert "session_token" in response.json()
-
 def test_login_user_wrong_password(sample_user):
     # Mock DynamoDB responses 
     # No item for email, meaning email doesn't exist
@@ -55,3 +42,16 @@ def test_login_user_wrong_password(sample_user):
     response = client.post("/v1/users/auth/login", json = sample_session)
     assert response.status_code == 404
     assert response.json()["detail"] == "User not found"
+
+def test_login_user_success(sample_session, sample_user):
+    # Mock DynamoDB responses 
+    # No item for email, meaning email doesn't exist
+
+    delete_all_user_items()
+
+    response = client.post("/v1/users/auth/register", json=sample_user)
+
+    # Send POST request to login the user
+    response = client.post("/v1/users/auth/login", json=sample_session)
+    assert response.status_code == 201
+    assert "session_token" in response.json()
