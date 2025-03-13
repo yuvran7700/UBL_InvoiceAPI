@@ -27,9 +27,9 @@ def save_session_to_dynamodb(email: str, session_item: dict):
             Key = {
                 'email': email
             },
-            UpdateExpression = "SET session_id = :session_id, expires_at = :expires_at",
+            UpdateExpression = "SET session_token = :session_token, expires_at = :expires_at",
             ExpressionAttributeValues={
-                ":session_id": session_item['session_id'],
+                ":session_token": session_item['session_token'],
                 ":expires_at": session_item['expires_at'],
             },
             ReturnValues="UPDATED_NEW",

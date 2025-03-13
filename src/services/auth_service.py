@@ -51,19 +51,19 @@ def register_user(request_data: dict):
     
 def create_session(email: str):
     try:
-        session_id = str(uuid.uuid4())  # Generate a unique session token
+        session_token = str(uuid.uuid4())  # Generate a unique session token
         expiration_time = (datetime.now(timezone.utc) + 
                            timedelta(minutes=SESSION_EXPIRE_MINUTES))
 
         session_item = {
-            "session_id": session_id,  # Ensure "S" for string
+            "session_token": session_token,  # Ensure "S" for string
             "expires_at": expiration_time.isoformat(),
         }
 
         # Store session in DynamoDB
         save_session_to_dynamodb(email, session_item)
 
-        return session_id
+        return session_token
 
     except HTTPException as e:
             raise e  # Let FastAPI handle the HTTPException properly
