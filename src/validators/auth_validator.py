@@ -1,5 +1,4 @@
 import abn
-#import boto3
 from fastapi import HTTPException, status
 from src.db.dynamodb_client import user_table
 
