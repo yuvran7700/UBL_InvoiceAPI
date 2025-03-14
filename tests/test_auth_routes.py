@@ -1,9 +1,6 @@
 from fastapi.testclient import TestClient
 from src.main import app
-from unittest.mock import patch
-import boto3
 import pytest
-from fastapi import HTTPException, status
 from tests.conftest import sample_user_json
 from src.utils.auth_helpers import delete_all_user_items
 client = TestClient(app)
@@ -84,5 +81,25 @@ def test_password_hashed(sample_user_json):
     response = client.post("/v1/users/auth/register", json=sample_user_json)
     assert response.status_code == 201
     assert "hashed_password" not in response.json()["user"]
+    assert response.json()["user"]["email"] == sample_user_json["email"]
+    assert response.json()["user"]["businessName"] == sample_user_json["businessName"]
+
+def test_user_update_password(sample_user_json):
+    """
+    Test that the user update password endpoint correctly updates the user's password.
+    """ 
+    response = client.post("/v1/users/auth/register", json=sample_user_json)
+    assert response.status_code == 201
+
+    new_password = "NewPassword123"
+    update_data = {
+        "email": sample_user_json["email"],
+        "password": new_password
+    }
+    response = client.post("/v1/users/auth/update/password", json=update_data)
+    assert response.status_code == 200
+    print(response.json())
+    print(sample_user_json)
+    assert response.json()["message"] == "Password updated successfully"
     assert response.json()["user"]["email"] == sample_user_json["email"]
     assert response.json()["user"]["businessName"] == sample_user_json["businessName"]

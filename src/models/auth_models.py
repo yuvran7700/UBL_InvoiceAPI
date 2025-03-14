@@ -9,3 +9,7 @@ class RegisterRequest(BaseModel):
 class UpdatePasswordRequest(BaseModel):
     email: EmailStr
     password: str
+
+class UpdateEmailRequest(BaseModel):
+    email: EmailStr
+    new_email: EmailStr 
