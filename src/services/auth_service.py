@@ -52,17 +52,3 @@ class UserService:
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=f"Internal server error: {str(e)}"
             )
-
-    def delete_user(request_data: dict):
-        """
-        Register a new user with validation and error handling.
-        
-        Args:
-            request_data (dict): User registration data
-            
-        Returns:
-            dict: Success message
-            
-        Raises:
-            HTTPException: If validation fails or database operations fail
-        """

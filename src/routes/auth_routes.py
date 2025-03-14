@@ -22,5 +22,14 @@ def register(request: RegisterRequest):
 
 @router.post("/delete")
 def updatePassword(request: RegisterRequest):
-    pass
-
+    try:
+        user_service = UserService()  
+        result =  user_service.delete_user(request)  # Call service layer
+        return JSONResponse(status_code=status.HTTP_200_CREATED, content=result)
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"An error occurred: {str(e)}"
+        )
