@@ -5,7 +5,7 @@ import boto3
 import pytest
 from fastapi import HTTPException, status
 from tests.conftest import sample_user_json
-from src.utils.auth_helpers import cleanup_database, delete_all_user_items
+from src.utils.auth_helpers import delete_all_user_items
 client = TestClient(app)
 
 @pytest.fixture(autouse=True)
