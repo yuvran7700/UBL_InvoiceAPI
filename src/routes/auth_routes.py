@@ -7,10 +7,10 @@ router = APIRouter(prefix="/v1/users/auth", tags=["auth"])
 
 
 @router.post("/register")
-async def register(request: RegisterRequest):
+def register(request: RegisterRequest):
     try:
         user_service = UserService()  
-        result = await user_service.register_user(request)  # Call service layer
+        result =  user_service.register_user(request)  # Call service layer
         return JSONResponse(status_code=status.HTTP_201_CREATED, content=result)
     except HTTPException as e:
         raise e
@@ -21,6 +21,6 @@ async def register(request: RegisterRequest):
         )
 
 @router.post("/delete")
-async def updatePassword(request: RegisterRequest):
+def updatePassword(request: RegisterRequest):
     pass
 

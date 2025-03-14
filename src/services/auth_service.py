@@ -5,7 +5,7 @@ from src.validators.auth_validator import validate_abn, check_email_exists, vali
 from src.models.auth_models import RegisterRequest
 
 class UserService: 
-    async def register_user(self, request_data: RegisterRequest):
+    def register_user(self, request_data: RegisterRequest):
         """
         Register a new user with validation and error handling.
         
@@ -21,7 +21,7 @@ class UserService:
         try:
             # Validate all required fields
             validate_abn(request_data.abn)
-            await check_email_exists(request_data.email)
+            check_email_exists(request_data.email)
             validate_password(request_data.password)
 
             # Create user record
@@ -36,7 +36,14 @@ class UserService:
             # Save to database
             save_user_to_dynamodb(user_item)
 
-            return {"message": "User registered successfully"}
+            return {
+                "message": "User registered successfully",
+                    "user": {
+                        "email": user_item["email"],
+                        "businessName": user_item["businessName"],
+                        "abn": user_item["abn"]
+                    }
+            }
 
         except HTTPException:
             raise  # Re-raise HTTP exceptions as they are already properly formatted
@@ -46,7 +53,7 @@ class UserService:
                 detail=f"Internal server error: {str(e)}"
             )
 
-    async def delete_user(request_data: dict):
+    def delete_user(request_data: dict):
         """
         Register a new user with validation and error handling.
         

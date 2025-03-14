@@ -19,3 +19,12 @@ def check_dynamodb_connection():
 
 # Call this function at startup to verify
 check_dynamodb_connection()
+
+# def user_table():
+#     try:
+#         print("Checking DynamoDB connection...")
+#         print("Users Table Status:", user_table.table_status)
+#         return dynamodb.Table("Users")
+#     except Exception as e:
+#         print("Error connecting to DynamoDB:", str(e))
+#         return None
