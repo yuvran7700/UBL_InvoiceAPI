@@ -47,3 +47,17 @@ def updateEmail(request: updateEmailRequest):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"An error occurred: {str(e)}"
         )
+
+@router.post("/update/username")
+def updateUsername(request: updateEmailRequest):
+    try:
+        user_service = UserService()  
+        result =  user_service.update_username(request)  # Call service layer
+        return JSONResponse(status_code=status.HTTP_200_CREATED, content=result)
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"An error occurred: {str(e)}"
+        )
