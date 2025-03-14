@@ -5,3 +5,7 @@ class RegisterRequest(BaseModel):
     email: EmailStr
     password: str
     abn: str
+
+class UpdatePasswordRequest(BaseModel):
+    email: EmailStr
+    password: str

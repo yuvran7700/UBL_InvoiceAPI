@@ -2,7 +2,7 @@ import uuid
 from fastapi import HTTPException, status
 from src.utils.auth_helpers import hash_password, save_user_to_dynamodb
 from src.validators.auth_validator import validate_abn, check_email_exists, validate_password
-from src.models.auth_models import RegisterRequest
+from src.models.auth_models import RegisterRequest, UpdatePasswordRequest
 
 class UserService: 
     def register_user(self, request_data: RegisterRequest):
@@ -52,3 +52,37 @@ class UserService:
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=f"Internal server error: {str(e)}"
             )
+        
+    def update_password(self, request_data: UpdatePasswordRequest):
+        """
+        Update a user's password.
+        
+        Args:
+            request_data (dict): User data including new password
+            
+        Returns:
+            dict: Success message
+            
+        Raises:
+            HTTPException: If validation fails or database operations fail
+        """
+        try:
+            # Validate all required fields
+            check_email_exists(request_data.email)
+            validate_password(request_data.password)
+
+            # Update user record
+            user_item = {
+                'email': request_data.email,
+                'hashed_password': hash_password(request_data.password),
+            }
+
+            # Save to database
+            save_user_to_dynamodb(user_item)
+
+            return {
+                "message": "Password updated successfully"
+            }
+
+        except HTTPException:
+            raise

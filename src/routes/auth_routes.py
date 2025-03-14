@@ -24,7 +24,7 @@ def register(request: RegisterRequest):
 def updatePassword(request: RegisterRequest):
     try:
         user_service = UserService()  
-        result =  user_service.delete_user(request)  # Call service layer
+        result =  user_service.update_password(request)  # Call service layer
         return JSONResponse(status_code=status.HTTP_200_CREATED, content=result)
     except HTTPException as e:
         raise e
