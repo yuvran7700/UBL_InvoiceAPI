@@ -1,6 +1,6 @@
 import uuid
 from fastapi import HTTPException, status
-from utils.auth_helpers import hash_password, save_user_to_dynamodb
+from src.utils.auth_helpers import hash_password, save_user_to_dynamodb
 from src.validators.auth_validator import validate_abn, check_email_exists, validate_password
 from src.models.auth_models import RegisterRequest
 
