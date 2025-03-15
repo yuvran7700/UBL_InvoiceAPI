@@ -1,13 +1,23 @@
+#tests/fixtures/user_fixtures
+
+import os
 import pytest
 import json
-import os
-
-# Define the path to the user data JSON file
-USER_DATA_PATH = os.path.join(os.path.dirname(__file__), '../../test_data/user.json')
 
 @pytest.fixture
-def sample_user():
-    """Fixture to load sample user data from the JSON file."""
-    with open(USER_DATA_PATH, 'r') as file:
-        user_data = json.load(file)
-    return user_data
+def sample_user_json():
+    """
+    Loads the sample user data JSON file from the test_data folder.
+    Ensures it works regardless of the test execution directory.
+    """
+    # __file__ is in tests/fixtures, so we go up three levels to reach the project root.
+    project_root = os.path.dirname(
+        os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    file_path = os.path.join(project_root, "test_data", "user.json")
+
+    if not os.path.exists(file_path):
+        raise FileNotFoundError(f"Test data file not found: {file_path}")
+
+    with open(file_path, "r") as f:
+        return json.load(f)
+    

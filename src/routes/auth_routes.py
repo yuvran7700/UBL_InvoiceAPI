@@ -33,9 +33,8 @@ async def register(request: RegisterRequest):
 async def login_user(request: SessionRequest):
     """Authenticate the user and return a session token."""
     try:
-        session_token = authenticate_user(request.dict())
-
-        if not session_token:
+        JWT = authenticate_user(request.dict())
+        if not JWT:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED, 
                 detail="Invalid credentials"
@@ -43,7 +42,7 @@ async def login_user(request: SessionRequest):
 
         return JSONResponse(
                 status_code=status.HTTP_201_CREATED, 
-                content={"session_token": session_token}
+                content={"JWT": JWT}
             )
     except HTTPException as e:
         raise e

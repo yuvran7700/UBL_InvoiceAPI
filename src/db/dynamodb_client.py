@@ -13,6 +13,9 @@ invoice_table = dynamodb.Table("invoices")
 # Reference the "users" table
 user_table = dynamodb.Table("users")
 
+# Reference the "sessions" table
+session_table = dynamodb.Table("sessions")
+
 def initialize_invoice_dynamodb():
     """
     Initializes and tests the connection to DynamoDB.

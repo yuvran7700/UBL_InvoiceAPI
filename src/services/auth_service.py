@@ -5,9 +5,9 @@ from fastapi import HTTPException
 from utils.auth_helpers import (hash_password, 
                                 save_user_to_dynamodb, 
                                 save_session_to_dynamodb, 
-                                get_user)
+                                get_user,
+                                create_access_token)
 from src.validators.auth_validator import validate_abn, check_email_exists
-from datetime import datetime, timedelta, timezone
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -49,21 +49,13 @@ def register_user(request_data: dict):
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
 
     
-def create_session(email: str):
+def create_session(request_data):
     try:
-        session_token = str(uuid.uuid4())  # Generate a unique session token
-        expiration_time = (datetime.now(timezone.utc) + 
-                           timedelta(minutes=SESSION_EXPIRE_MINUTES))
 
-        session_item = {
-            "session_token": session_token,  # Ensure "S" for string
-            "expires_at": expiration_time.isoformat(),
-        }
+        JWT = create_access_token(request_data)        
+        save_session_to_dynamodb(request_data['email'], JWT)
 
-        # Store session in DynamoDB
-        save_session_to_dynamodb(email, session_item)
-
-        return session_token
+        return JWT
 
     except HTTPException as e:
             raise e  # Let FastAPI handle the HTTPException properly
@@ -77,5 +69,4 @@ def authenticate_user(request_data: dict):
         raise HTTPException(status_code=404, detail="User not found")
     if not pwd_context.verify(request_data['password'], response['hashed_password']):
         return None
-
-    return create_session(response["email"])
+    return create_session(request_data)

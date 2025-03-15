@@ -1,14 +1,14 @@
 from fastapi.testclient import TestClient
 from src.main import app
 from unittest.mock import patch
-from tests.fixtures.user_fixtures import sample_user
+from tests.conftest import sample_user_json
 
 client = TestClient(app)
 
 # Mocking DynamoDB methods
 @patch("src.db.dynamodb_client.user_table.put_item")
 @patch("src.db.dynamodb_client.user_table.get_item")
-def test_register_user(mock_get_item, mock_put_item, sample_user):
+def test_register_user(mock_get_item, mock_put_item, sample_user_json):
     
     # Mock DynamoDB responses 
     # No item for email, meaning email doesn't exist
@@ -16,7 +16,7 @@ def test_register_user(mock_get_item, mock_put_item, sample_user):
     mock_put_item.return_value = {}
 
     # Send POST request to register the user
-    response = client.post("/v1/users/auth/register", json=sample_user)
+    response = client.post("/v1/users/auth/register", json=sample_user_json)
 
     print("Response JSON:", response.json())
     # Assert the response status code is 201 (Created)
@@ -29,17 +29,17 @@ def test_register_user(mock_get_item, mock_put_item, sample_user):
     assert data["message"] == "User registered successfully", f"Unexpected message: {data['message']}"  # noqa: E501
 
     # Mock the `get_item` to simulate an existing user for the same email
-    mock_get_item.return_value = {"Item": {"email": sample_user["email"]}}
+    mock_get_item.return_value = {"Item": {"email": sample_user_json["email"]}}
 
     # Send a second registration attempt with the same email (it should fail)
-    response = client.post("/v1/users/auth/register", json=sample_user)
+    response = client.post("/v1/users/auth/register", json=sample_user_json)
 
     # Assert the response status code is 400 (Bad Request) due to email duplication
     assert response.status_code == 400, f"Expected status 400, got {response.status_code}"  # noqa: E501
     assert response.json()["detail"] == "Email already registered", f"Unexpected error message: {response.json()['detail']}"  # noqa: E501
 
     # Validate the ABN format, for testing purposes we'll use an invalid ABN
-    invalid_user_data = sample_user.copy()
+    invalid_user_data = sample_user_json.copy()
     invalid_user_data["abn"] = "invalid_abn"
 
     # Send a registration attempt with an invalid ABN (it should fail)
