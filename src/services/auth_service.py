@@ -6,8 +6,12 @@ from utils.auth_helpers import (hash_password,
                                 save_user_to_dynamodb, 
                                 save_session_to_dynamodb, 
                                 get_user,
-                                create_access_token)
-from src.validators.auth_validator import validate_abn, check_email_exists
+                                create_access_token,
+                                get_token,
+                                decode_token)
+from src.validators.auth_validator import (validate_abn, 
+                                           check_email_exists, 
+                                           session_validation)
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -51,12 +55,9 @@ def register_user(request_data: dict):
     
 def create_session(request_data):
     try:
-
         JWT = create_access_token(request_data)        
         save_session_to_dynamodb(request_data['email'], JWT)
-
         return JWT
-
     except HTTPException as e:
             raise e  # Let FastAPI handle the HTTPException properly
     except Exception as e:
@@ -70,3 +71,11 @@ def authenticate_user(request_data: dict):
     if not pwd_context.verify(request_data['password'], response['hashed_password']):
         return None
     return create_session(request_data)
+
+def get_JWT(JWT: str):
+    response = get_token(JWT)
+    if not response:
+        raise HTTPException(status_code=401, detail="Invalid token")
+    decoded_JWT = decode_token(JWT)
+    session_validation(decoded_JWT)
+    return {"valid": True}

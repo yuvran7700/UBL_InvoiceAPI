@@ -3,7 +3,7 @@ from fastapi import HTTPException, status
 from pydantic import BaseModel
 from src.db.dynamodb_client import user_table, session_table
 from datetime import datetime, timedelta, timezone
-from jose import jwt
+from jose import JWTError, jwt
 #hash-password helper function 
 
 SECRET_KEY = "a3eddf3292bac4ac269ed39a74e6760ed3c34ff3a15f4cb17c61520da8c88b05"
@@ -60,3 +60,20 @@ def create_access_token(data: dict):
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
     return encoded_jwt
+
+def get_token(JWT: str):
+    try:
+        response = session_table.get_item(Key = { "JWT": JWT })
+        return response["Item"]
+    except Exception:
+        return {}
+    
+def decode_token(JWT: str):
+    try:
+        payload = jwt.decode(JWT, SECRET_KEY, algorithms=[ALGORITHM])
+        return payload
+    except JWTError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Could not validate credentials",
+        )
