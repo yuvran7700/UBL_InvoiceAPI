@@ -1,6 +1,6 @@
 import uuid
 from fastapi import HTTPException, status
-from src.utils.auth_helpers import get_user_from_dynamo, hash_password, save_user_to_dynamodb, update_user_in_dynamo
+from src.utils.auth_helpers import get_user_from_dynamo, hash_password, save_user_to_dynamodb, update_user_in_dynamo, verify_password
 from src.validators.auth_validator import validate_abn, check_email_exists, validate_password
 from src.models.auth_models import RegisterRequest, UpdatePasswordRequest
 from src.db.dynamodb_client import user_table
@@ -87,7 +87,6 @@ class UserService:
         
             # Hash the new password
             new_hashed_password = hash_password(request_data.updated_password)
-            
             # Update the user's password in DynamoDB
             result = user_table.update_item(
                 Key={'email': request_data.email},

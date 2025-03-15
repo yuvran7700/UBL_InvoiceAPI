@@ -12,10 +12,9 @@ def hash_password(password: str) -> str:
     """Hash the user's password using bcrypt"""
     return pwd_context.hash(password)
 
-def verify_password(password: str) -> str:
-    """Verify the user's password has been hashed"""
-    hash = hash_password(password)
-    return pwd_context.verify(password,hash)
+def verify_password(plain_password: str, hashed_password: str) -> bool:
+    """Verify a password against its hash"""
+    return pwd_context.verify(plain_password, hashed_password)
 
 def save_user_to_dynamodb(user_item: dict):
     """Save user data to DynamoDB"""
@@ -49,7 +48,6 @@ def get_user_from_dynamo(email: str):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error retrieving user from DynamoDB: {str(e)}"
         )
-
 
 def update_user_in_dynamo(email: str, updated_data: dict):
     """Update a user in DynamoDB using the provided email and updated data."""
