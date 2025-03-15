@@ -54,10 +54,11 @@ def test_update_password_integration(sample_user_json):
     assert response.status_code == 201
 
     # Update the user's password
-    new_password = "newpassword123"
+    new_password = "NewSecurePassword123"
     update_data = {
         "email": sample_user_json["email"],
-        "password": new_password
+        "password": sample_user_json["password"],  # Current password
+        "updated_password": new_password  # New password
     }
     response = client.put("/v1/users/auth/update-password", json=update_data)
     assert response.status_code == 200
