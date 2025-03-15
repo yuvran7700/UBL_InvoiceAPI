@@ -15,3 +15,4 @@ def save_invoice(invoice: InvoiceType) -> None:
         invoices_table.put_item(Item=invoice_dict)
     except Exception as e:
         raise Exception(f"Failed to store invoice in DynamoDB: {e}")
+
