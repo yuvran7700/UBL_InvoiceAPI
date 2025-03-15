@@ -1,4 +1,4 @@
-#marshallers/invoice_marshaller.py
+# marshallers/invoice_marshaller.py
 """
 Invoice Marshaller.
 Handles the transformation (marshalling) of an OrderType into an InvoiceType.
@@ -8,7 +8,13 @@ from datetime import date
 import random
 import uuid
 from src.models.order_type import OrderType
-from src.models.invoice_type import InvoiceType, Party, InvoiceLine, ClassifiedTaxCategory
+from src.models.invoice_type import (
+    InvoiceType,
+    Party,
+    InvoiceLine,
+    ClassifiedTaxCategory,
+)
+
 
 class InvoiceMarshaller:
     @staticmethod
@@ -20,15 +26,20 @@ class InvoiceMarshaller:
             name=order.seller_name,
             account=order.seller_account,
             address=order.seller_address,
-            ttax_identifier=order.seller_tax_identifier if hasattr(order, 'seller_tax_identifier') and order.seller_tax_identifier else "GST12345678",  # Ideally retrieved from seller master data.
-            electronic_address="supplier@example.com"
+            ttax_identifier=(
+                order.seller_tax_identifier
+                if hasattr(order, "seller_tax_identifier")
+                and order.seller_tax_identifier
+                else "GST12345678"
+            ),  # Ideally retrieved from seller master data.
+            electronic_address="supplier@example.com",
         )
         buyer = Party(
             name=order.buyer_name,
             account=order.buyer_account,
             address=order.buyer_address,
             tax_identifier="GST87654321",  # Ideally retrieved from buyer master data.
-            electronic_address="buyer@example.com"
+            electronic_address="buyer@example.com",
         )
         return seller, buyer
 
@@ -40,15 +51,19 @@ class InvoiceMarshaller:
         invoice_lines = []
         line_total = 0.0
         for idx, order_line in enumerate(order.order_lines, start=1):
-            product_code = order_line.buyers_item_id  # Use buyer's item ID as product code.
+            product_code = (
+                order_line.buyers_item_id
+            )  # Use buyer's item ID as product code.
 
             classified_tax_category = None
             if order_line.line_extension_amount > 0 and order_line.total_tax_amount > 0:
-                tax_rate = (order_line.total_tax_amount / order_line.line_extension_amount) * 100
+                tax_rate = (
+                    order_line.total_tax_amount / order_line.line_extension_amount
+                ) * 100
                 classified_tax_category = ClassifiedTaxCategory(
                     tax_category_code="S",  # "S" indicates standard rate (adjust as needed)
                     tax_rate=round(tax_rate, 2),
-                    tax_scheme="GST"
+                    tax_scheme="GST",
                 )
 
             invoice_line = InvoiceLine(
@@ -58,7 +73,7 @@ class InvoiceMarshaller:
                 quantity=order_line.quantity,
                 unit_price=order_line.unit_price,
                 line_extension_amount=order_line.line_extension_amount,
-                classified_tax_category=classified_tax_category
+                classified_tax_category=classified_tax_category,
             )
             invoice_lines.append(invoice_line)
             line_total += order_line.line_extension_amount
@@ -76,10 +91,10 @@ class InvoiceMarshaller:
     def marshall_order_to_invoice(order: OrderType) -> InvoiceType:
         """
         Marshalls an OrderType object into an InvoiceType object.
-        
+
         Args:
             order (OrderType): The enriched order data.
-            
+
         Returns:
             InvoiceType: The draft invoice generated from the order.
         """
@@ -104,5 +119,5 @@ class InvoiceMarshaller:
             buyer=buyer,
             invoice_lines=invoice_lines,
             legal_monetary_total=line_total,
-            status="draft"
+            status="draft",
         )

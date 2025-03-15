@@ -1,5 +1,10 @@
-import boto3
+"""
+DynamoDB client initialization and connection testing.
+"""
+
 import os
+import boto3
+
 
 # Load AWS region from environment variables (default to us-east-1)
 AWS_REGION = os.getenv("AWS_REGION", "us-east-1")
@@ -10,9 +15,13 @@ dynamodb = boto3.resource("dynamodb", region_name=AWS_REGION)
 # Reference the "invoices" table
 invoices_table = dynamodb.Table("invoices")
 
+
 def initialize_dynamodb():
     """
     Initializes and tests the connection to DynamoDB.
+
+    Prints the status of the "invoices" table if the connection is successful.
+    Prints an error message if the connection fails.
     """
     try:
         print("Checking DynamoDB connection...")

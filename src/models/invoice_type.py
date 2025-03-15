@@ -1,31 +1,34 @@
-#models/invoice_type.py
+# models/invoice_type.py
 """
 Pydantic models for the UBL/A‑NZ invoice.
 These models define the structure for the generated invoice, including header, parties,
 line items, tax information, and payment terms.
 """
 
-from pydantic import BaseModel
-from typing import List, Optional
 from datetime import date
+from typing import List, Optional
+from pydantic import BaseModel
+
 
 class ClassifiedTaxCategory(BaseModel):
     """
     Represents the classified tax category for an invoice line.
-    
+
     Attributes:
         tax_category_code (str): Tax category code (e.g. "S" for standard).
         tax_rate (float): Tax rate percentage.
         tax_scheme (str): Tax scheme identifier (e.g., "GST").
     """
+
     tax_category_code: str
     tax_rate: float
     tax_scheme: str
 
+
 class Party(BaseModel):
     """
     Represents a party (seller or buyer) in the invoice.
-    
+
     Attributes:
         name (str): The party name.
         account (str): The party account or identifier.
@@ -33,6 +36,7 @@ class Party(BaseModel):
         tax_identifier (Optional[str]): The tax number (e.g., GST number).
         electronic_address (Optional[str]): Electronic contact information.
     """
+
     name: str
     account: str
     address: str
@@ -41,10 +45,11 @@ class Party(BaseModel):
     electronic_address: Optional[str] = None
     scheme_id: Optional[str] = None  # NEW FIELD
 
+
 class InvoiceLine(BaseModel):
     """
     Represents a line item in the invoice.
-    
+
     Attributes:
         id (int): A sequential line identifier.
         description (str): Description of the product/service.
@@ -54,6 +59,7 @@ class InvoiceLine(BaseModel):
         line_extension_amount (float): Net amount for the line.
         classified_tax_category (Optional[ClassifiedTaxCategory]): Tax info for the line.
     """
+
     id: int
     description: str
     product_code: str
@@ -62,10 +68,11 @@ class InvoiceLine(BaseModel):
     line_extension_amount: float
     classified_tax_category: Optional[ClassifiedTaxCategory] = None
 
+
 class InvoiceType(BaseModel):
     """
     Represents the complete draft invoice.
-    
+
     Attributes:
         invoice_id (str): Unique invoice identifier (used as the DynamoDB partition key).
         issue_date (date): Invoice issue date.
@@ -79,6 +86,7 @@ class InvoiceType(BaseModel):
         invoice_lines (List[InvoiceLine]): List of invoice line items.
         legal_monetary_total (float): Total invoice amount.
     """
+
     invoice_id: str
     issue_date: date
     invoice_type_code: str
