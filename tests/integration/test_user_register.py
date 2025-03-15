@@ -1,9 +1,9 @@
 import pytest
 from fastapi.testclient import TestClient
 from src.main import app
-from src.utils.auth_helpers import delete_all_user_items, get_user_from_dynamo
+from src.utils.auth_helpers import  verify_password
 from tests.conftest import sample_user_json
-
+from src.repositories.auth_repository import UserTable
 
 client = TestClient(app)
 
@@ -13,11 +13,12 @@ def cleanup_database():
     """
     Fixture to clean up the database before and after each test
     """
-    delete_all_user_items()  # Clean before test
+    UserTable.delete_all()  # Clean before test
     yield
-    delete_all_user_items()  # Clean after test
+    UserTable.delete_all()  # Clean after test
 
-def test_user_registration_integration_with_dynamo_check(sample_user_json):
+
+def test_user_registration(sample_user_json):
     """
     Test the full registration process, including validating the user in DynamoDB.
     """
@@ -37,10 +38,43 @@ def test_user_registration_integration_with_dynamo_check(sample_user_json):
     assert user_data["abn"] == sample_user_json["abn"]
     assert "password" not in user_data
 
-    stored_user = get_user_from_dynamo(sample_user_json["email"])
+    stored_user = UserTable.get(sample_user_json["email"])
     assert stored_user is not None
     assert stored_user["email"] == sample_user_json["email"]
     assert stored_user["businessName"] == sample_user_json["businessName"]
     assert stored_user["abn"] == sample_user_json["abn"]
     assert "hashed_password" in stored_user
     assert "user_id" in stored_user
+
+
+def test_update_password(sample_user_json):
+    """
+    Test the full password update process, including validating the user in DynamoDB.
+    """
+    # Register the user
+    response = client.post("/v1/users/auth/register", json=sample_user_json)
+    assert response.status_code == 201
+
+    # Update the user's password
+    new_password = "NewSecurePassword123"
+    update_data = {
+        "email": sample_user_json["email"],
+        "password": sample_user_json["password"],  # Current password
+        "updated_password": new_password  # New password
+    }
+    response = client.put("/v1/users/auth/update-password", json=update_data)
+    assert response.status_code == 200
+    data = response.json()
+    assert data["message"] == "Password updated successfully"
+
+    # Check that the password was updated in DynamoDB
+    stored_user = UserTable.get(sample_user_json["email"])
+    assert stored_user is not None
+    assert stored_user["email"] == sample_user_json["email"]
+    assert stored_user["businessName"] == sample_user_json["businessName"]
+    assert stored_user["abn"] == sample_user_json["abn"]
+    assert "hashed_password" in stored_user
+    assert "user_id" in stored_user
+
+    # Verify the new password
+    assert verify_password(new_password, stored_user["hashed_password"])
