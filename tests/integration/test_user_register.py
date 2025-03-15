@@ -3,7 +3,7 @@ from fastapi.testclient import TestClient
 from src.main import app
 from src.utils.auth_helpers import  verify_password
 from tests.conftest import sample_user_json
-from src.repositories.user_repository import UserTable
+from src.repositories.auth_repository import UserTable
 
 client = TestClient(app)
 
@@ -17,7 +17,7 @@ def cleanup_database():
     yield
     UserTable.delete_all()  # Clean after test
 
-@pytest.intergration
+
 def test_user_registration(sample_user_json):
     """
     Test the full registration process, including validating the user in DynamoDB.
@@ -46,7 +46,7 @@ def test_user_registration(sample_user_json):
     assert "hashed_password" in stored_user
     assert "user_id" in stored_user
 
-@pytest.intergration
+
 def test_update_password(sample_user_json):
     """
     Test the full password update process, including validating the user in DynamoDB.

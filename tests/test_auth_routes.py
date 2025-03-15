@@ -5,7 +5,6 @@ import boto3
 import pytest
 from fastapi import HTTPException, status
 from tests.conftest import sample_user_json
-from src.utils.auth_helpers import delete_all_user_items
 from src.repositories.auth_repository import UserTable
 client = TestClient(app)
 
@@ -14,7 +13,7 @@ def auto_cleanup():
     """
     Automatically clean up the database after each test
     """
-    return delete_all_user_items()
+    return UserTable.delete_all()
 
 def test_user_registration(sample_user_json):
     """
