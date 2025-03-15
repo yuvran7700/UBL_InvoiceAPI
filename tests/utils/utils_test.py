@@ -2,8 +2,12 @@ import boto3
 from src.repositories.auth_repository import save_session_to_dynamodb
 from datetime import datetime, timezone
 from jose import jwt
+import os
 
-dynamodb = boto3.resource("dynamodb")
+# Load AWS region from environment variables (default to us-east-1)
+AWS_REGION = os.getenv("AWS_REGION", "us-east-1")
+
+dynamodb = boto3.resource("dynamodb", region_name=AWS_REGION)
 
 SECRET_KEY = "a3eddf3292bac4ac269ed39a74e6760ed3c34ff3a15f4cb17c61520da8c88b05"
 ALGORITHM = "HS256"

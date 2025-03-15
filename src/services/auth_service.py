@@ -3,13 +3,13 @@ from passlib.context import CryptContext
 from fastapi import HTTPException
 from utils.auth_helpers import (hash_password, 
                                 create_access_token,
-                                get_token,
                                 decode_token,)
 from src.validators.auth_validator import (validate_abn,  
                                            session_validation)
 from src.repositories.auth_repository import (save_user_to_dynamodb, 
                                             save_session_to_dynamodb, 
                                             get_user,
+                                            get_token,
                                             remove_session_from_dynamodb,
                                             check_email_exists)
 
@@ -82,3 +82,10 @@ def remove_JWT(JWT: str):
     remove_session_from_dynamodb(JWT)
 
     return {"message": "Successfully logged out"}
+def token_logout_valid(JWT: str):
+    response =  get_token(JWT)
+    if response:
+         raise HTTPException(status_code = 401, 
+                             detail = "Invalid token - user still logged in")
+    if not response: 
+        return { "valid": True }
