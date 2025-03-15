@@ -7,8 +7,8 @@ client = TestClient(app)
 
 def test_logout_missing(sample_session_json, sample_user_json): # noqa: F811
 
-    delete_all_user_items()
-    delete_all_session_items()
+    # delete_all_user_items()
+    # delete_all_session_items()
 
     client.post("/v1/users/auth/register", json=sample_user_json) 
 
