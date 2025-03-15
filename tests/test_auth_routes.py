@@ -86,3 +86,27 @@ def test_password_hashed(sample_user_json):
     assert "hashed_password" not in response.json()["user"]
     assert response.json()["user"]["email"] == sample_user_json["email"]
     assert response.json()["user"]["businessName"] == sample_user_json["businessName"]
+
+def test_update_password(sample_user_json):
+    """
+    Test that the update password endpoint correctly updates the user's password.
+    """
+    # Register a new user
+    response = client.post("/v1/users/auth/register", json=sample_user_json)
+    assert response.status_code == 201
+
+    # Define the new password payload with all required fields
+    new_password_payload = {
+        "email": sample_user_json["email"],
+        "password": sample_user_json["password"],  # Current password
+        "updated_password": "NewSecurePassword123"  # New password
+    }
+
+    # Update the user's password
+    response = client.put("/v1/users/auth/update-password", json=new_password_payload)
+    print("Update password response:", response.json())
+    assert response.status_code == 200, f"Expected status 200, got {response.status_code}"
+    
+    data = response.json()
+    assert "message" in data, "Missing message in response"
+    assert data["message"] == "Password updated successfully", f"Unexpected message: {data['message']}"

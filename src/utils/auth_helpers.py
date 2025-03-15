@@ -1,6 +1,7 @@
 from passlib.context import CryptContext
 
 from fastapi import HTTPException, status
+import pytest
 
 from src.db.dynamodb_client import user_table
 
@@ -11,10 +12,9 @@ def hash_password(password: str) -> str:
     """Hash the user's password using bcrypt"""
     return pwd_context.hash(password)
 
-def verify_password(password: str) -> str:
-    """Verify the user's password has been hashed"""
-    hash = hash_password(password)
-    return pwd_context.verify(password,hash)
+def verify_password(plain_password: str, hashed_password: str) -> bool:
+    """Verify a password against its hash"""
+    return pwd_context.verify(plain_password, hashed_password)
 
 def save_user_to_dynamodb(user_item: dict):
     """Save user data to DynamoDB"""
@@ -26,6 +26,7 @@ def save_user_to_dynamodb(user_item: dict):
             detail=f"Error saving user to DynamoDB: {str(e)}"
         )
 
+@pytest.mark.unit
 def get_user_from_dynamo(email: str):
     """Retrieve user from DynamoDB using the provided email."""
     try:
@@ -46,6 +47,29 @@ def get_user_from_dynamo(email: str):
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error retrieving user from DynamoDB: {str(e)}"
+        )
+
+
+def update_user_in_dynamo(email: str, updated_data: dict):
+    """Update a user in DynamoDB using the provided email and updated data."""
+    try:
+        # Update the user in DynamoDB
+        response = user_table.update_item(
+            Key={'email': email},
+            UpdateExpression="SET businessName = :bn, abn = :abn",
+            ExpressionAttributeValues={
+                ':bn': updated_data['businessName'],
+                ':abn': updated_data['abn']
+            },
+            ReturnValues="ALL_NEW"
+        )
+        # Return the updated user item
+        return response['Attributes']
+    
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error updating user in DynamoDB: {str(e)}"
         )
     
 
