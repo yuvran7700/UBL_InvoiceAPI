@@ -29,7 +29,7 @@ stages:
 lint:
   stage: lint
   script:
-    - pip install ruff  # Install ruff for linting
+    - pip install pylint  # Install ruff for linting
     - ruff check .  # Lint the project files
   allow_failure: true  # If linting fails, we continue the pipeline (optional)
 
@@ -38,7 +38,7 @@ test:
   stage: tests
   script:
     - pip install pytest  # Install pytest for testing
-    - pytest
+    - pylint tests/ src/
   allow_failure: false  # Fail the pipeline if tests don't pass
 
 #Coverage stage
