@@ -83,5 +83,6 @@ class InvoiceMarshaller:
             seller=seller,
             buyer=buyer,
             invoice_lines=invoice_lines,
-            legal_monetary_total=line_total
+            legal_monetary_total=line_total,
+            status = "draft"
         )

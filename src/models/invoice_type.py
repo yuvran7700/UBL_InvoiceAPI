@@ -91,3 +91,4 @@ class InvoiceType(BaseModel):
     invoice_lines: List[InvoiceLine]
     legal_monetary_total: float
     additional_document_reference_id: Optional[str] = None  # NEW FIELD
+    status: str = "draft"
