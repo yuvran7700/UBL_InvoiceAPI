@@ -10,3 +10,7 @@ class UpdatePasswordRequest(BaseModel):
     email: EmailStr
     password: str
     updated_password: str
+
+class UpdateEmailRequest(BaseModel):
+    email: EmailStr
+    updated_email: EmailStr 

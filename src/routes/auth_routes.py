@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, status
 from fastapi.responses import JSONResponse
 from src.services.auth_service import UserService
-from src.models.auth_models import RegisterRequest, UpdatePasswordRequest
+from src.models.auth_models import RegisterRequest, UpdatePasswordRequest, UpdateEmailRequest
 
 router = APIRouter(prefix="/v1/users/auth", tags=["auth"])
 
@@ -37,7 +37,7 @@ def updatePassword(request: UpdatePasswordRequest):
 
     
 @router.post("/update/email")
-def updateEmail(request: updateEmailRequest):
+def updateEmail(request: UpdateEmailRequest):
     try:
         user_service = UserService()  
         result =  user_service.update_email(request)  # Call service layer
