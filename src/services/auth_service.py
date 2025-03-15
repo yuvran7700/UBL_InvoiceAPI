@@ -1,10 +1,13 @@
 import uuid
 from fastapi import HTTPException, status
-from src.utils.auth_helpers import get_user_from_dynamo, hash_password, save_user_to_dynamodb, update_user_in_dynamo, verify_password
+from passlib.context import CryptContext
+
+from src.utils.auth_helpers import  hash_password
+from src.repositories.auth_repository import UserTable
 from src.validators.auth_validator import validate_abn, check_email_exists, validate_password
 from src.models.auth_models import RegisterRequest, UpdatePasswordRequest
 from src.db.dynamodb_client import user_table
-from passlib.context import CryptContext
+
 
 # Initialize the password hashing context
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -39,7 +42,7 @@ class UserService:
             }
 
             # Save to database
-            save_user_to_dynamodb(user_item)
+            UserTable.save(user_item)
 
             return {
                 "message": "User registered successfully",
@@ -73,7 +76,7 @@ class UserService:
         """
         try:
             # Get the user from DynamoDB
-            user = get_user_from_dynamo(request_data.email)
+            user = UserTable.get(request_data.email)
             
             # Verify the current password is correct
             if not pwd_context.verify(request_data.password, user.get('hashed_password')):
