@@ -25,32 +25,36 @@ stages:
   - tests
   - coverage
 
-# Linting stage
 lint:
   stage: lint
   script:
-    - pip install pylint  # Install ruff for linting
-    - pylint tests/  # Lint the project files
-    - pylint src/ 
-  allow_failure: true  # If linting fails, we continue the pipeline (optional)
+    - pip install pylint
+    - pylint tests/
+    - pylint src/
+  allow_failure: true
 
-# Testing stage
-test:
+unit_tests:
   stage: tests
   script:
-    - pip install pytest  # Install pytest for testing
-    - pytest
-  allow_failure: false  # Fail the pipeline if tests don't pass
+    - pip install pytest
+    - pytest tests/unit/
+  allow_failure: false
 
-#Coverage stage
+integration_tests:
+  stage: tests
+  script:
+    - pip install pytest
+    - pytest tests/integration/
+  allow_failure: true
+
 coverage:
   stage: coverage
   script: 
-    - pip install coverage  # Install coverage
-    - coverage run -m pytest  # Run tests with coverage tracking
-    - coverage report  # Show the coverage report
-    - coverage html  # Optionally generate an HTML coverage report
+    - pip install coverage
+    - coverage run -m pytest
+    - coverage report
+    - coverage html
   artifacts:
     paths:
-      - htmlcov/  # Optionally save HTML coverage report as an artifact
+      - htmlcov/
   allow_failure: false
