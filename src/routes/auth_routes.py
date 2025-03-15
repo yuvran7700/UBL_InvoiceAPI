@@ -36,7 +36,7 @@ def updatePassword(request: UpdatePasswordRequest):
    
 
     
-@router.post("/update/email")
+@router.put("/update-email")
 def updateEmail(request: UpdateEmailRequest):
     try:
         user_service = UserService()  

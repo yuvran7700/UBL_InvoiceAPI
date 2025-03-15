@@ -16,17 +16,19 @@ class UserTable():
         """Retrieve user from DynamoDB using the provided email."""
         try:
             # Retrieve the user by email from DynamoDB
-            response = user_table.get_item(
-                Key={'email': email}  # Assuming 'email' is the primary key of the table
+            response = user_table.scan(
+                FilterExpression='email = :email',
+                ExpressionAttributeValues={':email': email}
             )
-            # Check if the 'Item' key exists in the response, meaning the user was found
-            if 'Item' not in response:
+            items = response.get('Items', [])
+            
+            if not items:
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,
                     detail="User not found"
                 )
-            # Return the retrieved user item
-            return response['Item']
+            # Return the first matching user
+            return items[0]
         
         except Exception as e:
             raise HTTPException(
@@ -34,27 +36,29 @@ class UserTable():
                 detail=f"Error retrieving user from DynamoDB: {str(e)}"
             )
 
-    def update(email: str, updated_data: dict):
-        """Update a user in DynamoDB using the provided email and updated data."""
-        try:
-            # Update the user in DynamoDB
-            response = user_table.update_item(
-                Key={'email': email},
-                UpdateExpression="SET businessName = :bn, abn = :abn",
-                ExpressionAttributeValues={
-                    ':bn': updated_data['businessName'],
-                    ':abn': updated_data['abn']
-                },
-                ReturnValues="ALL_NEW"
-            )
-            # Return the updated user item
-            return response['Attributes']
+    # Update user data in DynamoDB? 
+    #TO DO LATER!!!
+    # def update(email: str, updated_data: dict):
+    #     """Update a user in DynamoDB using the provided email and updated data."""
+    #     try:
+    #         # Update the user in DynamoDB
+    #         response = user_table.update_item(
+    #             Key={'email': email},
+    #             UpdateExpression="SET businessName = :bn, abn = :abn",
+    #             ExpressionAttributeValues={
+    #                 ':bn': updated_data['businessName'],
+    #                 ':abn': updated_data['abn']
+    #             },
+    #             ReturnValues="ALL_NEW"
+    #         )
+    #         # Return the updated user item
+    #         return response['Attributes']
         
-        except Exception as e:
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=f"Error updating user in DynamoDB: {str(e)}"
-            )
+    #     except Exception as e:
+    #         raise HTTPException(
+    #             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+    #             detail=f"Error updating user in DynamoDB: {str(e)}"
+    #         )
         
 
     def delete_all():
@@ -70,5 +74,5 @@ class UserTable():
         with user_table.batch_writer() as batch:
             for item in items:
                 print(f"Deleting user with email: {item['email']}")  # Debugging line
-                batch.delete_item(Key={"email": item["email"]})
+                batch.delete_item(Key={"user_id": item["user_id"], "email": item["email"]})
         

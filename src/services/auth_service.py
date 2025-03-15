@@ -5,7 +5,7 @@ from passlib.context import CryptContext
 from src.utils.auth_helpers import  hash_password
 from src.repositories.auth_repository import UserTable
 from src.validators.auth_validator import validate_abn, check_email_exists, validate_password
-from src.models.auth_models import RegisterRequest, UpdatePasswordRequest
+from src.models.auth_models import RegisterRequest, UpdateEmailRequest, UpdatePasswordRequest
 from src.db.dynamodb_client import user_table
 
 
@@ -92,7 +92,7 @@ class UserService:
             new_hashed_password = hash_password(request_data.updated_password)
             # Update the user's password in DynamoDB
             result = user_table.update_item(
-                Key={'email': request_data.email},
+                Key={'user_id': user['user_id']},
                 UpdateExpression="SET hashed_password = :new_password",
                 ExpressionAttributeValues={
                     ':new_password': new_hashed_password
@@ -116,4 +116,52 @@ class UserService:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=f"Error updating password: {str(e)}"
+            )
+
+    def update_email(self, request_data: UpdateEmailRequest): 
+        """
+        Update a user's email.
+        
+        Args:
+            request_data (UpdateEmailRequest): User data including current and new email
+            
+        Returns:
+            dict: Success message
+            
+        Raises:
+            HTTPException: If validation fails or database operations fail
+        """
+        try:
+            # Get the user from DynamoDB
+            user = UserTable.get(request_data.email)
+            
+            # Validate the new email does not exist
+            check_email_exists(request_data.updated_email)
+        
+            # Update the user's email in DynamoDB
+            result = user_table.update_item(
+                Key={'user_id': user['user_id']},
+                UpdateExpression="SET email = :new_email",
+                ExpressionAttributeValues={
+                    ':new_email': request_data.updated_email
+                },
+                ReturnValues="UPDATED_NEW"
+            )
+
+            if 'Attributes' not in result:
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail="Failed to update the email"
+                )
+
+            return {
+                "message": "Email updated successfully"
+            }
+
+        except HTTPException:
+            raise
+        except Exception as e:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Error updating email: {str(e)}"
             )
