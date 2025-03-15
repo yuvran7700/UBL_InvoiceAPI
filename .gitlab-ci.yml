@@ -31,7 +31,7 @@ lint:
   script:
     - pip install pylint  # Install ruff for linting
     - pylint tests/  # Lint the project files
-    - pylint src/
+    - pylint src/ 
   allow_failure: true  # If linting fails, we continue the pipeline (optional)
 
 # Testing stage
