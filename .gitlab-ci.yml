@@ -39,7 +39,7 @@ test:
   script:
     - pip install pytest  # Install pytest for testing
     - pylint src/
-    pylint tests/
+    - pylint tests/
   allow_failure: false  # Fail the pipeline if tests don't pass
 
 #Coverage stage
