@@ -1,23 +1,19 @@
 import uuid
 from passlib.context import CryptContext
-import boto3
 from fastapi import HTTPException
 from utils.auth_helpers import (hash_password, 
-                                save_user_to_dynamodb, 
-                                save_session_to_dynamodb, 
-                                get_user,
                                 create_access_token,
                                 get_token,
-                                decode_token)
-from src.validators.auth_validator import (validate_abn, 
-                                           check_email_exists, 
+                                decode_token,)
+from src.validators.auth_validator import (validate_abn,  
                                            session_validation)
+from src.repositories.auth_repository import (save_user_to_dynamodb, 
+                                            save_session_to_dynamodb, 
+                                            get_user,
+                                            remove_session_from_dynamodb,
+                                            check_email_exists)
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
-# AWS DynamoDB Configuration
-dynamodb = boto3.resource("dynamodb", region_name="us-east-1")  # Set your AWS region
-users_table = dynamodb.Table("Users")
 
 # Session Expiration Time (in minutes)
 SESSION_EXPIRE_MINUTES = 60
@@ -79,3 +75,10 @@ def get_JWT(JWT: str):
     decoded_JWT = decode_token(JWT)
     session_validation(decoded_JWT)
     return {"valid": True}
+
+def remove_JWT(JWT: str):
+    decoded = decode_token(JWT)
+    session_validation(decoded)
+    remove_session_from_dynamodb(JWT)
+
+    return {"message": "Successfully logged out"}

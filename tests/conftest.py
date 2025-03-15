@@ -2,7 +2,7 @@
 import sys
 import os
 from tests.fixtures.user_fixtures import sample_user_json  # noqa: F401
-from tests.fixtures.session_fixtures import sample_session_json
+from tests.fixtures.session_fixtures import sample_session_json # noqa: F401
 
 # Add project root to Python path
 project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))

@@ -1,7 +1,10 @@
 from fastapi import APIRouter, HTTPException, Query, status
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, EmailStr
-from src.services.auth_service import register_user, authenticate_user, get_JWT
+from src.services.auth_service import (register_user, 
+                                       authenticate_user, 
+                                       get_JWT, 
+                                       remove_JWT)
 
 router = APIRouter(prefix="/v1/users/auth", tags=["auth"])
 
@@ -14,6 +17,8 @@ class RegisterRequest(BaseModel):
 class SessionRequest(BaseModel):
     email: EmailStr
     password: str
+class LogOutRequest(BaseModel):
+    JWT: str
 
 @router.post("/register")
 async def register(request: RegisterRequest):
@@ -27,7 +32,6 @@ async def register(request: RegisterRequest):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"An error occurred: {str(e)}"
         )
-
 
 @router.post("/login")
 async def login_user(request: SessionRequest):
@@ -71,3 +75,23 @@ async def login_validation(JWT: str = Query(...)):
             status_code = status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail = f"An error occurred: {str(e)}"
         )   
+
+@router.post("/logout")
+async def logout_user(request: LogOutRequest):
+    """Invalidates current user session and logs user out."""
+    try:
+        if not request.JWT:
+            raise HTTPException(
+                status_code = status.HTTP_401_UNAUTHORIZED, 
+                detail = "Token missing"
+            )
+        response = remove_JWT(request.JWT)
+        return JSONResponse(status_code = status.HTTP_201_CREATED, 
+                            content = response)
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        raise HTTPException(
+            status_code = status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail = f"An error occurred: {str(e)}"
+        )

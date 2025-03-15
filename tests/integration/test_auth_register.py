@@ -1,14 +1,14 @@
 from fastapi.testclient import TestClient
 from src.main import app
 from unittest.mock import patch
-from tests.conftest import sample_user_json
+from tests.conftest import sample_user_json # noqa: F401
 
 client = TestClient(app)
 
 # Mocking DynamoDB methods
 @patch("src.db.dynamodb_client.user_table.put_item")
 @patch("src.db.dynamodb_client.user_table.get_item")
-def test_register_user(mock_get_item, mock_put_item, sample_user_json):
+def test_register_user(mock_get_item, mock_put_item, sample_user_json): # noqa: F811
     
     # Mock DynamoDB responses 
     # No item for email, meaning email doesn't exist

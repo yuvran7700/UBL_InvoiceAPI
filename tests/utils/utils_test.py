@@ -1,5 +1,5 @@
 import boto3
-from src.utils.auth_helpers import save_session_to_dynamodb
+from src.repositories.auth_repository import save_session_to_dynamodb
 from datetime import datetime, timezone
 from jose import jwt
 

@@ -9,3 +9,4 @@ boto3
 abn
 passlib
 pydantic[email]
+python-jose
