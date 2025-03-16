@@ -8,6 +8,7 @@ line items, tax information, and payment terms.
 from datetime import date
 from typing import List, Optional
 from pydantic import BaseModel
+import models.common.party_attributes as PartyAttributes
 
 
 class ClassifiedTaxCategory(BaseModel):
@@ -92,11 +93,11 @@ class InvoiceType(BaseModel):
     invoice_type_code: str
     buyer_reference: Optional[str] = None
     order_reference: str
-    due_date: Optional[date] = None  # NEW FIELD
+    due_date: Optional[date] = None
     payment_means: Optional[str] = None
-    seller: Party
-    buyer: Party
+    accounting_supplier_party: PartyAttributes
+    accounting_customer_party: PartyAttributes
     invoice_lines: List[InvoiceLine]
     legal_monetary_total: float
-    additional_document_reference_id: Optional[str] = None  # NEW FIELD
+    additional_document_reference_id: Optional[str] = None
     status: str = "draft"
