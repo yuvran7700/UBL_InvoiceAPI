@@ -150,3 +150,42 @@ class user_service:
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=f"Error updating email: {str(e)}"
             )
+        
+    def update_username(self, request_data: update_username_request):   
+        """
+        Update a user's username.
+        
+        Args:
+            request_data (update_username_request): User data including current and new username
+            
+        Returns:
+            dict: Success message
+            
+        Raises:
+            HTTPException: If validation fails or database operations fail
+        """
+        try:
+            # Get the user from DynamoDB
+            user_data = user.get(request_data.email)
+            
+            # Update the user's username in DynamoDB
+            result = user.update_user(
+                user_id=user_data['user_id'],
+                update_data={'businessName': request_data.updated_username}
+            )
+
+            if not result.get('message'):
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail="Failed to update username"
+                )
+
+            return {"message": "Username updated successfully"}
+
+        except HTTPException:
+            raise
+        except Exception as e:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Error updating username: {str(e)}"
+            )
