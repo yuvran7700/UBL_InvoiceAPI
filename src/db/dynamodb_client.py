@@ -16,6 +16,7 @@ user_table = dynamodb.Table("users")
 # Reference the "sessions" table
 session_table = dynamodb.Table("sessions")
 
+
 def initialize_invoice_dynamodb():
     """
     Initializes and tests the connection to DynamoDB.
@@ -25,6 +26,7 @@ def initialize_invoice_dynamodb():
         print("Invoices Table Status:", invoice_table.table_status)
     except Exception as e:
         print("Error connecting to DynamoDB:", str(e))
+
 
 def initialize_session_dynamodb():
     """

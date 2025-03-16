@@ -1,25 +1,15 @@
 from fastapi import APIRouter, HTTPException, Query, status
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel, EmailStr
-from src.services.auth_service import (register_user, 
-                                       authenticate_user, 
-                                       get_JWT, 
-                                       remove_JWT,
-                                       token_logout_valid)
+from src.services.auth_service import (
+    register_user,
+    authenticate_user,
+    get_JWT,
+    remove_JWT,
+    token_logout_valid,
+)
+from src.models.auth_models import RegisterRequest, LogOutRequest, SessionRequest
 
 router = APIRouter(prefix="/v1/users/auth", tags=["auth"])
-
-class RegisterRequest(BaseModel):
-    businessName: str
-    email: EmailStr
-    password: str
-    abn: str
-
-class SessionRequest(BaseModel):
-    email: EmailStr
-    password: str
-class LogOutRequest(BaseModel):
-    JWT: str
 
 @router.post("/register")
 async def register(request: RegisterRequest):
@@ -31,8 +21,9 @@ async def register(request: RegisterRequest):
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"An error occurred: {str(e)}"
+            detail=f"An error occurred: {str(e)}",
         )
+
 
 @router.post("/login")
 async def login_user(request: SessionRequest):
@@ -41,21 +32,18 @@ async def login_user(request: SessionRequest):
         JWT = authenticate_user(request.dict())
         if not JWT:
             raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED, 
-                detail="Invalid credentials"
+                status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials"
             )
 
-        return JSONResponse(
-                status_code=status.HTTP_201_CREATED, 
-                content={"JWT": JWT}
-            )
+        return JSONResponse(status_code=status.HTTP_201_CREATED, content={"JWT": JWT})
     except HTTPException as e:
         raise e
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"An error occurred: {str(e)}"
+            detail=f"An error occurred: {str(e)}",
         )
+
 
 @router.get("/validate/login", response_model=dict)
 async def login_validation(JWT: str = Query(...)):
@@ -63,19 +51,19 @@ async def login_validation(JWT: str = Query(...)):
     try:
         if not JWT:
             raise HTTPException(
-                status_code = status.HTTP_401_UNAUTHORIZED, 
-                detail = "Token missing"
+                status_code=status.HTTP_401_UNAUTHORIZED, detail="Token missing"
             )
         response = get_JWT(JWT)
-        return JSONResponse(status_code = status.HTTP_201_CREATED, content = response)
+        return JSONResponse(status_code=status.HTTP_201_CREATED, content=response)
 
     except HTTPException as e:
         raise e
     except Exception as e:
         raise HTTPException(
-            status_code = status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail = f"An error occurred: {str(e)}"
-        )   
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"An error occurred: {str(e)}",
+        )
+
 
 @router.post("/logout")
 async def logout_user(request: LogOutRequest):
@@ -83,19 +71,18 @@ async def logout_user(request: LogOutRequest):
     try:
         if not request.JWT:
             raise HTTPException(
-                status_code = status.HTTP_401_UNAUTHORIZED, 
-                detail = "Token missing"
+                status_code=status.HTTP_401_UNAUTHORIZED, detail="Token missing"
             )
         response = remove_JWT(request.JWT)
-        return JSONResponse(status_code = status.HTTP_201_CREATED, 
-                            content = response)
+        return JSONResponse(status_code=status.HTTP_201_CREATED, content=response)
     except HTTPException as e:
         raise e
     except Exception as e:
         raise HTTPException(
-            status_code = status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail = f"An error occurred: {str(e)}"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"An error occurred: {str(e)}",
         )
+
 
 @router.get("/validate/logout", response_model=dict)
 async def logout_validation(JWT: str = Query(...)):
@@ -103,16 +90,15 @@ async def logout_validation(JWT: str = Query(...)):
     try:
         if not JWT:
             raise HTTPException(
-                status_code = status.HTTP_401_UNAUTHORIZED, 
-                detail = "Token missing"
+                status_code=status.HTTP_401_UNAUTHORIZED, detail="Token missing"
             )
         response = token_logout_valid(JWT)
-        return JSONResponse(status_code = status.HTTP_201_CREATED, content = response)
+        return JSONResponse(status_code=status.HTTP_201_CREATED, content=response)
 
     except HTTPException as e:
         raise e
     except Exception as e:
         raise HTTPException(
-            status_code = status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail = f"An error occurred: {str(e)}"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"An error occurred: {str(e)}",
         )

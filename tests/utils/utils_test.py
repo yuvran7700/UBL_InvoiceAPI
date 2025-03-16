@@ -55,3 +55,11 @@ def create_expired_token():
     )
     save_session_to_dynamodb("test1@example.com", JWT)
     return JWT
+
+def reset_too_many_attemps(email: str):
+    table_name = "users"
+    table = dynamodb.Table(table_name)
+    table.update_item(
+        Key={"email": email},
+        UpdateExpression="REMOVE failed_attempts, lockout_until"
+    )

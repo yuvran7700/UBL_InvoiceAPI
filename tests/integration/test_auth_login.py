@@ -1,7 +1,9 @@
 from fastapi.testclient import TestClient
 from src.main import app
 from tests.conftest import sample_user_json, sample_session_json # noqa: F401
-from tests.utils.utils_test import delete_all_user_items, delete_all_session_items 
+from tests.utils.utils_test import (delete_all_user_items, 
+                                    delete_all_session_items, 
+                                    reset_too_many_attemps)
 
 client = TestClient(app)
 
@@ -12,6 +14,7 @@ def test_login_user_wrong_password(sample_user_json): # noqa: F811
 
     response = client.post("/v1/users/auth/register", 
                            json=sample_user_json) # noqa: F811
+    assert response.status_code == 201
 
     sample_session = {
         "email": "test1@example.com",
@@ -40,6 +43,73 @@ def test_login_user_wrong_email(sample_user_json): # noqa: F811
     response = client.post("/v1/users/auth/login", json = sample_session) # noqa: F811
     assert response.status_code == 404
     assert response.json()["detail"] == "User not found"
+
+def test_login_failed_attempt(sample_user_json): # noqa: F811
+
+    delete_all_user_items()
+    delete_all_session_items()
+
+    client.post("/v1/users/auth/register", json = sample_user_json) # noqa: F811
+
+    sample_session = {
+        "email": "test1@example.com",
+        "password": "wrong_password"
+    }
+
+    # Send POST request to login the user
+    response = client.post("/v1/users/auth/login", 
+                           json=sample_session) # noqa: F811
+    assert response.status_code == 401
+
+    response = client.post("/v1/users/auth/login", 
+                           json=sample_session) # noqa: F811
+    assert response.status_code == 401
+
+    response = client.post("/v1/users/auth/login", 
+                           json=sample_session) # noqa: F811
+    assert response.status_code == 401
+
+    response = client.post("/v1/users/auth/login", 
+                           json=sample_session) # noqa: F811
+    assert response.status_code == 403
+    assert response.json()["detail"] == "Too many attempts, try again later."
+
+def test_login_failed_reset_success(sample_user_json, sample_session_json): # noqa: F811
+
+    delete_all_user_items()
+    delete_all_session_items()
+
+    client.post("/v1/users/auth/register", json = sample_user_json) # noqa: F811
+
+    sample_session = {
+        "email": "test1@example.com",
+        "password": "wrong_password"
+    }
+
+    # Send POST request to login the user
+    response = client.post("/v1/users/auth/login", 
+                           json=sample_session) # noqa: F811
+    assert response.status_code == 401
+
+    response = client.post("/v1/users/auth/login", 
+                           json=sample_session) # noqa: F811
+    assert response.status_code == 401
+
+    response = client.post("/v1/users/auth/login", 
+                           json=sample_session) # noqa: F811
+    assert response.status_code == 401
+
+    response = client.post("/v1/users/auth/login", 
+                           json=sample_session) # noqa: F811
+    assert response.status_code == 403
+    assert response.json()["detail"] == "Too many attempts, try again later."
+
+    reset_too_many_attemps("test1@example.com")
+
+    response = client.post("/v1/users/auth/login", 
+                           json=sample_session_json) # noqa: F811
+    assert response.status_code == 201
+    assert "JWT" in response.json()
 
 def test_login_user_success(sample_session_json, sample_user_json): # noqa: F811
 
@@ -87,24 +157,3 @@ def test_login_different_tokens(sample_session_json, sample_user_json): # noqa: 
     data2 = response2.json()
 
     assert data1["JWT"] != data2["JWT"]
-
-'''
-
-def test_login_multiple_tokens(sample_user_json, sample_session_json): # noqa: F811
-
-    print("in test")
-    delete_all_user_items()
-    delete_all_session_items()
-
-    client.post("/v1/users/auth/register", json = sample_user_json) # noqa: F811
-
-    response = client.post("/v1/users/auth/login", 
-                           json=sample_session_json) # noqa: F811
-    assert response.status_code == 201
-
-    response = client.post("/v1/users/auth/login", 
-                           json=sample_session_json) # noqa: F811
-    assert response.status_code == 401
-    assert response.json()["detail"] == "Invalid token - already exists"
-    
-'''
