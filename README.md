@@ -145,6 +145,48 @@ Unfortunately, at the moment you are just working individually. But GitLab still
 
 ### 2.5. Branching
 
+# Git Branching Guide
+
+This guide outlines how to create and manage branches following our team's naming conventions for better collaboration and JIRA tracking.
+
+## Git Best Practices
+
+- **Deploy Branch Layer**:  
+  You need to have an additional layer called `deploy` in your Git workflow.  
+  - Always pull and push from/to `deploy`, **NOT `main`**.  
+  - This ensures that the `main` pipeline is never failing and remains stable for production releases.
+
+- **Branch Naming Convention**:  
+  Follow the naming conventions outlined above to ensure consistency across your repository and improve collaboration.
+
+## Branch Naming Convention
+
+Each branch should follow this format:
+```
+Category          Meaning
+------------------------------------------------------
+hotfix            Quickly fixing critical issues,
+                  usually with a temporary solution
+bugfix            Fixing a bug
+feature           Adding, removing, or modifying a feature
+test              Experimenting with something which is not an issue
+wip               Work in progress
+
+```
+```
+feature/M15A-<JIRA-TICKET-ID>-<feature-name>
+fix/M15A-<JIRA-TICKET-ID>-<bug-fix-description>
+hotfix/M15A-<JIRA-TICKET-ID>-<critical-fix-description>
+```
+
+### Examples:
+- `feature/M15A-135-account-registration`
+- `fix/M15A-142-password-validation`
+- `hotfix/M15A-150-auth-token-expiry`
+
+
+---
+
 **Branches** are a vital part of git and are used so people can work on separate parts of the codebase and not interfere with one another or risk breaking a product that is visible to the client. Breaking something on one branch does not have an impact on any other.
 
 Good use of git will involve separating parts of the project that can be worked on separately and having them in their own feature branch. These branches can then be merged when they are ready.
@@ -209,6 +251,7 @@ To merge your changes from above:
 1. Switch back to the master branch using one of the commands from the above section
 2. Merge in the changes you made in the other branch `git merge first_new_branch`
 3. Push the successful merge to the server to update the master branch on the server
+
 
 ### 2.7. Merge Conflicts
 
@@ -414,20 +457,19 @@ The SENG2011 Invoicing Task involves building a simple invoicing system using Py
 The project follows a standard Python project structure:
 
 ```
-invoiceapi/
-├── src/
-│   ├── main.py              # Entry point for the Flask application
-│   ├── routes/              # Contains API route definitions
-│   │   ├── __init__.py
-│   │   └── invoice_routes.py
-│   └── models/              # Contains data models (e.g., Invoice)
-│       ├── __init__.py
-│       └── invoice.py
-├── tests/                   # Contains unit and integration tests
-│   ├── __init__.py
-│   └── test_main.py
-├── requirements.txt         # Lists project dependencies
-└── README.md                # Project documentation
+project-root/
+│── src/                    
+│   │── routes/             # 📂 API route handlers
+│   │── models/             # 📂 Pydantic models for data validation
+│   │── services/           # 📂 Business logic & CRUD operations
+│   │── db/                 # 📂 Database connection & queries (DynamoDB)
+│   │── utils/              # 📂 Helper utilities (parsers, validators, etc.)
+│   │── validators/             
+│   │── exceptions/   
+│── tests/                  
+│   │── fixtures/           # 📂 Stores reusable pytest fixtures
+│── test_data/
+
 ```
 
 ### 4.4. Testing
