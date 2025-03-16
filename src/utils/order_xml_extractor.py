@@ -1,7 +1,6 @@
-#src/utils/order_xml_extractor.py
 """
-Extracts raw order data from a UBL order XML document.
-Returns a structured dictionary that includes nested Contact and TaxScheme objects.
+Extracts raw order data from a UBL XML document.
+Returns a structured dictionary including nested Contact and TaxScheme objects.
 """
 
 from datetime import datetime
@@ -11,6 +10,9 @@ from models.common.contact import Contact
 from models.common.tax_scheme import TaxScheme, PartyTaxScheme
 
 class OrderXmlExtractor:
+    """
+    Utility class to extract structured order data from UBL XML.
+    """
     NAMESPACES = {
         "cbc": "urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2",
         "cac": "urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2",
@@ -18,6 +20,19 @@ class OrderXmlExtractor:
 
     @staticmethod
     def get_text(element, path, required=False, error_message=None, ns=None):
+        """
+        Retrieves the trimmed text from an XML element based on the provided XPath.
+
+        Args:
+            element: The XML element.
+            path (str): XPath to the desired child element.
+            required (bool, optional): Whether the text is required.
+            error_message (str, optional): Custom error message if required text is missing.
+            ns (dict, optional): Namespace mapping.
+
+        Returns:
+            str or None: The trimmed text, or None if not found.
+        """
         ns = ns or OrderXmlExtractor.NAMESPACES
         child = element.find(path, ns)
         text = child.text.strip() if child is not None and child.text is not None else None
@@ -30,6 +45,19 @@ class OrderXmlExtractor:
 
     @staticmethod
     def parse_date(text, field_name):
+        """
+        Parses a date string in the format YYYY-MM-DD.
+
+        Args:
+            text (str): Date string.
+            field_name (str): Field name for error messaging.
+
+        Returns:
+            date: Parsed date object.
+
+        Raises:
+            HTTPException: If the date string is invalid.
+        """
         try:
             return datetime.strptime(text, "%Y-%m-%d").date()
         except ValueError:
@@ -37,6 +65,19 @@ class OrderXmlExtractor:
 
     @staticmethod
     def parse_float(text, field_name):
+        """
+        Parses a string to a float.
+
+        Args:
+            text (str): The numeric string.
+            field_name (str): Field name for error messaging.
+
+        Returns:
+            float: Parsed float value.
+
+        Raises:
+            HTTPException: If the conversion fails.
+        """
         try:
             return float(text)
         except (TypeError, ValueError):
@@ -46,6 +87,16 @@ class OrderXmlExtractor:
 
     @staticmethod
     def format_address(address_elem, ns=None) -> str:
+        """
+        Formats an address element into a single comma-separated string.
+
+        Args:
+            address_elem: The XML element containing address parts.
+            ns (dict, optional): Namespace mapping.
+
+        Returns:
+            str: Formatted address.
+        """
         if address_elem is None:
             return ""
         ns = ns or OrderXmlExtractor.NAMESPACES
@@ -62,7 +113,16 @@ class OrderXmlExtractor:
 
     @staticmethod
     def extract_contact(contact_elem, ns=None):
-        """Extracts a Contact object from the given XML element."""
+        """
+        Extracts a Contact object from an XML element.
+
+        Args:
+            contact_elem: The XML element for contact.
+            ns (dict, optional): Namespace mapping.
+
+        Returns:
+            Contact or None: Extracted Contact object or None if not provided.
+        """
         if contact_elem is None:
             return None
         ns = ns or OrderXmlExtractor.NAMESPACES
@@ -75,7 +135,16 @@ class OrderXmlExtractor:
 
     @staticmethod
     def extract_tax_scheme(tax_scheme_elem, ns=None):
-        """Extracts a TaxScheme object from the given XML element."""
+        """
+        Extracts a TaxScheme object from an XML element.
+
+        Args:
+            tax_scheme_elem: The XML element for the tax scheme.
+            ns (dict, optional): Namespace mapping.
+
+        Returns:
+            TaxScheme or None: The extracted TaxScheme or None if not available.
+        """
         if tax_scheme_elem is None:
             return None
         ns = ns or OrderXmlExtractor.NAMESPACES
@@ -86,7 +155,16 @@ class OrderXmlExtractor:
 
     @staticmethod
     def extract_party_tax_scheme(party_tax_scheme_elem, ns=None):
-        """Extracts a PartyTaxScheme object from the given XML element."""
+        """
+        Extracts a PartyTaxScheme object from an XML element.
+
+        Args:
+            party_tax_scheme_elem: The XML element for the party tax scheme.
+            ns (dict, optional): Namespace mapping.
+
+        Returns:
+            PartyTaxScheme or None: The extracted party tax scheme or None if not available.
+        """
         if party_tax_scheme_elem is None:
             return None
         ns = ns or OrderXmlExtractor.NAMESPACES
@@ -100,20 +178,29 @@ class OrderXmlExtractor:
 
     @staticmethod
     def extract(xml_content: bytes) -> dict:
+        """
+        Extracts order data from XML content and returns a structured dictionary.
+
+        Args:
+            xml_content (bytes): The raw XML content.
+
+        Returns:
+            dict: A dictionary containing header, buyer, seller, payment terms, and invoice_lines.
+        """
         try:
             root = ET.fromstring(xml_content)
         except ET.ParseError:
             raise HTTPException(status_code=400, detail="Invalid XML content")
         ns = OrderXmlExtractor.NAMESPACES
 
-        # Header extraction
+        # Header extraction with updated keys.
         header = {
-            "order_id": OrderXmlExtractor.get_text(root, "./cbc:ID", required=True, error_message="Missing order ID in XML", ns=ns),
-            "sales_order_id": OrderXmlExtractor.get_text(root, "./cbc:SalesOrderID", ns=ns) or "",
+            "order_reference": OrderXmlExtractor.get_text(root, "./cbc:ID", required=True, error_message="Missing order ID in XML", ns=ns),
+            "buyer_reference": OrderXmlExtractor.get_text(root, "./cbc:SalesOrderID", ns=ns) or "",
             "note": OrderXmlExtractor.get_text(root, "./cbc:Note", ns=ns),
         }
 
-        # Buyer extraction
+        # Buyer extraction.
         buyer_customer = root.find("./cac:BuyerCustomerParty", ns)
         if buyer_customer is None:
             raise HTTPException(status_code=400, detail="Missing BuyerCustomerParty in XML")
@@ -133,7 +220,7 @@ class OrderXmlExtractor:
             "buyer_tax_scheme": OrderXmlExtractor.extract_party_tax_scheme(buyer_tax_scheme_elem, ns),
         }
 
-        # Seller extraction
+        # Seller extraction.
         seller_supplier = root.find("./cac:SellerSupplierParty", ns)
         if seller_supplier is None:
             raise HTTPException(status_code=400, detail="Missing SellerSupplierParty in XML")
@@ -149,26 +236,11 @@ class OrderXmlExtractor:
             "seller_tax_scheme": OrderXmlExtractor.extract_party_tax_scheme(seller_tax_scheme_elem, ns),
         }
 
-        # Monetary totals
-        anticipated_total = root.find("./cac:AnticipatedMonetaryTotal", ns)
-        if anticipated_total is None:
-            raise HTTPException(status_code=400, detail="Missing AnticipatedMonetaryTotal in XML")
-        monetary = {
-            "anticipated_line_extension_amount": OrderXmlExtractor.parse_float(
-                OrderXmlExtractor.get_text(anticipated_total, "./cbc:LineExtensionAmount", required=True, error_message="Missing LineExtensionAmount in XML", ns=ns),
-                "LineExtensionAmount"
-            ),
-            "anticipated_payable_amount": OrderXmlExtractor.parse_float(
-                OrderXmlExtractor.get_text(anticipated_total, "./cbc:PayableAmount", required=True, error_message="Missing PayableAmount in XML", ns=ns),
-                "PayableAmount"
-            ),
-        }
-
-        # Payment terms
+        # Payment terms extraction.
         transaction_conditions = root.find("./cac:TransactionConditions", ns)
         payment_terms = OrderXmlExtractor.get_text(transaction_conditions, "./cbc:Description", ns=ns) if transaction_conditions is not None else None
 
-        # Order lines
+        # Order lines extraction.
         order_lines = []
         for elem in root.findall("./cac:OrderLine", ns):
             line_note = OrderXmlExtractor.get_text(elem, "./cbc:Note", ns=ns)
@@ -177,10 +249,19 @@ class OrderXmlExtractor:
                 continue
             line_id = OrderXmlExtractor.get_text(line_item_elem, "./cbc:ID", ns=ns) or ""
             quantity_str = OrderXmlExtractor.get_text(line_item_elem, "./cbc:Quantity", ns=ns)
-            line_extension_str = OrderXmlExtractor.get_text(line_item_elem, "./cbc:LineExtensionAmount", ns=ns)
-            tax_amount_str = OrderXmlExtractor.get_text(line_item_elem, "./cbc:TotalTaxAmount", ns=ns)
+            
+            # Extract price element and calculate unit price as PriceAmount / BaseQuantity.
             price_elem = line_item_elem.find("./cac:Price", ns)
-            unit_price_str = (OrderXmlExtractor.get_text(price_elem, "./cbc:PriceAmount", ns=ns) if price_elem is not None else None)
+            if price_elem is None:
+                raise HTTPException(status_code=400, detail="Missing Price element in OrderLine")
+            price_amount_str = OrderXmlExtractor.get_text(price_elem, "./cbc:PriceAmount", ns=ns)
+            base_quantity_str = OrderXmlExtractor.get_text(price_elem, "./cbc:BaseQuantity", ns=ns)
+            price_amount = float(price_amount_str)
+            base_quantity = float(base_quantity_str)
+            if base_quantity == 0:
+                raise HTTPException(status_code=400, detail="BaseQuantity cannot be zero in OrderLine")
+            unit_price = price_amount / base_quantity
+
             item_elem = line_item_elem.find("./cac:Item", ns)
             if item_elem is None:
                 continue
@@ -188,17 +269,20 @@ class OrderXmlExtractor:
             item_name = OrderXmlExtractor.get_text(item_elem, "./cbc:Name", ns=ns) or ""
             buyers_item_id = OrderXmlExtractor.get_text(item_elem, "./cac:BuyersItemIdentification/cbc:ID", ns=ns) or ""
             sellers_item_id = OrderXmlExtractor.get_text(item_elem, "./cac:SellersItemIdentification/cbc:ID", ns=ns) or ""
+            
             order_line = {
                 "note": line_note,
                 "line_id": line_id,
                 "quantity": OrderXmlExtractor.parse_float(quantity_str, "Quantity"),
-                "line_extension_amount": OrderXmlExtractor.parse_float(line_extension_str, "LineExtensionAmount"),
-                "total_tax_amount": OrderXmlExtractor.parse_float(tax_amount_str, "TotalTaxAmount"),
-                "unit_price": OrderXmlExtractor.parse_float(unit_price_str, "PriceAmount") if unit_price_str else 0.0,
+                "line_extension_amount": 0.0,  # Default; will be calculated later.
+                "total_tax_amount": 0.0,       # Default; will be calculated later.
+                "unit_price": unit_price,
                 "item_description": item_description,
                 "item_name": item_name,
                 "buyers_item_id": buyers_item_id,
                 "sellers_item_id": sellers_item_id,
+                "discount": 0.0,
+                "charge": 0.0
             }
             order_lines.append(order_line)
 
@@ -206,7 +290,6 @@ class OrderXmlExtractor:
             "header": header,
             "buyer": buyer,
             "seller": seller,
-            "monetary": monetary,
             "payment_terms": payment_terms,
-            "order_lines": order_lines,
+            "invoice_lines": order_lines,
         }

@@ -1,7 +1,6 @@
-#src/order_type_builder/order_director.py
 """
 Director for constructing an OrderType object from XML.
-Uses OrderXmlExtractor to get structured data and OrderBuilder to create the final OrderType.
+Utilizes the OrderXmlExtractor to parse XML and the OrderBuilder to create the final OrderType.
 """
 
 from fastapi import HTTPException
@@ -11,24 +10,31 @@ from utils.order_xml_extractor import OrderXmlExtractor
 from src.models.common.party_attributes import PartyAttributes
 
 class OrderDirector:
+    """
+    Director class that orchestrates the construction of an OrderType from XML.
+    """
     @staticmethod
     def construct_order_from_xml(xml_content: bytes) -> OrderType:
-        # Extract data from XML
-        data = OrderXmlExtractor.extract(xml_content)
+        """
+        Constructs an OrderType from the provided XML content.
 
-        # Use OrderBuilder to construct the OrderType
+        Args:
+            xml_content (bytes): The XML content of the order.
+
+        Returns:
+            OrderType: The constructed order.
+        """
+        data = OrderXmlExtractor.extract(xml_content)
         builder = OrderBuilder()
         order = (builder
-                 .set_order_id(data["header"]["order_id"])
-                 .set_sales_order_id(data["header"]["sales_order_id"])
+                 .set_order_id(data["header"]["order_reference"])
+                 .set_sales_order_id(data["header"]["buyer_reference"])
                  .set_note(data["header"]["note"])
-                 .set_buyer(data["buyer"])  # Pass buyer data as a dictionary
-                 .set_seller(data["seller"])  # Pass seller data as a dictionary
-                 .set_anticipated_line_extension_amount(data["monetary"]["anticipated_line_extension_amount"])
-                 .set_anticipated_payable_amount(data["monetary"]["anticipated_payable_amount"])
+                 .set_buyer(data["buyer"])
+                 .set_seller(data["seller"])
                  .set_payment_terms(data["payment_terms"])
                  .set_order_lines([
-                     OrderLineType(**line) for line in data["order_lines"]
+                     OrderLineType(**line) for line in data["invoice_lines"]
                  ])
                  .build())
         return order

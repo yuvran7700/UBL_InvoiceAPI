@@ -20,7 +20,7 @@ async def upload_order(file: UploadFile = File(...)):
 
     :param file: The uploaded XML file.
     :return: The created draft invoice.
-    :raises HTTPException: If the file type is not supported 
+    :raises HTTPException: If the file type is not supported
         or if there is an error parsing the XML.
     """
     if file.content_type not in ["application/xml", "text/xml"]:
