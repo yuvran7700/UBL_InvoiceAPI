@@ -35,6 +35,9 @@ lint:
 
 unit_tests:
   stage: tests
+  rules:
+    - exists:
+        - tests/unit/**  # Checks if there are any files in tests/unit folder
   script:
     - pip install pytest
     - pytest tests/unit/
