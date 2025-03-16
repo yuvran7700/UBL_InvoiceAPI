@@ -1,15 +1,14 @@
+"""Adding routes for API usage"""
 from fastapi import FastAPI
-from routes.auth_routes import router as auth_router  # Adjust import as neede
+from src.routes.auth_routes import router as auth_router  # Adjust import as neede
 
 app = FastAPI()
-
 app.include_router(auth_router)
-
 
 @app.get("/")
 def read_root():
+    """Ensuring API is running"""
     return {"message": "UBL Invoice API is running!"}
-
 
 if __name__ == "__main__":
     import uvicorn

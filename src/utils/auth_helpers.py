@@ -1,6 +1,9 @@
+"""
+Helper methods to assist with auth services
+"""
+from datetime import datetime, timedelta, timezone
 from passlib.context import CryptContext
 from fastapi import HTTPException, status
-from datetime import datetime, timedelta, timezone
 from jose import JWTError, jwt
 
 SECRET_KEY = "a3eddf3292bac4ac269ed39a74e6760ed3c34ff3a15f4cb17c61520da8c88b05"
@@ -13,11 +16,30 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 # hash-password helper function
 def hash_password(password: str) -> str:
-    """Hash the user's password using bcrypt"""
+    """
+        Hash the user's password using bcrypt.
+        
+        Args:
+            password (str): users password
+            
+        Returns:
+            str: hashed password
+            
+    """
     return pwd_context.hash(password)
 
 
 def create_access_token(data: dict):
+    """
+        Creates encoded JWT token
+        
+        Args:
+            data (dict): users login information
+            
+        Returns:
+            str: encoded JWT
+            
+    """
     to_encode = {"email": data["email"]}
     expiration_time = datetime.now(timezone.utc) + timedelta(
         minutes=SESSION_EXPIRE_MINUTES
@@ -28,7 +50,20 @@ def create_access_token(data: dict):
     return encoded_jwt
 
 
-def decode_token(JWT: str):
+def decode_token(JWT: str): # pylint: disable = invalid-name
+    """
+        De-encrypts JWT.
+        
+        Args:
+            JWT (str): JSON Web token
+            
+        Returns:
+            str: decoded JWT
+
+        Raises:
+            HTTPException: If token is invalid
+            
+    """
     try:
         payload = jwt.decode(JWT, SECRET_KEY, algorithms=[ALGORITHM])
         return payload

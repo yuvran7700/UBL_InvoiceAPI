@@ -1,4 +1,5 @@
 # tests/conftest.py
+"""Adds project root to Python path for data testing."""
 import sys
 import os
 from tests.fixtures.user_fixtures import sample_user_json  # noqa: F401
