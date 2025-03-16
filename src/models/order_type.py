@@ -3,15 +3,15 @@ Pydantic models for order data extracted from a UBL order document.
 Includes header, party, and invoice line details.
 """
 
-from datetime import date
 from typing import List, Optional
 from pydantic import BaseModel
-from models.common.party_attributes import PartyAttributes
+from src.models.common.party_attributes import PartyAttributes
+
 
 class OrderLineType(BaseModel):
     """
     Represents an individual invoice line (formerly order line) for an order.
-    
+
     Attributes:
         note: Optional note for the invoice line.
         line_id: Unique identifier for the invoice line.
@@ -26,6 +26,7 @@ class OrderLineType(BaseModel):
         discount: Optional discount applied (default 0.0).
         charge: Optional additional charge applied (default 0.0).
     """
+
     note: Optional[str]
     line_id: str
     quantity: float
@@ -39,10 +40,11 @@ class OrderLineType(BaseModel):
     discount: Optional[float] = 0.0
     charge: Optional[float] = 0.0
 
+
 class OrderType(BaseModel):
     """
     Represents an order extracted from a UBL XML order document.
-    
+
     Attributes:
         order_reference: Unique order reference (formerly order_id).
         buyer_reference: Buyer reference identifier (formerly sales_order_id).
@@ -52,6 +54,7 @@ class OrderType(BaseModel):
         payment_terms: Payment terms associated with the order.
         invoice_lines: List of invoice lines (formerly order_lines).
     """
+
     order_reference: str
     buyer_reference: str
     note: Optional[str]

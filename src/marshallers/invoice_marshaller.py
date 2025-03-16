@@ -3,11 +3,12 @@ Module for converting an OrderType into an InvoiceType.
 Handles calculation of monetary totals and assigns invoice-specific fields.
 """
 
-from nanoid import generate
 from datetime import date
+from nanoid import generate
 from src.models.order_type import OrderType
 from src.models.invoice_type import InvoiceType
 from src.utils.invoice_calculations import calculate_line_extension
+
 
 class InvoiceMarshaller:
     """
@@ -35,7 +36,7 @@ class InvoiceMarshaller:
             legal_monetary_total=total_invoice_amount,
             payment_means=order.payment_terms,
             order=order,  # Embed the complete order data.
-            status="draft"
+            status="draft",
         )
 
     @staticmethod
@@ -57,8 +58,10 @@ class InvoiceMarshaller:
             # Use discount and charge if defined; default to 0.0.
             discount = getattr(line, "discount", 0.0)
             charge = getattr(line, "charge", 0.0)
-            
+
             # Calculate and update the line's extension amount.
-            line.line_extension_amount = calculate_line_extension(quantity, line.unit_price, discount, charge)
+            line.line_extension_amount = calculate_line_extension(
+                quantity, line.unit_price, discount, charge
+            )
             total += line.line_extension_amount
         return total

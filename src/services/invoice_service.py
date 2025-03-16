@@ -8,6 +8,7 @@ from src.marshallers.invoice_marshaller import InvoiceMarshaller
 from src.models.order_type import OrderType
 from src.repositories.invoice_repository import save_invoice
 
+
 def create_invoice(order: OrderType) -> InvoiceType:
     """
     Creates an invoice from an order and persists it using the repository.
