@@ -1,4 +1,4 @@
-#src/order_type_builder/order_builder.py
+#src/order_type_creation/order_builder.py
 """
 Builder for constructing an OrderType object step-by-step.
 """
@@ -14,7 +14,6 @@ class OrderBuilder:
     def __init__(self):
         self._order_id: Optional[str] = None
         self._sales_order_id: Optional[str] = None
-        self._issue_date: Optional[date] = None
         self._note: Optional[str] = None
         self._buyer: Optional[PartyAttributes] = None
         self._seller: Optional[PartyAttributes] = None
@@ -29,10 +28,6 @@ class OrderBuilder:
 
     def set_sales_order_id(self, sales_order_id: str) -> "OrderBuilder":
         self._sales_order_id = sales_order_id
-        return self
-
-    def set_issue_date(self, issue_date: date) -> "OrderBuilder":
-        self._issue_date = issue_date
         return self
 
     def set_note(self, note: Optional[str]) -> "OrderBuilder":
@@ -91,15 +86,14 @@ class OrderBuilder:
 
     def build(self) -> OrderType:
         # Validate required fields
-        if not self._order_id or not self._issue_date or not self._buyer or not self._seller:
+        if not self._order_id or not self._buyer or not self._seller:
             raise ValueError("Missing required order fields.")
         return OrderType(
             order_id=self._order_id,
             sales_order_id=self._sales_order_id or "",
-            issue_date=self._issue_date,
             note=self._note,
-            buyer=self._buyer.dict(),
-            seller=self._seller.dict(),
+            AccountingCustomerParty=self._buyer.dict(),
+            AccountingSupplierParty=self._seller.dict(),
             anticipated_line_extension_amount=self._anticipated_line_extension_amount,
             anticipated_payable_amount=self._anticipated_payable_amount,
             payment_terms=self._payment_terms,

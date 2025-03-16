@@ -110,10 +110,6 @@ class OrderXmlExtractor:
         header = {
             "order_id": OrderXmlExtractor.get_text(root, "./cbc:ID", required=True, error_message="Missing order ID in XML", ns=ns),
             "sales_order_id": OrderXmlExtractor.get_text(root, "./cbc:SalesOrderID", ns=ns) or "",
-            "issue_date": OrderXmlExtractor.parse_date(
-                OrderXmlExtractor.get_text(root, "./cbc:IssueDate", required=True, error_message="Missing IssueDate in XML", ns=ns),
-                "IssueDate"
-            ),
             "note": OrderXmlExtractor.get_text(root, "./cbc:Note", ns=ns),
         }
 

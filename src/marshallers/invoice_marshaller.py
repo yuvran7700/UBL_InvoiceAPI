@@ -1,125 +1,26 @@
-# marshallers/invoice_marshaller.py
-
-"""
-Invoice Marshaller.
-Handles the transformation (marshalling) of an OrderType into an InvoiceType.
-"""
-
+# src/invoice_type_creation/invoice_marshaller.py
+from nanoid import generate
 from datetime import date
-import random
-import uuid
 from src.models.order_type import OrderType
-from src.models.invoice_type import (
-    InvoiceType,
-    Party,
-    InvoiceLine,
-    ClassifiedTaxCategory,
-)
-
+from src.models.invoice_type import InvoiceType
 
 class InvoiceMarshaller:
     @staticmethod
-    def helper_map_parties(order: OrderType):
-        """
-        Maps seller and buyer details from the order to Party objects.
-        """
-        seller = Party(
-            name=order.seller_name,
-            account=order.seller_account,
-            address=order.seller_address,
-            ttax_identifier=(
-                order.seller_tax_identifier
-                if hasattr(order, "seller_tax_identifier")
-                and order.seller_tax_identifier
-                else "GST12345678"
-            ),  # Ideally retrieved from seller master data.
-            electronic_address="supplier@example.com",
-        )
-        buyer = Party(
-            name=order.buyer_name,
-            customer_account_id = order.buyer_account_customer_id
-            supplier_account_id = order.buyer_supplier_customer_id
-            address=order.buyer_address,
-            tax_identifier="GST87654321",  # Ideally retrieved from buyer master data.
-            electronic_address="buyer@example.com",
-        )
-        return seller, buyer
-
-    @staticmethod
-    def helper_map_invoice_lines(order: OrderType):
-        """
-        Transforms order lines into invoice lines and computes the total.
-        """
-        invoice_lines = []
-        line_total = 0.0
-        for idx, order_line in enumerate(order.order_lines, start=1):
-            product_code = (
-                order_line.buyers_item_id
-            )  # Use buyer's item ID as product code.
-
-            classified_tax_category = None
-            if order_line.line_extension_amount > 0 and order_line.total_tax_amount > 0:
-                tax_rate = (
-                    order_line.total_tax_amount / order_line.line_extension_amount
-                ) * 100
-                classified_tax_category = ClassifiedTaxCategory(
-                    tax_category_code="S",  # "S" indicates standard rate (adjust as needed)
-                    tax_rate=round(tax_rate, 2),
-                    tax_scheme="GST",
-                )
-
-            invoice_line = InvoiceLine(
-                id=idx,
-                description=order_line.item_description or order_line.item_name,
-                product_code=product_code,
-                quantity=order_line.quantity,
-                unit_price=order_line.unit_price,
-                line_extension_amount=order_line.line_extension_amount,
-                classified_tax_category=classified_tax_category,
-            )
-            invoice_lines.append(invoice_line)
-            line_total += order_line.line_extension_amount
-
-        return invoice_lines, line_total
-
-    @staticmethod
-    def helper_generate_invoice_id():
-        """
-        Generates a unique invoice ID.
-        """
-        return str(uuid.uuid4())
-
-    @staticmethod
     def marshall_order_to_invoice(order: OrderType) -> InvoiceType:
-        """
-        Marshalls an OrderType object into an InvoiceType object.
+        # For example, assume the total invoice amount is the anticipated_payable_amount.
+        total = order.anticipated_payable_amount
+        
+        # Generate a unique invoice ID.
+        invoice_id = generate(size=10)
 
-        Args:
-            order (OrderType): The enriched order data.
-
-        Returns:
-            InvoiceType: The draft invoice generated from the order.
-        """
-        seller, buyer = InvoiceMarshaller.helper_map_parties(order)
-
-        invoice_lines, line_total = InvoiceMarshaller.helper_map_invoice_lines(order)
-
-        invoice_id = InvoiceMarshaller.helper_generate_invoice_id()
-
-        payment_means = order.payment_terms
-
-        # Create and return the InvoiceType.
+        
+        # Create and return an InvoiceType that composes the order data.
         return InvoiceType(
             invoice_id=invoice_id,
             issue_date=date.today(),
-            invoice_type_code="380",  # Example: "380" for a commercial invoice.
-            buyer_reference=order.sales_order_id,
-            order_reference=order.order_id,
-            due_date=None,  # Optionally compute or map due date.
-            payment_means=payment_means,
-            seller=seller,
-            buyer=buyer,
-            invoice_lines=invoice_lines,
-            legal_monetary_total=line_total,
-            status="draft",
+            invoice_type_code="380",  # Example code for a commercial invoice.
+            legal_monetary_total=total,
+            payment_means=order.payment_terms,
+            order=order,  # Composition: embed the entire order data.
+            status="draft"
         )

@@ -17,5 +17,5 @@ def create_invoice(order: OrderType) -> InvoiceType:
     Creates an invoice from an order and persists it using the repository.
     """
     invoice = InvoiceMarshaller.marshall_order_to_invoice(order)
-    save_invoice(invoice)  # Use repository to persist the invoice
+    save_invoice(invoice)
     return invoice

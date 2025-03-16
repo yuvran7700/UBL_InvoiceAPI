@@ -6,7 +6,7 @@ Uses OrderXmlExtractor to get structured data and OrderBuilder to create the fin
 
 from fastapi import HTTPException
 from src.models.order_type import OrderType, OrderLineType
-from src.order_type_builder.order_builder import OrderBuilder
+from src.order_type_creation.order_builder import OrderBuilder
 from utils.order_xml_extractor import OrderXmlExtractor
 from src.models.common.party_attributes import PartyAttributes
 
@@ -21,7 +21,6 @@ class OrderDirector:
         order = (builder
                  .set_order_id(data["header"]["order_id"])
                  .set_sales_order_id(data["header"]["sales_order_id"])
-                 .set_issue_date(data["header"]["issue_date"])
                  .set_note(data["header"]["note"])
                  .set_buyer(data["buyer"])  # Pass buyer data as a dictionary
                  .set_seller(data["seller"])  # Pass seller data as a dictionary
