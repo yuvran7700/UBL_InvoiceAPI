@@ -3,16 +3,16 @@ from fastapi import HTTPException, status
 from passlib.context import CryptContext
 
 from src.utils.auth_helpers import  hash_password
-from src.repositories.auth_repository import UserTable
+from src.repositories.auth_repository import user
 from src.validators.auth_validator import validate_abn, check_email_exists, validate_password
-from src.models.auth_models import RegisterRequest, UpdateEmailRequest, UpdatePasswordRequest
+from src.models.auth_models import RegisterRequest, UpdateEmailRequest, UpdatePasswordRequest, UpdateBusinessNameRequest
 from src.db.dynamodb_client import user_table
 
 
 # Initialize the password hashing context
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-class UserService: 
+class user_service: 
     def register_user(self, request_data: RegisterRequest):
         """
         Register a new user with validation and error handling.
@@ -42,7 +42,7 @@ class UserService:
             }
 
             # Save to database
-            UserTable.save(user_item)
+            user.save(user_item)
 
             return {
                 "message": "User registered successfully",
@@ -76,10 +76,10 @@ class UserService:
         """
         try:
             # Get the user from DynamoDB
-            user = UserTable.get(request_data.email)
+            user_data = user.get(request_data.email)
             
             # Verify the current password is correct
-            if not pwd_context.verify(request_data.password, user.get('hashed_password')):
+            if not pwd_context.verify(request_data.password, user_data.get('hashed_password')):
                 raise HTTPException(
                     status_code=status.HTTP_401_UNAUTHORIZED,
                     detail="Current password is incorrect"
@@ -90,21 +90,12 @@ class UserService:
         
             # Hash the new password
             new_hashed_password = hash_password(request_data.updated_password)
-            # Update the user's password in DynamoDB
-            result = user_table.update_item(
-                Key={'user_id': user['user_id']},
-                UpdateExpression="SET hashed_password = :new_password",
-                ExpressionAttributeValues={
-                    ':new_password': new_hashed_password
-                },
-                ReturnValues="UPDATED_NEW"
+            
+            # Update the user's password in DynamoDB using the generalized update function
+            result = user.update_user(
+                user_id=user_data['user_id'],
+                update_data={'hashed_password': new_hashed_password}
             )
-
-            if 'Attributes' not in result:
-                raise HTTPException(
-                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                    detail="Failed to update the password"
-                )
 
             return {
                 "message": "Password updated successfully"
@@ -133,26 +124,16 @@ class UserService:
         """
         try:
             # Get the user from DynamoDB
-            user = UserTable.get(request_data.email)
+            user_data = user.get(request_data.email)
             
             # Validate the new email does not exist
             check_email_exists(request_data.updated_email)
         
-            # Update the user's email in DynamoDB
-            result = user_table.update_item(
-                Key={'user_id': user['user_id']},
-                UpdateExpression="SET email = :new_email",
-                ExpressionAttributeValues={
-                    ':new_email': request_data.updated_email
-                },
-                ReturnValues="UPDATED_NEW"
+            # Update the user's email in DynamoDB using the generalized update function
+            result = user.update_user(
+                user_id=user_data['user_id'],
+                update_data={'email': request_data.updated_email}
             )
-
-            if 'Attributes' not in result:
-                raise HTTPException(
-                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                    detail="Failed to update the email"
-                )
 
             return {
                 "message": "Email updated successfully"
@@ -164,4 +145,39 @@ class UserService:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=f"Error updating email: {str(e)}"
+            )
+            
+    def update_business_name(self, request_data: UpdateBusinessNameRequest):
+        """
+        Update a user's business name.
+        
+        Args:
+            request_data (UpdateBusinessNameRequest): User data including email and new business name
+            
+        Returns:
+            dict: Success message
+            
+        Raises:
+            HTTPException: If validation fails or database operations fail
+        """
+        try:
+            # Get the user from DynamoDB
+            user_data = user.get(request_data.email)
+            
+            # Update the user's business name in DynamoDB using the generalized update function
+            result = user.update_user(
+                user_id=user_data['user_id'],
+                update_data={'businessName': request_data.updated_business_name}
+            )
+
+            return {
+                "message": "Business name updated successfully"
+            }
+
+        except HTTPException:
+            raise
+        except Exception as e:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Error updating business name: {str(e)}"
             )

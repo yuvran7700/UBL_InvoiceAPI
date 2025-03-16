@@ -3,7 +3,7 @@ from fastapi.testclient import TestClient
 from src.main import app
 from src.utils.auth_helpers import  verify_password
 from tests.conftest import sample_user_json
-from src.repositories.auth_repository import UserTable
+from src.repositories.auth_repository import user
 
 client = TestClient(app)
 
@@ -13,9 +13,9 @@ def cleanup_database():
     """
     Fixture to clean up the database before and after each test
     """
-    UserTable.delete_all()  # Clean before test
+    user.delete_all()  # Clean before test
     yield
-    UserTable.delete_all()  # Clean after test
+    user.delete_all()  # Clean after test
 
 
 def test_user_registration(sample_user_json):
@@ -38,7 +38,7 @@ def test_user_registration(sample_user_json):
     assert user_data["abn"] == sample_user_json["abn"]
     assert "password" not in user_data
 
-    stored_user = UserTable.get(sample_user_json["email"])
+    stored_user = user.get(sample_user_json["email"])
     assert stored_user is not None
     assert stored_user["email"] == sample_user_json["email"]
     assert stored_user["businessName"] == sample_user_json["businessName"]
@@ -68,7 +68,7 @@ def test_update_password(sample_user_json):
     assert data["message"] == "Password updated successfully"
 
     # Check that the password was updated in DynamoDB
-    stored_user = UserTable.get(sample_user_json["email"])
+    stored_user = user.get(sample_user_json["email"])
     assert stored_user is not None
     assert stored_user["email"] == sample_user_json["email"]
     assert stored_user["businessName"] == sample_user_json["businessName"]

@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, status
 from fastapi.responses import JSONResponse
-from src.services.auth_service import UserService
-from src.models.auth_models import RegisterRequest, UpdatePasswordRequest, UpdateEmailRequest
+from src.services.auth_service import user_service
+from src.models.auth_models import RegisterRequest, UpdatePasswordRequest, UpdateEmailRequest, UpdateBusinessNameRequest
 
 router = APIRouter(prefix="/v1/users/auth", tags=["auth"])
 
@@ -9,8 +9,8 @@ router = APIRouter(prefix="/v1/users/auth", tags=["auth"])
 @router.post("/register")
 def register(request: RegisterRequest):
     try:
-        user_service = UserService()  
-        result =  user_service.register_user(request)  # Call service layer
+        service = user_service()  
+        result =  service.register_user(request)  # Call service layer
         return JSONResponse(status_code=status.HTTP_201_CREATED, content=result)
     except HTTPException as e:
         raise e
@@ -23,8 +23,8 @@ def register(request: RegisterRequest):
 @router.put("/update-password")
 def updatePassword(request: UpdatePasswordRequest):
     try:
-        user_service = UserService()  
-        result =  user_service.update_password(request)  # Call service layer
+        service = user_service()  
+        result =  service.update_password(request)  # Call service layer
         return JSONResponse(status_code=status.HTTP_200_OK, content=result)
     except HTTPException as e:
         raise e
@@ -39,13 +39,27 @@ def updatePassword(request: UpdatePasswordRequest):
 @router.put("/update-email")
 def updateEmail(request: UpdateEmailRequest):
     try:
-        user_service = UserService()  
-        result =  user_service.update_email(request)  # Call service layer
-        return JSONResponse(status_code=status.HTTP_200_CREATED, content=result)
+        service = user_service()  
+        result =  service.update_email(request)  # Call service layer
+        return JSONResponse(status_code=status.HTTP_200_OK, content=result)
     except HTTPException as e:
         raise e
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"An error occurred: {str(e)}"
+        )
+
+@router.put("/update-business-name")
+def updateBusinessName(request: UpdateBusinessNameRequest):
+    try:
+        service = user_service()  
+        result = service.update_business_name(request)  # Call service layer
+        return JSONResponse(status_code=status.HTTP_200_OK, content=result)
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"An error occurred when updating the business name: {str(e)}"
         )
