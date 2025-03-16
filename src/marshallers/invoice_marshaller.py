@@ -1,4 +1,5 @@
 # marshallers/invoice_marshaller.py
+
 """
 Invoice Marshaller.
 Handles the transformation (marshalling) of an OrderType into an InvoiceType.
@@ -36,7 +37,8 @@ class InvoiceMarshaller:
         )
         buyer = Party(
             name=order.buyer_name,
-            account=order.buyer_account,
+            customer_account_id = order.buyer_account_customer_id
+            supplier_account_id = order.buyer_supplier_customer_id
             address=order.buyer_address,
             tax_identifier="GST87654321",  # Ideally retrieved from buyer master data.
             electronic_address="buyer@example.com",

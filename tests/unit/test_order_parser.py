@@ -1,5 +1,5 @@
 from datetime import date
-from src.utils.order_parser import OrderParser
+from src.order_type_builder.order_director import OrderParser
 
 def test_order_parser(sample_order_xml):
     """

@@ -6,7 +6,7 @@ and creates a draft invoice.
 """
 
 from fastapi import APIRouter, UploadFile, File, HTTPException
-from src.utils.order_parser import OrderParser
+from src.order_type_builder.order_director import OrderParser
 from src.services.invoice_service import create_invoice
 from src.models.invoice_type import InvoiceType
 
