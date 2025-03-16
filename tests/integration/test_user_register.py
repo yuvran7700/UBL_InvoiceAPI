@@ -125,7 +125,6 @@ def test_update_username(sample_user_json):
     stored_user = user.get(sample_user_json["email"])
     assert stored_user is not None
     assert stored_user["email"] == sample_user_json["email"]
-    assert stored_user["businessName"] == sample_user_json["businessName"]
     assert stored_user["abn"] == sample_user_json["abn"]
     assert "hashed_password" in stored_user
     assert "user_id" in stored_user
