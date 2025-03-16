@@ -2,7 +2,8 @@ from fastapi.testclient import TestClient
 from src.main import app
 import pytest
 from tests.conftest import sample_user_json
-from src.utils.auth_helpers import delete_all_user_items
+from src.repositories.auth_repository import user
+
 client = TestClient(app)
 
 @pytest.fixture(autouse=True)
@@ -10,7 +11,7 @@ def auto_cleanup():
     """
     Automatically clean up the database after each test
     """
-    return delete_all_user_items()
+    return user.delete_all()
 
 def test_user_registration(sample_user_json):
     """
@@ -84,22 +85,53 @@ def test_password_hashed(sample_user_json):
     assert response.json()["user"]["email"] == sample_user_json["email"]
     assert response.json()["user"]["businessName"] == sample_user_json["businessName"]
 
-def test_user_update_password(sample_user_json):
+@pytest.mark.update_tests
+def test_update_password(sample_user_json):
     """
-    Test that the user update password endpoint correctly updates the user's password.
-    """ 
+    Test that the update password endpoint correctly updates the user's password.
+    """
+    # Register a new user
     response = client.post("/v1/users/auth/register", json=sample_user_json)
     assert response.status_code == 201
 
-    new_password = "NewPassword123"
-    update_data = {
+    # Define the new password payload with all required fields
+    new_password_payload = {
         "email": sample_user_json["email"],
-        "password": new_password
+        "password": sample_user_json["password"],  # Current password
+        "updated_password": "NewSecurePassword123"  # New password
     }
-    response = client.post("/v1/users/auth/update/password", json=update_data)
-    assert response.status_code == 200
-    print(response.json())
-    print(sample_user_json)
-    assert response.json()["message"] == "Password updated successfully"
-    assert response.json()["user"]["email"] == sample_user_json["email"]
-    assert response.json()["user"]["businessName"] == sample_user_json["businessName"]
+
+    # Update the user's password
+    response = client.put("/v1/users/auth/update-password", json=new_password_payload)
+    print("Update password response:", response.json())
+    assert response.status_code == 200, f"Expected status 200, got {response.status_code}"
+    
+    data = response.json()
+    assert "message" in data, "Missing message in response"
+    assert data["message"] == "Password updated successfully", f"Unexpected message: {data['message']}"
+
+@pytest.mark.update_tests
+def test_update_email(sample_user_json):
+    """
+    Test that the update email endpoint correctly updates the user's email.
+    """ 
+    # Register a new user
+    response = client.post("/v1/users/auth/register", json=sample_user_json)
+    assert response.status_code == 201
+
+    # Define the new email payload with all required fields
+    new_email_payload = {
+        "email": sample_user_json["email"],
+        "updated_email": "newEmail@gmail.com"
+    }       
+
+    response = client.put("/v1/users/auth/update-email", json=new_email_payload)
+    print("Update email response:", response.json())
+    assert response.status_code == 200, f"Expected status 200, got {response.status_code}" 
+    data = response.json()
+    assert "message" in data, "Missing message in response"
+    assert data["message"] == "Email updated successfully", f"Unexpected message: {data['message']}"
+
+    curr_user = user.get("newEmail@gmail.com")
+    assert curr_user is not None, "Updated user not found"
+    assert curr_user["email"] == "newEmail@gmail.com"

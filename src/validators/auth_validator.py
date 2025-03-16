@@ -16,13 +16,25 @@ def validate_abn(abn_value: str):
 #Checks if the user's email exists in the database
 def check_email_exists(email: str):
     """Check if email is already registered."""
-    response = user_table.get_item(Key={'email': email})
-    if 'Item' in response:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Email already registered"
+    try:
+        # Scan for email instead of getting by primary key
+        response = user_table.scan(
+            FilterExpression='email = :email',
+            ExpressionAttributeValues={':email': email}
         )
-
+        if response.get('Items'):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Email already registered"
+            )
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error checking email: {str(e)}"
+        )
+    
 def validate_password(password: str):
     """Validate password strength."""
     if len(password) < 8:
@@ -46,4 +58,3 @@ def validate_password(password: str):
             detail="Password must contain at least one lowercase letter"
         )
 
-#nsures that the user's password matches the given username
