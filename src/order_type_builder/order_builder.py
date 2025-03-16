@@ -1,3 +1,4 @@
+#src/order_type_builder/order_builder.py
 """
 Builder for constructing an OrderType object step-by-step.
 """
@@ -6,6 +7,8 @@ from datetime import date
 from typing import List, Optional
 from src.models.order_type import OrderType, OrderLineType
 from src.models.common.party_attributes import PartyAttributes
+from src.models.common.contact import Contact
+from src.models.common.tax_scheme import PartyTaxScheme
 
 class OrderBuilder:
     def __init__(self):
@@ -36,12 +39,12 @@ class OrderBuilder:
         self._note = note
         return self
 
-    def set_buyer(self, buyer: PartyAttributes) -> "OrderBuilder":
-        self._buyer = buyer
+    def set_buyer(self, buyer_data: dict) -> "OrderBuilder":
+        self._buyer = self._build_party_attributes(buyer_data, is_buyer=True)
         return self
 
-    def set_seller(self, seller: PartyAttributes) -> "OrderBuilder":
-        self._seller = seller
+    def set_seller(self, seller_data: dict) -> "OrderBuilder":
+        self._seller = self._build_party_attributes(seller_data, is_buyer=False)
         return self
 
     def set_anticipated_line_extension_amount(self, amount: float) -> "OrderBuilder":
@@ -60,9 +63,31 @@ class OrderBuilder:
         self._order_lines = order_lines
         return self
 
-    def add_order_line(self, order_line: OrderLineType) -> "OrderBuilder":
-        self._order_lines.append(order_line)
-        return self
+    
+            
+    def _build_party_attributes(self, party_data: dict, is_buyer: bool) -> PartyAttributes:
+        """Helper method to build a PartyAttributes object from a dictionary."""
+        if is_buyer:
+            return PartyAttributes(
+                customer_assigned_account_id=party_data["buyer_account_customer_id"],
+                supplier_assigned_account_id=party_data["buyer_account_supplier_id"],
+                party_name=party_data["buyer_name"],
+                address=party_data["buyer_address"],
+                endpoint_id=party_data.get("buyer_electronic_address"),
+                contact=party_data.get("buyer_contact").dict() if party_data.get("buyer_contact") else None,
+                tax_scheme=party_data.get("buyer_tax_scheme").dict() if party_data.get("buyer_tax_scheme") else None
+            )
+        else:
+            return PartyAttributes(
+                customer_assigned_account_id=party_data["seller_account"],
+                supplier_assigned_account_id=party_data["seller_account"],
+                party_name=party_data["seller_name"],
+                address=party_data["seller_address"],
+                endpoint_id=None,
+                contact=party_data.get("seller_contact").dict() if party_data.get("seller_contact") else None,
+                tax_scheme=party_data.get("seller_tax_scheme").dict() if party_data.get("seller_tax_scheme") else None
+            )
+
 
     def build(self) -> OrderType:
         # Validate required fields
@@ -73,8 +98,8 @@ class OrderBuilder:
             sales_order_id=self._sales_order_id or "",
             issue_date=self._issue_date,
             note=self._note,
-            buyer=self._buyer,
-            seller=self._seller,
+            buyer=self._buyer.dict(),
+            seller=self._seller.dict(),
             anticipated_line_extension_amount=self._anticipated_line_extension_amount,
             anticipated_payable_amount=self._anticipated_payable_amount,
             payment_terms=self._payment_terms,

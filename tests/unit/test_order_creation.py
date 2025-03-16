@@ -1,0 +1,193 @@
+import pytest
+from datetime import date
+from src.utils.order_xml_extractor import OrderXmlExtractor
+from src.order_type_builder.order_director import OrderDirector
+from src.order_type_builder.order_builder import OrderBuilder
+from src.models.order_type import OrderType
+
+# Test extraction of header data
+def test_extract_header(sample_order_xml):
+    data = OrderXmlExtractor.extract(sample_order_xml)
+    header = data.get("header")
+    assert header is not None
+    assert "order_id" in header and header["order_id"] != ""
+    assert "issue_date" in header and isinstance(header["issue_date"], date)
+    # sales_order_id might be empty but exists
+    assert "sales_order_id" in header
+
+# Test extraction of buyer data
+def test_extract_buyer(sample_order_xml):
+    data = OrderXmlExtractor.extract(sample_order_xml)
+    buyer = data.get("buyer")
+    assert buyer is not None
+    # Check required buyer fields
+    assert "buyer_name" in buyer and buyer["buyer_name"] != ""
+    assert "buyer_account_customer_id" in buyer and buyer["buyer_account_customer_id"] != ""
+    assert "buyer_account_supplier_id" in buyer and buyer["buyer_account_supplier_id"] != ""
+    # Verify address and optional fields exist
+    assert "buyer_address" in buyer and buyer["buyer_address"] != ""
+    # Endpoint and scheme may be optional, so no strict assertion here
+    assert "buyer_electronic_address" in buyer  # may be None or non-empty depending on XML
+    assert "buyer_scheme_id" in buyer           # may be None if not provided
+    assert "buyer_country" in buyer              # may be None if not provided
+
+# Test extraction of seller data
+def test_extract_seller(sample_order_xml):
+    data = OrderXmlExtractor.extract(sample_order_xml)
+    seller = data.get("seller")
+    assert seller is not None
+    assert "seller_name" in seller and seller["seller_name"] != ""
+    assert "seller_account" in seller and seller["seller_account"] != ""
+    assert "seller_address" in seller and seller["seller_address"] != ""
+
+# Test extraction of monetary totals
+def test_extract_monetary(sample_order_xml):
+    data = OrderXmlExtractor.extract(sample_order_xml)
+    monetary = data.get("monetary")
+    assert monetary is not None
+    assert monetary["anticipated_line_extension_amount"] > 0
+    assert monetary["anticipated_payable_amount"] > 0
+
+# Test extraction of payment terms (optional)
+def test_extract_payment_terms(sample_order_xml):
+    data = OrderXmlExtractor.extract(sample_order_xml)
+    # Payment terms may be optional; if present, ensure it's a string.
+    payment_terms = data.get("payment_terms")
+    if payment_terms:
+        assert isinstance(payment_terms, str)
+
+# Test extraction of order lines
+def test_extract_order_lines(sample_order_xml):
+    data = OrderXmlExtractor.extract(sample_order_xml)
+    order_lines = data.get("order_lines")
+    assert order_lines is not None
+    # Assume the sample XML has at least one order line
+    assert len(order_lines) > 0
+    first_line = order_lines[0]
+    assert "line_id" in first_line and first_line["line_id"] != ""
+    assert "quantity" in first_line and first_line["quantity"] > 0
+
+# Test full order creation using the Director (OrderDirector) and Builder
+def test_full_order_creation(sample_order_xml):
+    # Use the updated method name: construct_order_from_xml
+    order = OrderDirector.construct_order_from_xml(sample_order_xml)
+    print(order)
+    assert isinstance(order, OrderType)
+    assert order.order_id != ""
+    assert isinstance(order.issue_date, date)
+    assert order.buyer is not None
+    assert order.seller is not None
+    # Check monetary totals are as expected
+    assert order.anticipated_line_extension_amount > 0
+    assert order.anticipated_payable_amount > 0
+    # Check that order lines were parsed
+    assert isinstance(order.order_lines, list)
+    assert len(order.order_lines) > 0
+    
+    
+def test_extract_all_data(sample_order_xml):
+    # Extract the data from the XML using your extractor
+    extracted_data = OrderXmlExtractor.extract(sample_order_xml)
+    
+    # Print the complete extracted data for inspection
+    print("\nExtracted Data:")
+    for key, value in extracted_data.items():
+        print(f"{key}: {value}")
+    
+    # Header assertions
+    header = extracted_data.get("header")
+    assert header is not None
+    assert header.get("order_id") == "AEG012345"
+    assert header.get("sales_order_id") == "CON0095678"
+    assert header.get("issue_date").isoformat() == "2005-06-20"
+    assert header.get("note") == "sample"
+    
+    # Buyer assertions
+    buyer = extracted_data.get("buyer")
+    assert buyer is not None
+    assert buyer.get("buyer_name") == "IYT Corporation"
+    assert buyer.get("buyer_account_customer_id") == "XFB01"
+    assert buyer.get("buyer_account_supplier_id") == "GT00978567"
+    # The address is formatted by concatenating various fields
+    assert "Avon Way" in buyer.get("buyer_address")
+    # Optional fields: if present, check that they are not empty (or None)
+    # Note: In your XML, buyer_electronic_address and buyer_scheme_id may or may not be present.
+    # You can adjust the following assertions as needed:
+    # For this sample XML, no EndpointID is provided, so we expect None.
+    assert buyer.get("buyer_electronic_address") is None
+    # buyer_scheme_id is derived from the EndpointID element, so it should be None if not provided.
+    assert buyer.get("buyer_scheme_id") is None
+    # The buyer country should come from the PostalAddress -> Country element
+    assert buyer.get("buyer_country") == "GB"
+    
+    # Contact & TaxScheme for buyer
+    buyer_contact = buyer.get("buyer_contact")
+    # Assuming your extractor returns a Contact model or dict with similar fields
+    assert buyer_contact is not None
+    assert buyer_contact.name == "Mr Fred Churchill"
+    assert buyer_contact.telephone == "0127 2653214"
+    assert buyer_contact.telefax == "0127 2653215"
+    assert buyer_contact.electronic_mail == "fred@iytcorporation.gov.uk"
+    
+    buyer_tax_scheme = buyer.get("buyer_tax_scheme")
+    assert buyer_tax_scheme is not None
+    # Check a few fields from the buyer's tax scheme
+    assert buyer_tax_scheme.registration_name == "Bridgtow District Council"
+    assert buyer_tax_scheme.company_id == "12356478"
+    assert buyer_tax_scheme.exemption_reason == "Local Authority"
+    # And the nested TaxScheme data
+    nested_tax = buyer_tax_scheme.tax_scheme
+    assert nested_tax is not None
+    assert nested_tax.id == "UK VAT"
+    assert nested_tax.tax_type_code == "VAT"
+    
+    # Seller assertions
+    seller = extracted_data.get("seller")
+    assert seller is not None
+    assert seller.get("seller_account") == "CO001"
+    assert seller.get("seller_name") == "Consortial"
+    assert "Busy Street" in seller.get("seller_address")
+    
+    seller_contact = seller.get("seller_contact")
+    assert seller_contact is not None
+    assert seller_contact.name == "Mrs Bouquet"
+    assert seller_contact.telephone == "0158 1233714"
+    assert seller_contact.telefax == "0158 1233856"
+    assert seller_contact.electronic_mail == "bouquet@fpconsortial.co.uk"
+    
+    seller_tax_scheme = seller.get("seller_tax_scheme")
+    assert seller_tax_scheme is not None
+    assert seller_tax_scheme.registration_name == "Farthing Purchasing Consortium"
+    assert seller_tax_scheme.company_id == "175 269 2355"
+    assert seller_tax_scheme.exemption_reason == "N/A"
+    nested_seller_tax = seller_tax_scheme.tax_scheme
+    assert nested_seller_tax is not None
+    assert nested_seller_tax.id == "VAT"
+    assert nested_seller_tax.tax_type_code == "VAT"
+    
+    # Monetary assertions
+    monetary = extracted_data.get("monetary")
+    assert monetary is not None
+    assert float(monetary.get("anticipated_line_extension_amount")) == 100.00
+    assert float(monetary.get("anticipated_payable_amount")) == 100.00
+    
+    # Payment terms
+    payment_terms = extracted_data.get("payment_terms")
+    # Expected payment terms from TransactionConditions description
+    assert payment_terms == "order response required; payment is by BACS or by cheque"
+    
+    # Order lines assertions
+    order_lines = extracted_data.get("order_lines")
+    assert order_lines is not None
+    assert len(order_lines) == 1  # one order line in this sample
+    order_line = order_lines[0]
+    assert order_line.get("note") == "this is an illustrative order line"
+    assert order_line.get("line_id") == "1"
+    assert float(order_line.get("quantity")) == 100.0
+    assert float(order_line.get("line_extension_amount")) == 100.00
+    assert float(order_line.get("total_tax_amount")) == 17.50
+    assert float(order_line.get("unit_price")) == 100.00
+    assert order_line.get("item_description") == "Acme beeswax"
+    assert order_line.get("item_name") == "beeswax"
+    assert order_line.get("buyers_item_id") == "6578489"
+    assert order_line.get("sellers_item_id") == "17589683"
