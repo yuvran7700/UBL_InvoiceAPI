@@ -46,7 +46,7 @@ def test_user_registration(sample_user_json):
     assert "hashed_password" in stored_user
     assert "user_id" in stored_user
 
-
+@pytest.mark.update_tests
 def test_update_password(sample_user_json):
     """
     Test the full password update process, including validating the user in DynamoDB.
@@ -78,3 +78,20 @@ def test_update_password(sample_user_json):
 
     # Verify the new password
     assert verify_password(new_password, stored_user["hashed_password"])
+
+@pytest.mark.update_tests
+def test_update_email(sample_user_json):    
+    # Register the user
+    response = client.post("/v1/users/auth/register", json=sample_user_json)
+    assert response.status_code == 201
+
+    # Update the user's email
+    new_email = "Newemail@gmail.com"
+    update_data = {
+        "email": sample_user_json["email"],
+        "updated_email": new_email  # New email
+    }
+    response = client.put("/v1/users/auth/update-email", json=update_data)
+    assert response.status_code == 200
+    data = response.json()
+    assert data["message"] == "Email updated successfully"                  

@@ -5,7 +5,7 @@ from passlib.context import CryptContext
 from src.utils.auth_helpers import  hash_password
 from src.repositories.auth_repository import user
 from src.validators.auth_validator import validate_abn, check_email_exists, validate_password
-from src.models.auth_models import RegisterRequest, UpdateEmailRequest, UpdatePasswordRequest, UpdateBusinessNameRequest
+from src.models.auth_models import RegisterRequest, UpdateEmailRequest, UpdatePasswordRequest
 from src.db.dynamodb_client import user_table
 
 
@@ -129,15 +129,19 @@ class user_service:
             # Validate the new email does not exist
             check_email_exists(request_data.updated_email)
         
-            # Update the user's email in DynamoDB using the generalized update function
+            # Update the user's email in DynamoDB
             result = user.update_user(
                 user_id=user_data['user_id'],
                 update_data={'email': request_data.updated_email}
             )
 
-            return {
-                "message": "Email updated successfully"
-            }
+            if not result.get('message'):
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail="Failed to update email"
+                )
+
+            return {"message": "Email updated successfully"}
 
         except HTTPException:
             raise
@@ -145,39 +149,4 @@ class user_service:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=f"Error updating email: {str(e)}"
-            )
-            
-    def update_business_name(self, request_data: UpdateBusinessNameRequest):
-        """
-        Update a user's business name.
-        
-        Args:
-            request_data (UpdateBusinessNameRequest): User data including email and new business name
-            
-        Returns:
-            dict: Success message
-            
-        Raises:
-            HTTPException: If validation fails or database operations fail
-        """
-        try:
-            # Get the user from DynamoDB
-            user_data = user.get(request_data.email)
-            
-            # Update the user's business name in DynamoDB using the generalized update function
-            result = user.update_user(
-                user_id=user_data['user_id'],
-                update_data={'businessName': request_data.updated_business_name}
-            )
-
-            return {
-                "message": "Business name updated successfully"
-            }
-
-        except HTTPException:
-            raise
-        except Exception as e:
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=f"Error updating business name: {str(e)}"
             )

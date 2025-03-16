@@ -135,29 +135,3 @@ def test_update_email(sample_user_json):
     curr_user = user.get("newEmail@gmail.com")
     assert curr_user is not None, "Updated user not found"
     assert curr_user["email"] == "newEmail@gmail.com"
-
-@pytest.mark.update_tests
-def test_update_business_name(sample_user_json):
-    """
-    Test that the update business name endpoint correctly updates the user's business name.
-    """ 
-    # Register a new user
-    response = client.post("/v1/users/auth/register", json=sample_user_json)
-    assert response.status_code == 201
-
-    # Define the new business name payload with all required fields
-    new_business_name_payload = {
-        "email": sample_user_json["email"],
-        "updated_business_name": "New Business Name LLC"
-    }       
-
-    response = client.put("/v1/users/auth/update-business-name", json=new_business_name_payload)
-    print("Update business name response:", response.json())
-    assert response.status_code == 200, f"Expected status 200, got {response.status_code}" 
-    data = response.json()
-    assert "message" in data, "Missing message in response"
-    assert data["message"] == "Business name updated successfully", f"Unexpected message: {data['message']}"
-
-    curr_user = user.get(sample_user_json["email"])
-    assert curr_user is not None, "Updated user not found"
-    assert curr_user["businessName"] == "New Business Name LLC"

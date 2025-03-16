@@ -35,14 +35,14 @@ class user():
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=f"Error retrieving user from DynamoDB: {str(e)}"
             )
-
+        
     @staticmethod
     def update_user(user_id: str, update_data: dict) -> dict:
         """
         General update function for user data
         
         Args:
-            user_id: User's unique identifier (primary key)
+            user_id: User's unique identifier
             update_data: Dictionary containing fields to update
             
         Returns:
@@ -65,48 +65,31 @@ class user():
                     detail="User not found"
                 )
             
-            # Get the current user data
             current_user_data = items[0]
             current_email = current_user_data['email']
             
-            # Special handling for email updates (since email is part of the composite key)
+            # Special handling for email updates
             if 'email' in update_data and update_data['email'] != current_email:
-                # Create a new user record with updated data
+                # Create a new record with updated email
                 new_user_data = current_user_data.copy()
+                new_user_data.update(update_data)
                 
-                # Update all fields from update_data
-                for key, value in update_data.items():
-                    new_user_data[key] = value
-                
-                # Create a new item with the updated email
+                # Create new record first
                 user_table.put_item(Item=new_user_data)
                 
-                # Delete the old item with the old email
+                # Then delete old record
                 user_table.delete_item(
                     Key={'user_id': user_id, 'email': current_email}
                 )
                 
-                return {
-                    'message': 'User updated successfully',
-                    'updated_fields': list(update_data.keys())
-                }
+                return {'message': 'User updated successfully'}
+                
             else:
-                # For updates that don't change the email, use update_item
-                # Remove email from update_data if it's the same as current
-                if 'email' in update_data and update_data['email'] == current_email:
-                    del update_data['email']
-                    
-                if not update_data:  # If nothing to update after removing email
-                    return {
-                        'message': 'No changes to update'
-                    }
-                    
-                # Construct the update expression
+                # For non-email updates
                 update_expression = "SET " + ", ".join(f"#{k} = :{k}" for k in update_data.keys())
                 expression_attribute_names = {f"#{k}": k for k in update_data.keys()}
                 expression_attribute_values = {f":{k}": v for k, v in update_data.items()}
 
-                # Perform the update in DynamoDB
                 result = user_table.update_item(
                     Key={'user_id': user_id, 'email': current_email},
                     UpdateExpression=update_expression,
@@ -115,21 +98,11 @@ class user():
                     ReturnValues="UPDATED_NEW"
                 )
                 
-                # Check if the update was successful
-                if 'Attributes' not in result:
-                    raise HTTPException(
-                        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                        detail="Failed to update user"
-                    )
-                    
                 return {
                     'message': 'User updated successfully',
-                    'updated_fields': list(update_data.keys()),
-                    'attributes': result['Attributes']
+                    'attributes': result.get('Attributes', {})
                 }
                 
-        except HTTPException:
-            raise
         except Exception as e:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
