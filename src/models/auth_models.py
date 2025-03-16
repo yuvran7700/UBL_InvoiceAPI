@@ -14,3 +14,7 @@ class UpdatePasswordRequest(BaseModel):
 class UpdateEmailRequest(BaseModel):
     email: EmailStr
     updated_email: EmailStr 
+
+class update_username_request(BaseModel):
+    email: EmailStr
+    updated_username: str
