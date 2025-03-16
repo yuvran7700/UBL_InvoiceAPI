@@ -5,7 +5,7 @@ from passlib.context import CryptContext
 from src.utils.auth_helpers import  hash_password
 from src.repositories.auth_repository import user
 from src.validators.auth_validator import validate_abn, check_email_exists, validate_password
-from src.models.auth_models import RegisterRequest, UpdateEmailRequest, UpdatePasswordRequest
+from src.models.auth_models import RegisterRequest, UpdateEmailRequest, UpdatePasswordRequest, update_username_request
 from src.db.dynamodb_client import user_table
 
 

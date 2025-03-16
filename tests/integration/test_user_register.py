@@ -95,3 +95,38 @@ def test_update_email(sample_user_json):
     assert response.status_code == 200
     data = response.json()
     assert data["message"] == "Email updated successfully"                  
+
+    # Check that the email was updated in DynamoDB
+    stored_user = user.get(new_email)
+    assert stored_user is not None
+    assert stored_user["email"] == new_email
+    assert stored_user["businessName"] == sample_user_json["businessName"]
+    assert stored_user["abn"] == sample_user_json["abn"]
+    assert "hashed_password" in stored_user
+    assert "user_id" in stored_user 
+
+def test_update_username(sample_user_json):    
+    # Register the user
+    response = client.post("/v1/users/auth/register", json=sample_user_json)
+    assert response.status_code == 201
+
+    # Update the user's username
+    new_username = "NewUsername"
+    update_data = {
+        "email": sample_user_json["email"],
+        "updated_username": new_username  # New username
+    }
+    response = client.put("/v1/users/auth/update-username", json=update_data)
+    assert response.status_code == 200
+    data = response.json()
+    assert data["message"] == "Username updated successfully"                  
+
+    # Check that the username was updated in DynamoDB
+    stored_user = user.get(sample_user_json["email"])
+    assert stored_user is not None
+    assert stored_user["email"] == sample_user_json["email"]
+    assert stored_user["businessName"] == sample_user_json["businessName"]
+    assert stored_user["abn"] == sample_user_json["abn"]
+    assert "hashed_password" in stored_user
+    assert "user_id" in stored_user
+    assert stored_user["businessName"] == new_username

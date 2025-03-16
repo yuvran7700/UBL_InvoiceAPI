@@ -135,3 +135,34 @@ def test_update_email(sample_user_json):
     curr_user = user.get("newEmail@gmail.com")
     assert curr_user is not None, "Updated user not found"
     assert curr_user["email"] == "newEmail@gmail.com"
+
+@pytest.mark.update_tests
+def test_update_username(sample_user_json):
+    """
+    Test that the update username endpoint correctly updates the user's username.
+    """
+    # Register a new user
+    response = client.post("/v1/users/auth/register", json=sample_user_json)
+    assert response.status_code == 201
+
+    # Define the new username payload with all required fields
+    new_username_payload = {
+        "email": sample_user_json["email"],
+        "updated_username": "newUsername"
+    }
+
+    response = client.put("/v1/users/auth/update-username", json=new_username_payload)
+    print("Update username response:", response.json())
+    assert response.status_code == 200, f"Expected status 200, got {response.status_code}"
+    
+    data = response.json()
+    assert "message" in data, "Missing message in response"
+    assert data["message"] == "Username updated successfully", f"Unexpected message: {data['message']}"
+
+    curr_user = user.get(sample_user_json["email"])
+    assert curr_user is not None, "Updated user not found"
+    assert curr_user["email"] == sample_user_json["email"]
+    assert curr_user["businessName"] == "newUsername"
+    assert curr_user["abn"] == sample_user_json["abn"]
+    assert "hashed_password" in curr_user
+    assert "user_id" in curr_user
