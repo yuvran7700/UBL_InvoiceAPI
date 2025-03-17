@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from src.routes.user_routes import router as auth_router
+from src.routes.user_routes import router as user_router
 
 app = FastAPI()
 
@@ -10,4 +10,4 @@ def read_root():
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
-app.include_router(auth_router)
+app.include_router(user_router)

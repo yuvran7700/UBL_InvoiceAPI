@@ -29,7 +29,8 @@ def create_user(user_in: UserIn):
         check_email_exists(user_in.email)
         validate_password(user_in.password)
         hashed_password = hash_password(user_in.password)
-        user_in_db = UserInDB(**user_in.dict(), hashed_password=hashed_password)
+        user_id = str(uuid.uuid4())
+        user_in_db = UserInDB(**user_in.model_dump(), hashed_password=hashed_password, user_id=user_id)
         save_user(user_in_db)
     except HTTPException:
         raise  # Re-raise HTTP exceptions as they are already properly formatted

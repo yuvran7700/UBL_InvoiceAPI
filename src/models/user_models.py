@@ -12,8 +12,9 @@ class UserOut(BaseModel):
     abn: str    
 
 class UserInDB(BaseModel):
-    user_id: str
-    email: EmailStr
     business_name: str
-    abn: str
+    email: EmailStr    
     hashed_password: str
+    abn: str
+    user_id: str
+    
