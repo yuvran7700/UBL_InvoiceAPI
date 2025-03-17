@@ -1,6 +1,7 @@
 import pytest
 from fastapi.testclient import TestClient
 from src.main import app
+from src.repositories.user_repository import get_user
 from src.utils.user_helpers import  verify_password
 from tests.conftest import sample_user_json
 from src.repositories.auth_repository import user
@@ -38,7 +39,7 @@ def test_user_registration(sample_user_json):
     assert user_data["abn"] == sample_user_json["abn"]
     assert "password" not in user_data
 
-    stored_user = user.get(sample_user_json["email"])
+    stored_user = get_user(sample_user_json["email"])
     assert stored_user is not None
     assert stored_user["email"] == sample_user_json["email"]
     assert stored_user["businessName"] == sample_user_json["businessName"]

@@ -22,6 +22,23 @@ def save_user(user_in_db: UserInDB) -> None:
         raise Exception(f"Failed to store invoice in DynamoDB: {e}")
 
 
+def get_user(email: str) -> UserInDB:
+    """
+    Retrieves an invoice from DynamoDB by its unique identifier.
+
+    Args:
+        invoice_id (str): The unique invoice identifier.
+
+    Returns:
+        InvoiceType: The retrieved invoice if found, otherwise None.
+    """
+    response = user_table.query(
+        IndexName="email-index",  # Ensure your GSI is set up
+        KeyConditionExpression=Key("email").eq(email)
+    )
+
+    return response.get("Items", [])
+
 
 
 # class user():
