@@ -3,7 +3,7 @@ from src.main import app
 import pytest
 from src.services.user_service import create_user
 from tests.conftest import sample_user_json
-from src.repositories.user_repository import user
+from src.repositories.user_repository import delete_all_users, get_user
 
 client = TestClient(app)
 
@@ -12,7 +12,7 @@ def auto_cleanup():
     """
     Automatically clean up the database after each test
     """
-    return user.delete_all()
+    return delete_all_users()
 
 def test_invalid_abn(sample_user_json):
     """
@@ -89,7 +89,7 @@ def test_update_email(sample_user_json):
     assert "message" in data, "Missing message in response"
     assert data["message"] == "Email updated successfully", f"Unexpected message: {data['message']}"
 
-    curr_user = user.get("newEmail@gmail.com")
+    curr_user = get_user("newEmail@gmail.com")
     assert curr_user is not None, "Updated user not found"
     assert curr_user["email"] == "newEmail@gmail.com"
 

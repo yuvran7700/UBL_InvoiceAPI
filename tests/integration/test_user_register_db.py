@@ -4,7 +4,6 @@ from src.main import app
 from src.repositories.user_repository import get_user
 from src.utils.user_helpers import  verify_password
 from tests.conftest import sample_user_json
-from src.repositories.auth_repository import user
 
 client = TestClient(app)
 

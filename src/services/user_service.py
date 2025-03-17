@@ -5,8 +5,6 @@ from src.models.user_models import UserIn, UserInDB
 from src.repositories.user_repository import save_user
 from src.utils.user_helpers import  hash_password
 from src.validators.user_validator import validate_abn, check_email_exists, validate_password
-from src.models.auth_models import RegisterRequest, UpdateEmailRequest, UpdatePasswordRequest, update_username_request
-from src.db.dynamodb_client import user_table
 
 
 # Initialize the password hashing context

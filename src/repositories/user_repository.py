@@ -39,7 +39,21 @@ def get_user(email: str) -> UserInDB:
 
     return response.get("Items", [])
 
+def delete_all_users():
+    """Deletes all items from the DynamoDB users table."""
+    response = user_table.scan()  # Get all items from the table
+    items = response.get("Items", [])
 
+    while "LastEvaluatedKey" in response:  # Continue if there are more items
+        response = user_table.scan(ExclusiveStartKey=response["LastEvaluatedKey"])
+        items.extend(response.get("Items", []))
+
+    # Batch delete (DynamoDB limits batch writes to 25 items per request)
+    with user_table.batch_writer() as batch:
+        for item in items:
+            print(f"Deleting user with email: {item['email']}")  # Debugging line
+            batch.delete_item(Key={"user_id": item["user_id"], "email": item["email"]})
+    
 
 # class user():
 #     def save(user_item: dict):

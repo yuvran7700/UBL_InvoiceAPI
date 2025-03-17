@@ -4,14 +4,6 @@ from src.utils.user_helpers import hash_password
 from src.validators.user_validator import validate_abn, validate_password
 from tests.conftest import sample_user_json
 
-
-@pytest.fixture(autouse=True)
-def auto_cleanup():
-    """
-    Automatically clean up the database after each test
-    """
-    return user.delete_all()
-
 @pytest.mark.unit
 def test_user_in_db_map_sucess(sample_user_json):
     user_in_db = create_user(sample_user_json)
