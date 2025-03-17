@@ -1,10 +1,21 @@
 from pydantic import BaseModel, EmailStr
 
-class RegisterRequest(BaseModel):
+class UserIn(BaseModel):
     businessName: str
     email: EmailStr
     password: str
     abn: str
+
+class UserOut(BaseModel):
+    businessName: str
+    email: EmailStr
+    abn: str    
+
+class UserInDB(BaseModel):
+    username: str
+    hashed_password: str
+    email: EmailStr
+
 
 class UpdatePasswordRequest(BaseModel):
     email: EmailStr

@@ -9,7 +9,7 @@ dynamodb = boto3.resource("dynamodb", region_name=AWS_REGION)
 
 
 # Reference the "Users" table
-user_table = dynamodb.Table("UsersDB")
+user_table = dynamodb.Table("users")
 
 def check_dynamodb_connection():
     try:
