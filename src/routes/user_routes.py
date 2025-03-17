@@ -1,17 +1,16 @@
 from fastapi import APIRouter, HTTPException, status
 from fastapi.responses import JSONResponse
-from src.services.auth_service import user_service
-from src.models.auth_models import RegisterRequest, UpdatePasswordRequest, UpdateEmailRequest, update_username_request
+from src.models.user_models import UserIn, UserOut
+from src.services.user_service import create_user
+from src.models.user_models import RegisterRequest, UpdatePasswordRequest, UpdateEmailRequest, update_username_request
 
-router = APIRouter(prefix="/v1/users/auth", tags=["auth"])
+router = APIRouter(prefix="/v1/users/", tags=["user"])
 
 
-@router.post("/register")
-def register(request: RegisterRequest):
+@app.post("/register", response_model=UserOut)
+async def register(user_in: UserIn):
     try:
-        service = user_service()  
-        result =  service.register_user(request)  # Call service layer
-        return JSONResponse(status_code=status.HTTP_201_CREATED, content=result)
+        user =  create_user(user_in)  # Call service layer
     except HTTPException as e:
         raise e
     except Exception as e:
@@ -19,6 +18,7 @@ def register(request: RegisterRequest):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"An error occurred: {str(e)}"
         )
+    return user
 
 @router.put("/update-password")
 def updatePassword(request: UpdatePasswordRequest):
