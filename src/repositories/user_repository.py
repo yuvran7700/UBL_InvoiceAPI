@@ -3,6 +3,9 @@ from typing import List
 from boto3.dynamodb.conditions import Key
 
 from src.db.dynamodb_client import user_table
+from src.exceptions.db_exceptions import DatabaseReadError
+from src.exceptions.error_handler import DatabaseErrorHandler, ErrorContext
+from src.exceptions.user_exceptions import UserNotFoundError
 from src.models.user_models import UserInDB
 
 
@@ -33,20 +36,23 @@ def get_user(email: str) -> UserInDB:
         InvoiceType: The retrieved invoice if found, otherwise None.
     """
     try:
+
         response = user_table.query(
             IndexName="email-index",  # Ensure your GSI is set up
             KeyConditionExpression=Key("email").eq(email)
         )
+
         items = response.get('Items', [])
+
         if not items: 
-            raise DatabaseReadError()
-            error_handler = ErrorContext(ValidationErrorHandler())
-            error_handler.handle_error(ABNValidationError("ABN", "Invalid ABN format"))
-        if items:
-            return UserInDB.model_validate(items[0])
-        return
+            raise UserNotFoundError(f"User with email {email} not found.")
+      
+        return UserInDB.model_validate(items[0])
     
-    expect 
+    except Exception as e:
+        error_handler = ErrorContext(DatabaseErrorHandler())
+        error_handler.handle_error(DatabaseReadError(f"Error retrieving user by email: {str(e)}")) 
+  
 
 
 def delete_all_users():
