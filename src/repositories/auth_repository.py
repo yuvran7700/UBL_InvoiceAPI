@@ -1,16 +1,17 @@
 from fastapi import HTTPException, status
 from datetime import datetime, timezone, timedelta
 from src.db.dynamodb_client import user_table, session_table
+from src.repositories.user_repository import get_user
 
 MAX_FAILED_ATTEMPTS = 3
 LOCKOUT_DURATION = timedelta(minutes=15)
 
-def check_email_exists(email: str):
-    response = user_table.get_item(Key={"user_id": user_id})
-    if "Item" in response:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail="Email already registered"
-        )
+# def check_email_exists(email: str):
+#     response = user_table.get_item(Key={"user_id": user_id})
+#     if "Item" in response:
+#         raise HTTPException(
+#             status_code=status.HTTP_400_BAD_REQUEST, detail="Email already registered"
+#         )
 
 
 def save_user_to_dynamodb(user_item: dict):

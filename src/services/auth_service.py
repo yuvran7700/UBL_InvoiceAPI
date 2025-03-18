@@ -11,19 +11,23 @@ from src.utils.auth_helpers import (
     create_access_token,
     decode_token,
 )
-from src.validators.auth_validator import validate_abn, session_validation
+from src.validators.auth_validator import session_validation
 from src.repositories.auth_repository import (
-    save_user_to_dynamodb,
     save_session_to_dynamodb,
     get_token,
     remove_session_from_dynamodb,
-    check_email_exists,
     add_failed_attempts,
     reset_failed_attempts
 )
 
+from src.validators.user_validator import (
+    validate_abn,
+    check_email_exists
+)
+
 from src.repositories.user_repository import (
-    get_user
+    get_user,
+    get_user_item
 )
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -84,7 +88,7 @@ def authenticate_user(request_data: dict):
         Raises:
             HTTPException: If user is not found, too many attempts
     """
-    response = get_user(request_data["email"])
+    response = get_user_item(request_data["email"])
     if not response:
         raise HTTPException(status_code=404, detail="User not found")
     failed_attempts = response.get("failed_attempts", 0)

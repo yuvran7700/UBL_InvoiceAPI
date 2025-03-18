@@ -10,7 +10,7 @@ from src.services.auth_service import (
     remove_JWT,
     token_logout_valid,
 )
-from src.models.auth_models import RegisterRequest, LogOutRequest, SessionRequest
+from src.models.auth_models import LogOutRequest, SessionRequest
 
 router = APIRouter(prefix="/v1/users/auth", tags=["auth"])
 
@@ -25,7 +25,8 @@ async def login_user(request: SessionRequest):
 
     """
     try:
-        JWT = authenticate_user(request.dict()) # pylint: disable = invalid-name
+        JWT = authenticate_user(request.model_dump()) # pylint: disable = invalid-name
+        print(f"JWT generated: {JWT}") 
         if not JWT:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials"
