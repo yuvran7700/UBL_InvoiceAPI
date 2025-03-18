@@ -1,7 +1,4 @@
-from fastapi import HTTPException, status
-from typing import List
 from boto3.dynamodb.conditions import Key
-
 from src.db.dynamodb_client import user_table
 from src.exceptions.db_exceptions import DatabaseReadError, DatabaseWriteError
 from src.exceptions.error_handler import DatabaseErrorHandler, ErrorContext
@@ -23,7 +20,9 @@ def save_user(user_in_db: UserInDB) -> None:
         user_table.put_item(Item=user_in_db_dic)
     except Exception as e:
         error_handler = ErrorContext(DatabaseErrorHandler())
-        error_handler.handle_error(DatabaseWriteError(f"Error putting user by email: {str(e)}"))
+        error_handler.handle_error(
+            DatabaseWriteError(f"Error putting user by email: {str(e)}")
+        )
 
 
 def get_user(email: str) -> UserInDB:
@@ -44,24 +43,26 @@ def get_user(email: str) -> UserInDB:
         response = user_table.query(
             IndexName="email-index",  # Ensure your GSI is set up
             KeyConditionExpression=Key("email").eq(email),
-            ConsistentRead=False
+            ConsistentRead=False,
         )
 
-        items = response.get('Items', [])
+        items = response.get("Items", [])
 
-        if  items: 
-             return UserInDB.model_validate(items[0])
+        if items:
+            return UserInDB.model_validate(items[0])
         return None
-    
+
     except Exception as e:
         error_handler = ErrorContext(DatabaseErrorHandler())
-        error_handler.handle_error(DatabaseReadError(f"Error retrieving user by email: {str(e)}")) 
+        error_handler.handle_error(
+            DatabaseReadError(f"Error retrieving user by email: {str(e)}")
+        )
         raise
 
-def update_user_password_in_db(user_id: str,  new_hashed_password: str): 
-    '''
-    '''
-    try: 
+
+def update_user_password_in_db(user_id: str, new_hashed_password: str):
+    """ """
+    try:
         user_table.update_item(
             Key={"user_id": user_id},
             UpdateExpression="set #hashed_password = :n",
@@ -75,13 +76,15 @@ def update_user_password_in_db(user_id: str,  new_hashed_password: str):
         )
     except Exception as e:
         error_handler = ErrorContext(DatabaseErrorHandler())
-        error_handler.handle_error(DatabaseWriteError(f"Error updating user password: {str(e)}")) 
+        error_handler.handle_error(
+            DatabaseWriteError(f"Error updating user password: {str(e)}")
+        )
         raise
 
-def update_username_in_db(user_id: str, new_username: str): 
-    '''
-    '''
-    try: 
+
+def update_username_in_db(user_id: str, new_username: str):
+    """ """
+    try:
         user_table.update_item(
             Key={"user_id": user_id},
             UpdateExpression="set #business_name = :n",
@@ -95,13 +98,15 @@ def update_username_in_db(user_id: str, new_username: str):
         )
     except Exception as e:
         error_handler = ErrorContext(DatabaseErrorHandler())
-        error_handler.handle_error(DatabaseWriteError(f"Error updating business name: {str(e)}")) 
+        error_handler.handle_error(
+            DatabaseWriteError(f"Error updating business name: {str(e)}")
+        )
         raise
 
-def update_email_in_db(user_id: str, new_email: str): 
-    '''
-    '''
-    try: 
+
+def update_email_in_db(user_id: str, new_email: str):
+    """ """
+    try:
         user_table.update_item(
             Key={"user_id": user_id},
             UpdateExpression="set #email = :n",
@@ -112,12 +117,15 @@ def update_email_in_db(user_id: str, new_email: str):
                 ":n": new_email,
             },
             ReturnValues="UPDATED_NEW",
-        ) 
-        
+        )
+
     except Exception as e:
         error_handler = ErrorContext(DatabaseErrorHandler())
-        error_handler.handle_error(DatabaseWriteError(f"Error updating email: {str(e)}")) 
+        error_handler.handle_error(
+            DatabaseWriteError(f"Error updating email: {str(e)}")
+        )
         raise
+
 
 def delete_all_users():
     """Deletes all items from the DynamoDB users table."""
@@ -133,4 +141,3 @@ def delete_all_users():
         for item in items:
             print(f"Deleting user with email: {item['email']}")  # Debugging line
             batch.delete_item(Key={"user_id": item["user_id"]})
-    

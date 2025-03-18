@@ -3,11 +3,14 @@ from src.routes.user_routes import router as user_router
 
 app = FastAPI()
 
+
 @app.get("/")
 def read_root():
     return {"message": "UBL Invoice API is running!"}
 
+
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run(app, host="0.0.0.0", port=8000)
 app.include_router(user_router)

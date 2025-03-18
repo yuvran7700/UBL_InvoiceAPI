@@ -1,6 +1,7 @@
-'''
-    Validates information required for successful user creation
-'''
+"""
+Validates information required for successful user creation
+"""
+
 import abn
 from src.exceptions.error_handler import ErrorContext, ValidationErrorHandler
 from src.exceptions.user_exceptions import (
@@ -25,24 +26,41 @@ def validate_password(password: str):
     error_handler = ErrorContext(ValidationErrorHandler())
 
     if len(password) < 8:
-        error_handler.handle_error(PasswordValidationError("Password", "Password must be at least 8 characters long"))
+        error_handler.handle_error(
+            PasswordValidationError(
+                "Password", "Password must be at least 8 characters long"
+            )
+        )
 
     if not any(char.isdigit() for char in password):
-        error_handler.handle_error(PasswordValidationError("Password", "Password must contain at least one number"))
+        error_handler.handle_error(
+            PasswordValidationError(
+                "Password", "Password must contain at least one number"
+            )
+        )
 
     if not any(char.isupper() for char in password):
-        error_handler.handle_error(PasswordValidationError("Password", "Password must contain at least one uppercase letter"))
+        error_handler.handle_error(
+            PasswordValidationError(
+                "Password", "Password must contain at least one uppercase letter"
+            )
+        )
 
     if not any(char.islower() for char in password):
-        error_handler.handle_error(PasswordValidationError("Password", "Password must contain at least one lowercase letter"))
+        error_handler.handle_error(
+            PasswordValidationError(
+                "Password", "Password must contain at least one lowercase letter"
+            )
+        )
 
-#Checks if the user's email exists in the database
+
+# Checks if the user's email exists in the database
 def check_email_exists(email: str):
     """Check if email is already registered.
-    
+
     Args:
         email (str): The email to check for registration.
-    
+
     Raises:
         EmailAlreadyRegisteredError: If the email is already registered in the system.
     """
@@ -50,24 +68,27 @@ def check_email_exists(email: str):
     # Use get_user to check if user exists by email.
     user = get_user(email)
 
-    if user:  
-    # If get_user succeeds, it means the user exists, so raise EmailAlreadyRegisteredError
+    if user:
+        # If get_user succeeds, it means the user exists, so raise EmailAlreadyRegisteredError
         error_handler = ErrorContext(ValidationErrorHandler())
-        error_handler.handle_error(EmailAlreadyRegisteredError(f"Email {email} is already registered."))
-    
+        error_handler.handle_error(
+            EmailAlreadyRegisteredError(f"Email {email} is already registered.")
+        )
+
+
 def check_user_exists(email: str):
-    '''checks user exists in db
-    
-    args: email 
-    
-    rasises: 
+    """checks user exists in db
+
+    args: email
+
+    rasises:
     usernotfounderror
-    
-    '''
+
+    """
 
     user = get_user(email)
 
-    if not user:  
+    if not user:
         error_handler = ErrorContext(ValidationErrorHandler())
         error_handler.handle_error(UserNotFoundError(f"User {email} not found."))
     return user.user_id

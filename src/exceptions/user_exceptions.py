@@ -10,8 +10,11 @@ class ValidationError(Exception):
         super().__init__(self.message)
 
 '''
+
+
 class ABNValidationError(ValidationError):
     """Raised when the ABN is invalid."""
+
     def __init__(self, field_name: str = None, message: str = None):
         self.field_name = field_name
         if not message:
@@ -20,8 +23,10 @@ class ABNValidationError(ValidationError):
                 message += f" for field: {field_name}"
         super().__init__(message)
 
+
 class PasswordValidationError(ValidationError):
     """Raised when the password does not meet the requirements."""
+
     def __init__(self, field_name: str = None, message: str = None):
         self.field_name = field_name
         if not message:
@@ -30,8 +35,10 @@ class PasswordValidationError(ValidationError):
                 message += f" for field: {field_name}"
         super().__init__(message)
 
+
 class EmailAlreadyRegisteredError(ValidationError):
     """Raised when the email is already registered."""
+
     def __init__(self, field_name: str = None, message: str = None):
         self.field_name = field_name
         if not message:
@@ -39,9 +46,11 @@ class EmailAlreadyRegisteredError(ValidationError):
             if field_name:
                 message += f" for field: {field_name}"
         super().__init__(message)
-    
+
+
 class UserNotFoundError(ValidationError):
     """Raised when the password does not meet the requirements."""
+
     def __init__(self, field_name: str = None, message: str = None):
         self.field_name = field_name
         if not message:
