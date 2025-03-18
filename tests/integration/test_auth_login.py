@@ -133,7 +133,7 @@ def test_login_user_success(sample_session_json, sample_user_json): # noqa: F811
 def test_login_different_tokens(sample_session_json, sample_user_json): # noqa: F811
 
     sample1 = {
-        "businessName": "Test1 Business",
+        "business_name": "Test1 Business",
         "email": "test2@example.com",
         "password": "Securepassword123",
         "abn": "51824753556"
