@@ -26,7 +26,6 @@ from src.validators.user_validator import (
 )
 
 from src.repositories.user_repository import (
-    get_user,
     get_user_item
 )
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")

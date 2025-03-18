@@ -1,16 +1,17 @@
 from fastapi.testclient import TestClient
 from src.main import app
-from tests.utils.utils_test import delete_all_user_items, delete_all_session_items
+from src.repositories.user_repository import delete_all_users
+from tests.utils.utils_test import delete_all_session_items
 from tests.conftest import sample_user_json, sample_session_json # noqa: F401
 
 client = TestClient(app)
 
 def test_logout_missing(sample_session_json, sample_user_json): # noqa: F811
 
-    delete_all_user_items()
+    delete_all_users()
     delete_all_session_items()
 
-    client.post("/v1/users/auth/register", json=sample_user_json) 
+    client.post("/v1/users/register", json=sample_user_json) 
 
     # Send POST request to login the user
     response = client.post("/v1/users/auth/login", json=sample_session_json) 
@@ -31,10 +32,10 @@ def test_logout_missing(sample_session_json, sample_user_json): # noqa: F811
 
 def test_logout_invalid_still_login(sample_session_json, sample_user_json): # noqa: F811
 
-    delete_all_user_items()
+    delete_all_users()
     delete_all_session_items()
 
-    client.post("/v1/users/auth/register", json=sample_user_json)
+    client.post("/v1/users/register", json=sample_user_json)
 
     # Send POST request to login the user
     response = client.post("/v1/users/auth/login", json=sample_session_json)
@@ -51,10 +52,10 @@ def test_logout_invalid_still_login(sample_session_json, sample_user_json): # no
 
 def test_logout_valid(sample_session_json, sample_user_json): # noqa: F811
 
-    delete_all_user_items()
+    delete_all_users()
     delete_all_session_items()
 
-    client.post("/v1/users/auth/register", json=sample_user_json)
+    client.post("/v1/users/register", json=sample_user_json)
 
     # Send POST request to login the user
     response = client.post("/v1/users/auth/login", json=sample_session_json)
