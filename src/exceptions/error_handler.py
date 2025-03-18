@@ -1,3 +1,4 @@
+# The above class defines an Error Handler that catches domain-specific exceptions and translates them into appropriate HTTP responses using a strategy pattern.
 ''' This file defines the Error Handler that 
     - catch these domain-specific exceptions 
     - translates them into appropriate HTTP responses 

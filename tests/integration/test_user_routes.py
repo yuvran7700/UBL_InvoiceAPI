@@ -2,7 +2,7 @@ from fastapi.testclient import TestClient
 from src.main import app
 import pytest
 from tests.conftest import sample_user_json
-from src.repositories.user_repository import delete_all_users, get_user
+from src.repositories.user_repository import delete_all_users
 
 client = TestClient(app)
 
@@ -13,6 +13,11 @@ def auto_cleanup():
     """
     return delete_all_users()
 
+# ----------------------------------------------------------------
+# Tests for the /register endpoint
+# ----------------------------------------------------------------
+
+@pytest.mark.routes
 def test_invalid_abn(sample_user_json):
     """
     Test that the user registration endpoint correctly handles an invalid ABN.
@@ -22,16 +27,47 @@ def test_invalid_abn(sample_user_json):
     assert response.status_code == 400
     assert response.json()["detail"] == "Invalid ABN format"
 
-def test_invalid_password(sample_user_json):
+@pytest.mark.routes
+def test_invalid_password_missing_number(sample_user_json):
     """
-    Test that the user registration endpoint correctly handles an invalid password.
+    Test that the user registration endpoint correctly handles a password without a number.
     """
-    sample_user_json['password'] = 'PasswordS'
+    sample_user_json["password"] = "PasswordS"
     response = client.post("/v1/users/register", json=sample_user_json)
     assert response.status_code == 400
     assert response.json()["detail"] == "Password must contain at least one number"
 
-@pytest.mark.hash
+@pytest.mark.routes
+def test_invalid_password_too_short(sample_user_json):
+    """
+    Test that the user registration endpoint correctly handles a password that is too short.
+    """
+    sample_user_json["password"] = "Pa1"
+    response = client.post("/v1/users/register", json=sample_user_json)
+    assert response.status_code == 400
+    assert response.json()["detail"] == "Password must be at least 8 characters long"
+
+@pytest.mark.routes
+def test_invalid_password_no_uppercase(sample_user_json):
+    """
+    Test that the user registration endpoint correctly handles a password without uppercase letters.
+    """
+    sample_user_json["password"] = "password1"
+    response = client.post("/v1/users/register", json=sample_user_json)
+    assert response.status_code == 400
+    assert response.json()["detail"] == "Password must contain at least one uppercase letter"
+
+@pytest.mark.routes
+def test_invalid_password_no_lowercase(sample_user_json):
+    """
+    Test that the user registration endpoint correctly handles a password without lowercase letters.
+    """
+    sample_user_json["password"] = "PASSWORD1"
+    response = client.post("/v1/users/register", json=sample_user_json)
+    assert response.status_code == 400
+    assert response.json()["detail"] == "Password must contain at least one lowercase letter"
+
+@pytest.mark.routes
 def test_password_hashed(sample_user_json):
     """
     Test that the user registration endpoint correctly hashes the user's password.
@@ -42,84 +78,82 @@ def test_password_hashed(sample_user_json):
     user = response.json()
     assert "password" not in user  
 
-# @pytest.mark.update_tests
-# def test_update_password(sample_user_json):
-#     """
-#     Test that the update password endpoint correctly updates the user's password.
-#     """
-#     # Register a new user
-#     response = client.post("/v1/users/register", json=sample_user_json)
-#     assert response.status_code == 201
+@pytest.mark.routes
+def test_register_missing_field():
+    # Sending a payload missing a required field (e.g. email)
+    payload = {
+        "password": "password123",
+        "business_name": "Test Business",
+        "abn": "123456789"
+    }
+    response = client.post("/v1/users/register", json=payload)
+    # FastAPI will return 422 Unprocessable Entity for validation errors.
+    assert response.status_code == 422
 
-#     # Define the new password payload with all required fields
-#     new_password_payload = {
-#         "email": sample_user_json["email"],
-#         "password": sample_user_json["password"],  # Current password
-#         "updated_password": "NewSecurePassword123"  # New password
-#     }
+# ----------------------------------------------------------------
+# Tests for the /update-password endpoint
+# ----------------------------------------------------------------
 
-#     # Update the user's password
-#     response = client.put("/v1/users/auth/update-password", json=new_password_payload)
-#     print("Update password response:", response.json())
-#     assert response.status_code == 200, f"Expected status 200, got {response.status_code}"
-    
-#     data = response.json()
-#     assert "message" in data, "Missing message in response"
-#     assert data["message"] == "Password updated successfully", f"Unexpected message: {data['message']}"
+def test_update_password_success():
+    payload = {
+        "email": "test@example.com",
+        "old_password": "oldpass",
+        "new_password": "newpass"
+    }
+    response = client.put("/v1/users/update-password", json=payload)
+    assert response.status_code == 200, response.text
+    data = response.json()
+    assert data["message"] == "Password updated successfully"
 
-# @pytest.mark.update_tests
-# def test_update_email(sample_user_json):
-#     """
-#     Test that the update email endpoint correctly updates the user's email.
-#     """ 
-#     # Register a new user
-#     response = client.post("/v1/users/register", json=sample_user_json)
-#     assert response.status_code == 201
+def test_update_password_missing_field():
+    # Missing the old_password field.
+    payload = {
+        "email": "test@example.com",
+        "new_password": "newpass"
+    }
+    response = client.put("/v1/users/update-password", json=payload)
+    assert response.status_code == 422
 
-#     # Define the new email payload with all required fields
-#     new_email_payload = {
-#         "email": sample_user_json["email"],
-#         "updated_email": "newEmail@gmail.com"
-#     }       
+# ----------------------------------------------------------------
+# Tests for the /update-business-name endpoint
+# ----------------------------------------------------------------
 
-#     response = client.put("/v1/users/auth/update-email", json=new_email_payload)
-#     print("Update email response:", response.json())
-#     assert response.status_code == 200, f"Expected status 200, got {response.status_code}" 
-#     data = response.json()
-#     assert "message" in data, "Missing message in response"
-#     assert data["message"] == "Email updated successfully", f"Unexpected message: {data['message']}"
+def test_update_business_name_success():
+    payload = {
+        "email": "test@example.com",
+        "new_username": "New Business Name"
+    }
+    response = client.put("/v1/users/update-business-name", json=payload)
+    assert response.status_code == 200, response.text
+    data = response.json()
+    assert data["message"] == "Business name updated successfully"
 
-#     curr_user = get_user("newEmail@gmail.com")
-#     assert curr_user is not None, "Updated user not found"
-#     assert curr_user["email"] == "newEmail@gmail.com"
+def test_update_business_name_missing_field():
+    # Missing the email field.
+    payload = {
+        "new_username": "New Business Name"
+    }
+    response = client.put("/v1/users/update-business-name", json=payload)
+    assert response.status_code == 422
 
-# @pytest.mark.update_tests
-# def test_update_username(sample_user_json):
-#     """
-#     Test that the update username endpoint correctly updates the user's username.
-#     """
-#     # Register a new user
-#     response = client.post("/v1/users/register", json=sample_user_json)
-#     assert response.status_code == 201
+# ----------------------------------------------------------------
+# Tests for the /update-email endpoint
+# ----------------------------------------------------------------
 
-#     # Define the new username payload with all required fields
-#     new_username_payload = {
-#         "email": sample_user_json["email"],
-#         "updated_username": "newUsername"
-#     }
+def test_update_email_success():
+    payload = {
+        "email": "test@example.com",
+        "new_email": "new@example.com"
+    }
+    response = client.put("/v1/users/update-email", json=payload)
+    assert response.status_code == 200, response.text
+    data = response.json()
+    assert data["message"] == "Email updated successfully"
 
-#     response = client.put("/v1/users/auth/update-username", json=new_username_payload)
-#     print("Update username response:", response.json())
-#     assert response.status_code == 200, f"Expected status 200, got {response.status_code}"
-    
-#     data = response.json()
-#     assert "message" in data, "Missing message in response"
-#     assert data["message"] == "Username updated successfully", f"Unexpected message: {data['message']}"
-
-#     curr_user = user.get(sample_user_json["email"])
-#     assert curr_user is not None, "Updated user not found"
-#     assert curr_user["email"] == sample_user_json["email"]
-#     assert curr_user["businessName"] == "newUsername"
-#     assert curr_user["abn"] == sample_user_json["abn"]
-#     assert "hashed_password" in curr_user
-#     assert "user_id" in curr_user
+def test_update_email_missing_field():
+    # Missing the original email field.
+    payload = {
+        "new_email": "new@example.com"
+    }
+    response = client.put("/v1/users/update-email", json=payload)
+    assert response.status_code == 422
