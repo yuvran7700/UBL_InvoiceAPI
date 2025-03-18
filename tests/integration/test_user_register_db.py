@@ -18,7 +18,7 @@ def cleanup_database():
     delete_all_users()   # Clean after test
 
 @pytest.mark.user_db_tests
-def test_user_registration1(sample_user_json):
+def test_user_registration(sample_user_json):
     """
     Test the full registration process, including validating the user in DynamoDB.
     """
@@ -28,7 +28,7 @@ def test_user_registration1(sample_user_json):
     # Assert the API responds with a success status code 201
     assert response.status_code == 200
     user = response.json()
-
+    user_in_db = get_user(sample_user_json["email"])
     # Check that the response contains user data (matching UserOut model)
     assert user["email"] == sample_user_json["email"]
     assert user["business_name"] == sample_user_json["business_name"]

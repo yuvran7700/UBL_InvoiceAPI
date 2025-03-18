@@ -54,4 +54,20 @@ def check_email_exists(email: str):
     # If get_user succeeds, it means the user exists, so raise EmailAlreadyRegisteredError
         error_handler = ErrorContext(ValidationErrorHandler())
         error_handler.handle_error(EmailAlreadyRegisteredError(f"Email {email} is already registered."))
-        raise EmailAlreadyRegisteredError(f"Email {email} is already registered.")
+    
+def check_user_exists(email: str):
+    '''checks user exists in db
+    
+    args: email 
+    
+    rasises: 
+    usernotfounderror
+    
+    '''
+
+    user = get_user(email)
+
+    if not user:  
+        error_handler = ErrorContext(ValidationErrorHandler())
+        error_handler.handle_error(UserNotFoundError(f"User {email} not found."))
+    return user.user_id

@@ -2,11 +2,10 @@ import uuid
 import logging
 from fastapi import HTTPException, status
 from passlib.context import CryptContext
-from src.exceptions.validation_exceptions import ValidationError
-from src.models.user_models import UserIn, UserInDB
-from src.repositories.user_repository import save_user
+from src.models.user_models import UpdatePasswordRequest, UserIn, UserInDB
+from src.repositories.user_repository import get_user, save_user, update_user_password_in_db
 from src.utils.user_helpers import  hash_password
-from src.validators.user_validator import validate_abn, check_email_exists, validate_password
+from src.validators.user_validator import check_user_exists, validate_abn, check_email_exists, validate_password
 
 logger = logging.getLogger(__name__)
 
@@ -33,65 +32,26 @@ def create_user(user_in: UserIn) -> UserInDB:
 
     user_id = str(uuid.uuid4())
 
-    # user_in_db = UserInDB(
-    #     business_name=user_in.business_name,
-    #     email=user_in.email,
-    #     hashed_password=hashed_password,
-    #     abn=user_in.abn,
-    #     user_id=user_id
-    # )
-
     user_in_db = UserInDB(**user_in.model_dump(), hashed_password=hashed_password, user_id=user_id)
     save_user(user_in_db)
     return(user_in_db)
 
-# def update_password(self, request_data: UpdatePasswordRequest):
-#     """
-#     Update a user's password.
+def update_user_password(request: UpdatePasswordRequest):
+    """
+    Update a user's password.
+    """
+    check_user_exists(request.email)
+    new_password = request.new_password
+    validate_password(new_password)
     
-#     Args:
-#         request_data (UpdatePasswordRequest): User data including current and new password
-        
-#     Returns:
-#         dict: Success message
-        
-#     Raises:
-#         HTTPException: If validation fails or database operations fail
-#     """
-#     try:
-#         # Get the user from DynamoDB
-#         user_data = user.get(request_data.email)
-        
-#         # Verify the current password is correct
-#         if not pwd_context.verify(request_data.password, user_data.get('hashed_password')):
-#             raise HTTPException(
-#                 status_code=status.HTTP_401_UNAUTHORIZED,
-#                 detail="Current password is incorrect"
-#             )
-        
-#         # Validate the new password
-#         validate_password(request_data.updated_password)
-    
-#         # Hash the new password
-#         new_hashed_password = hash_password(request_data.updated_password)
-        
-#         # Update the user's password in DynamoDB using the generalized update function
-#         result = user.update_user(
-#             user_id=user_data['user_id'],
-#             update_data={'hashed_password': new_hashed_password}
-#         )
+    new_hashed_password = hash_password(new_password)
 
-#         return {
-#             "message": "Password updated successfully"
-#         }
+    user = get_user(request.email)
+    user_id = user.user_id
 
-#     except HTTPException:
-#         raise
-#     except Exception as e:
-#         raise HTTPException(
-#             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-#             detail=f"Error updating password: {str(e)}"
-#         )
+    update_user_password_in_db(user_id, request.email, new_hashed_password)
+
+
 
 # def update_email(self, request_data: UpdateEmailRequest): 
 #     """
@@ -147,7 +107,7 @@ def create_user(user_in: UserIn) -> UserInDB:
         
     Raises:
         HTTPException: If validation fails or database operations fail
-    """
+    
     try:
         # Get the user from DynamoDB
         user_data = user.get(request_data.email)
@@ -172,4 +132,5 @@ def create_user(user_in: UserIn) -> UserInDB:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error updating username: {str(e)}"
-        )
+        )"
+    """

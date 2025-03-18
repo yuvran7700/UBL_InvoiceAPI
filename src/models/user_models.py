@@ -17,4 +17,7 @@ class UserInDB(BaseModel):
     hashed_password: str
     abn: str
     user_id: str
-    
+
+class UpdatePasswordRequest(BaseModel):
+    email: EmailStr
+    new_password: str

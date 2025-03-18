@@ -1,7 +1,6 @@
 from fastapi.testclient import TestClient
 from src.main import app
 import pytest
-from src.services.user_service import create_user
 from tests.conftest import sample_user_json
 from src.repositories.user_repository import delete_all_users, get_user
 

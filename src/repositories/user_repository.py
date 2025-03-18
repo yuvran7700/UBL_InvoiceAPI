@@ -23,7 +23,7 @@ def save_user(user_in_db: UserInDB) -> None:
         user_table.put_item(Item=user_in_db_dic)
     except Exception as e:
         error_handler = ErrorContext(DatabaseErrorHandler())
-        error_handler.handle_error(DatabaseWriteError(f"Error putting user by email: {str(e)}")) 
+        error_handler.handle_error(DatabaseWriteError(f"Error putting user by email: {str(e)}"))
 
 
 def get_user(email: str) -> UserInDB:
@@ -37,7 +37,6 @@ def get_user(email: str) -> UserInDB:
         UserInDB: The retrieved user if found.
 
     Raises:
-        UserNotFoundError: If no user is found with the given email.
         DatabaseReadError: If there is an error reading from the database.
     """
     try:
@@ -52,14 +51,31 @@ def get_user(email: str) -> UserInDB:
         if  items: 
              return UserInDB.model_validate(items[0])
         return None
-      
-       
     
     except Exception as e:
         error_handler = ErrorContext(DatabaseErrorHandler())
         error_handler.handle_error(DatabaseReadError(f"Error retrieving user by email: {str(e)}")) 
         raise
 
+def update_user_password_in_db(user_id: str, email: str, new_hashed_password: str): 
+    '''
+    '''
+    try: 
+        user_table.update_item(
+            Key={"user_id": user_id, "email": email},
+            UpdateExpression="set #hashed_password = :n",
+            ExpressionAttributeNames={
+                "#hashed_password": "hashed_password",
+            },
+            ExpressionAttributeValues={
+                ":n": new_hashed_password,
+            },
+            ReturnValues="UPDATED_NEW",
+        )
+    except Exception as e:
+        error_handler = ErrorContext(DatabaseErrorHandler())
+        error_handler.handle_error(DatabaseWriteError(f"Error updating user password: {str(e)}")) 
+        raise
 
 def delete_all_users():
     """Deletes all items from the DynamoDB users table."""
