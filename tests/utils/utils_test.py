@@ -4,6 +4,8 @@ from datetime import datetime, timezone
 from jose import jwt
 import os
 
+from src.repositories.user_repository import get_user
+
 # Load AWS region from environment variables (default to us-east-1)
 AWS_REGION = os.getenv("AWS_REGION", "us-east-1")
 
@@ -57,9 +59,13 @@ def create_expired_token():
     return JWT
 
 def reset_too_many_attemps(email: str):
+
+    user = get_user(email)
+    user_id = user.user_id
+    
     table_name = "users"
     table = dynamodb.Table(table_name)
     table.update_item(
-        Key={"email": email},
+        Key={"user_id": user_id},
         UpdateExpression="REMOVE failed_attempts, lockout_until"
     )
