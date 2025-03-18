@@ -77,6 +77,26 @@ def update_user_password_in_db(user_id: str, email: str, new_hashed_password: st
         error_handler.handle_error(DatabaseWriteError(f"Error updating user password: {str(e)}")) 
         raise
 
+def update_username_in_db(user_id: str, email: str, new_username: str): 
+    '''
+    '''
+    try: 
+        user_table.update_item(
+            Key={"user_id": user_id, "email": email},
+            UpdateExpression="set #business_name = :n",
+            ExpressionAttributeNames={
+                "#business_name": "business_name",
+            },
+            ExpressionAttributeValues={
+                ":n": new_username,
+            },
+            ReturnValues="UPDATED_NEW",
+        )
+    except Exception as e:
+        error_handler = ErrorContext(DatabaseErrorHandler())
+        error_handler.handle_error(DatabaseWriteError(f"Error updating business name: {str(e)}")) 
+        raise
+
 def delete_all_users():
     """Deletes all items from the DynamoDB users table."""
     response = user_table.scan()  # Get all items from the table

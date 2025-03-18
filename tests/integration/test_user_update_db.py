@@ -27,8 +27,6 @@ def test_update_password(sample_user_json):
     response = client.post("/v1/users/register", json=sample_user_json)
     assert response.status_code == 200
     user = response.json()
-    print("this is user")
-    print(user)
 
     new_password = "NewSecurePassword123"
     update_data = {
@@ -37,8 +35,6 @@ def test_update_password(sample_user_json):
     }
     response = client.put("/v1/users/update-password", json=update_data)
     assert response.status_code == 200
-    print("Update Password Response:", response.json())
-
     response_data = response.json()
     assert response_data["message"] == "Password updated successfully"
 
@@ -56,10 +52,35 @@ def test_update_password(sample_user_json):
     assert "hashed_password" in stored_user  # Check that the password is hashed
     assert "user_id" in stored_user  # Ensure that user_id is stored in the database
 
-    
-
     # Verify the new password
     assert verify_password(new_password, stored_user["hashed_password"])
+
+@pytest.mark.update_tests
+def test_update_business_name(sample_user_json):
+    """
+    Test updating the business name of a registered user.
+    """
+    # Register the user first
+    response = client.post("/v1/users/register", json=sample_user_json)
+    assert response.status_code == 200
+    user = response.json()
+    print("This is the user:", user)
+
+    # Update the business name
+    new_business_name = "Updated Business Name"
+    update_data = {
+        "email": user["email"],
+        "new_business_name": new_business_name  # New business name
+    }
+    response = client.put("/v1/users/update-business-name", json=update_data)
+    
+    # Validate response
+    assert response.status_code == 200
+    assert response.json()["message"] == "Business name updated successfully"
+
+    # Fetch user from DB and verify update
+    updated_user = get_user(user["email"])  # Assuming this retrieves the updated user
+    assert updated_user.business_name == new_business_name
 
 '''
 @pytest.mark.update_tests

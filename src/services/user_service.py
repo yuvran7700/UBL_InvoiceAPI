@@ -2,8 +2,8 @@ import uuid
 import logging
 from fastapi import HTTPException, status
 from passlib.context import CryptContext
-from src.models.user_models import UpdatePasswordRequest, UserIn, UserInDB
-from src.repositories.user_repository import get_user, save_user, update_user_password_in_db
+from src.models.user_models import UpdatePasswordRequest, UpdateUsernameRequest, UserIn, UserInDB
+from src.repositories.user_repository import get_user, save_user, update_user_password_in_db, update_username_in_db
 from src.utils.user_helpers import  hash_password
 from src.validators.user_validator import check_user_exists, validate_abn, check_email_exists, validate_password
 
@@ -50,6 +50,18 @@ def update_user_password(request: UpdatePasswordRequest):
     user_id = user.user_id
 
     update_user_password_in_db(user_id, request.email, new_hashed_password)
+
+def update_business_name(request: UpdateUsernameRequest):
+    """
+    Update a username.
+    """
+    check_user_exists(request.email)
+    new_business_name = request.new_business_name
+
+    user = get_user(request.email)
+    user_id = user.user_id
+
+    update_username_in_db(user_id, request.email, new_business_name)
 
 
 
