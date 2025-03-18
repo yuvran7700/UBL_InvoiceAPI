@@ -1,3 +1,13 @@
+''' This file defines the Error Handler that 
+    - catch these domain-specific exceptions 
+    - translates them into appropriate HTTP responses 
+        (with status codes and details).
+
+    Error Handler is created using a stragery pattern. 
+
+    Usage: Within code, use handler to raise the correct http expectins
+'''
+
 from abc import ABC, abstractmethod
 from fastapi import HTTPException, status
 import logging

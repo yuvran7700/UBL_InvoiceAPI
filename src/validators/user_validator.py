@@ -1,10 +1,10 @@
 import abn
-from fastapi import HTTPException, status
-from src.db.dynamodb_client import user_table
-from exceptions import (
+# from fastapi import HTTPException, status
+# from src.db.dynamodb_client import user_table
+from src.exceptions.error_handler import ErrorContext, ValidationErrorHandler
+from src.exceptions.user_exceptions import (
     ABNValidationError,
-    ErrorContext,
-    ValidationErrorHandler,
+    PasswordValidationError,
 )
 
 #This file handles all the validation required for account creation
@@ -25,9 +25,36 @@ def validate_abn(abn_value: str):
         error_handler.handle_error(ABNValidationError("ABN", "Invalid ABN format"))
 
 
+def validate_password(password: str):
+    """Validate password strength."""
+
+    error_handler = ErrorContext(ValidationErrorHandler())
+
+    if len(password) < 8:
+        error_handler.handle_error(PasswordValidationError("Password", "Password must be at least 8 characters long"))
+
+    if not any(char.isdigit() for char in password):
+        error_handler.handle_error(PasswordValidationError("Password", "Password must contain at least one number"))
+
+    if not any(char.isupper() for char in password):
+        error_handler.handle_error(PasswordValidationError("Password", "Password must contain at least one uppercase letter"))
+
+    if not any(char.islower() for char in password):
+        error_handler.handle_error(PasswordValidationError("Password", "Password must contain at least one lowercase letter"))
+
 #Checks if the user's email exists in the database
 def check_email_exists(email: str):
-    """Check if email is already registered."""
+    """Check if email is already registered.
+        args: email 
+        calls db get method that checks user exists 
+        raises: user already exists error 
+        
+    
+    """
+    if not get_user(email): 
+        error_handler = ErrorContext(ValidationErrorHandler())
+        error_handler.handle_error(ABNValidationError("ABN", "Invalid ABN format"))
+        
     try:
         # Scan for email instead of getting by primary key
         response = user_table.scan(
@@ -48,7 +75,9 @@ def check_email_exists(email: str):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error checking email: {str(e)}"
         )
-    
+
+
+''''  
 def validate_password(password: str):
     """Validate password strength."""
     if len(password) < 8:
@@ -72,3 +101,4 @@ def validate_password(password: str):
             detail="Password must contain at least one lowercase letter"
         )
 
+'''

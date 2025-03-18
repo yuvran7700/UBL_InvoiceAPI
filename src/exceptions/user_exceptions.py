@@ -1,5 +1,5 @@
 from fastapi import HTTPException, status
-from validation_exceptions import ValidationError
+from src.exceptions.validation_exceptions import ValidationError
 
 '''ValidationError in validation_expections
 class ValidationError(Exception):

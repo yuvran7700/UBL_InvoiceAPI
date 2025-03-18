@@ -32,12 +32,22 @@ def get_user(email: str) -> UserInDB:
     Returns:
         InvoiceType: The retrieved invoice if found, otherwise None.
     """
-    response = user_table.query(
-        IndexName="email-index",  # Ensure your GSI is set up
-        KeyConditionExpression=Key("email").eq(email)
-    )
+    try:
+        response = user_table.query(
+            IndexName="email-index",  # Ensure your GSI is set up
+            KeyConditionExpression=Key("email").eq(email)
+        )
+        items = response.get('Items', [])
+        if not items: 
+            raise DatabaseReadError()
+            error_handler = ErrorContext(ValidationErrorHandler())
+            error_handler.handle_error(ABNValidationError("ABN", "Invalid ABN format"))
+        if items:
+            return UserInDB.model_validate(items[0])
+        return
+    
+    expect 
 
-    return response.get("Items", [])
 
 def delete_all_users():
     """Deletes all items from the DynamoDB users table."""
