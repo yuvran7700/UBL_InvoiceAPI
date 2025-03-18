@@ -24,15 +24,32 @@ def check_dynamodb_connection():
 check_dynamodb_connection()
 
 # Reference the "invoices" table
-invoices_table = dynamodb.Table("invoices")
+invoice_table = dynamodb.Table("invoices")
+
+# Reference the "users" table
+user_table = dynamodb.Table("users")
+
+# Reference the "sessions" table
+session_table = dynamodb.Table("sessions")
 
 
-def initialize_dynamodb():
+def initialize_invoice_dynamodb():
     """
     Initializes and tests the connection to DynamoDB.
     """
     try:
         print("Checking DynamoDB connection...")
-        print("Invoices Table Status:", invoices_table.table_status)
+        print("Invoices Table Status:", invoice_table.table_status)
+    except Exception as e:
+        print("Error connecting to DynamoDB:", str(e))
+
+
+def initialize_session_dynamodb():
+    """
+    Initializes and tests the connection to DynamoDB.
+    """
+    try:
+        print("Checking DynamoDB connection...")
+        print("Invoices Table Status:", user_table.table_status)
     except Exception as e:
         print("Error connecting to DynamoDB:", str(e))
