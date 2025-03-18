@@ -51,7 +51,7 @@ def update_user_password(request: UpdatePasswordRequest):
 
     update_user_password_in_db(user_id, request.email, new_hashed_password)
 
-def update_business_name(request: UpdateUsernameRequest):
+def update_user_business_name(request: UpdateUsernameRequest):
     """
     Update a username.
     """

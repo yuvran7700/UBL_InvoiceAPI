@@ -73,7 +73,7 @@ def test_update_business_name(sample_user_json):
         "new_business_name": new_business_name  # New business name
     }
     response = client.put("/v1/users/update-business-name", json=update_data)
-    
+    print("This is the response:", response)
     # Validate response
     assert response.status_code == 200
     assert response.json()["message"] == "Business name updated successfully"
