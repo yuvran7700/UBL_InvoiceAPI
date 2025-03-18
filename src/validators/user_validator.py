@@ -1,17 +1,29 @@
 import abn
 from fastapi import HTTPException, status
 from src.db.dynamodb_client import user_table
+from exceptions import (
+    ABNValidationError,
+    ErrorContext,
+    ValidationErrorHandler,
+)
 
 #This file handles all the validation required for account creation
 
 #Validates the given ABN
+# def validate_abn(abn_value: str):
+#     """Validate Australian Business Number format."""
+#     if not abn.validate(abn_value):
+#         raise HTTPException(
+#             status_code=status.HTTP_400_BAD_REQUEST,
+#             detail="Invalid ABN format"
+#         )
+
 def validate_abn(abn_value: str):
     """Validate Australian Business Number format."""
     if not abn.validate(abn_value):
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid ABN format"
-        )
+        error_handler = ErrorContext(ValidationErrorHandler())
+        error_handler.handle_error(ABNValidationError("ABN", "Invalid ABN format"))
+
 
 #Checks if the user's email exists in the database
 def check_email_exists(email: str):
