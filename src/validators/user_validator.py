@@ -23,6 +23,7 @@ def check_email_exists(email: str):
             ExpressionAttributeValues={':email': email}
         )
         if response.get('Items'):
+            logger.warning(f"Email already registered: {email}")
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Email already registered"
@@ -31,6 +32,7 @@ def check_email_exists(email: str):
         raise
     except Exception as e:
         raise HTTPException(
+            logger.error(f"Error checking email: {str(e)}")
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error checking email: {str(e)}"
         )

@@ -1,4 +1,5 @@
 import uuid
+import logging
 from fastapi import HTTPException, status
 from passlib.context import CryptContext
 from src.models.user_models import UserIn, UserInDB
@@ -6,11 +7,12 @@ from src.repositories.user_repository import save_user
 from src.utils.user_helpers import  hash_password
 from src.validators.user_validator import validate_abn, check_email_exists, validate_password
 
+logger = logging.getLogger(__name__)
 
 # Initialize the password hashing context
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-def create_user(user_in: UserIn):
+def create_user(user_in: UserIn) -> UserInDB:
     """
     Register a new user with validation and error handling.
     
@@ -26,20 +28,34 @@ def create_user(user_in: UserIn):
     try:
         # Validate all required fields
         validate_abn(user_in.abn)
+        print(user_in.abn)
         check_email_exists(user_in.email)
         validate_password(user_in.password)
+
         hashed_password = hash_password(user_in.password)
+
         user_id = str(uuid.uuid4())
-        user_in_db = UserInDB(**user_in.model_dump(), hashed_password=hashed_password, user_id=user_id)
+
+        user_in_db = UserInDB(
+            business_name=user_in.business_name,
+            email=user_in.email,
+            hashed_password=hashed_password,
+            abn=user_in.abn,
+            user_id=user_id
+        )
+
+        # user_in_db = UserInDB(**user_in.model_dump(), hashed_password=hashed_password, user_id=user_id)
         save_user(user_in_db)
-    except HTTPException:
-        raise  # Re-raise HTTP exceptions as they are already properly formatted
+    except HTTPException as e:
+        logger.error(f"Validation error: {e.detail}")
+        raise
     except Exception as e:
+        logger.error(f"Internal server error: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Internal server error: {str(e)}"
         )
-    return user_in_db
+    return(user_in_db)
 
 # def update_password(self, request_data: UpdatePasswordRequest):
 #     """
