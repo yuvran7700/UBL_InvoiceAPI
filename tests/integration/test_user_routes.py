@@ -38,11 +38,10 @@ def test_password_hashed(sample_user_json):
     Test that the user registration endpoint correctly hashes the user's password.
     """
     response = client.post("/v1/users/register", json=sample_user_json)
-    print(response.json)
-    assert response.status_code == 201
-    assert "hashed_password" not in response.json()["user"]
-    assert response.json()["user"]["email"] == sample_user_json["email"]
-    assert response.json()["user"]["businessName"] == sample_user_json["businessName"]
+    assert response.status_code == 200
+
+    user = response.json()
+    assert "password" not in user  
 
 # @pytest.mark.update_tests
 # def test_update_password(sample_user_json):

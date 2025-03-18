@@ -17,7 +17,7 @@ def cleanup_database():
     yield
     delete_all_users()   # Clean after test
 
-@pytest.mark.dbw
+@pytest.mark.user_db_tests
 def test_user_registration1(sample_user_json):
     """
     Test the full registration process, including validating the user in DynamoDB.
@@ -38,6 +38,7 @@ def test_user_registration1(sample_user_json):
 
     # Ensure the user is correctly stored in the database with hashed password
     user_in_db = get_user(sample_user_json["email"])
+    #convert UserInDB model into json
     stored_user = user_in_db.model_dump()
     assert stored_user is not None
     assert stored_user["email"] == sample_user_json["email"]
@@ -45,32 +46,3 @@ def test_user_registration1(sample_user_json):
     assert stored_user["abn"] == sample_user_json["abn"]
     assert "hashed_password" in stored_user  # Check that the password is hashed
     assert "user_id" in stored_user  # Ensure that user_id is stored in the database
-
-@pytest.mark.db
-def test_user_registration(sample_user_json):
-    """
-    Test the full registration process, including validating the user in DynamoDB.
-    """
-    # Make the API request to register the user
-    response = client.post("/v1/users/register", json=sample_user_json)
-
-    # Assert the API responds with a success message and status code 201
-    assert response.status_code == 201
-    data = response.json()
-    assert data["message"] == "User registered successfully"
-    assert "user" in data
-
-    # Check that the response contains user data
-    user_data = data["user"]
-    assert user_data["email"] == sample_user_json["email"]
-    assert user_data["business_name"] == sample_user_json["business_name"]
-    assert user_data["abn"] == sample_user_json["abn"]
-    assert "password" not in user_data
-
-    stored_user = get_user(sample_user_json["email"])
-    assert stored_user is not None
-    assert stored_user["email"] == sample_user_json["email"]
-    assert stored_user["business_name"] == sample_user_json["business_name"]
-    assert stored_user["abn"] == sample_user_json["abn"]
-    assert "hashed_password" in stored_user
-    assert "user_id" in stored_user
