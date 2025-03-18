@@ -141,3 +141,4 @@ def delete_all_users():
         for item in items:
             print(f"Deleting user with email: {item['email']}")  # Debugging line
             batch.delete_item(Key={"user_id": item["user_id"]})
+
