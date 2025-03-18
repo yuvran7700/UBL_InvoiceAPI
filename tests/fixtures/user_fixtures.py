@@ -1,9 +1,8 @@
 # tests/fixtures/user_fixtures
 
 import os
-import pytest
 import json
-
+import pytest
 
 @pytest.fixture
 def sample_user_json():
