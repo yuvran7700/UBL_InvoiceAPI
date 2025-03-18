@@ -20,22 +20,6 @@ async def register(user_in: UserIn):
         )
     return user
 
-# @router.put("/update-password")
-# async def update_password(request: UpdatePasswordRequest):
-#     try:
-#         print(f"Received request: {request.dict()}")  # Debugging
-#         update_user_password(request)  # Call service layer
-#         return {"message": "Password updated successfully"}
-#     except HTTPException as e:
-#         print(f"HTTP Exception: {e.detail}")
-#         raise e
-#     except Exception as e:
-#         print(f"Unexpected error: {str(e)}")
-#         raise HTTPException(
-#             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-#             detail=f"An error occurred: {str(e)}"
-#         )
-
 @router.put("/update-password")
 async def update_password(request: UpdatePasswordRequest):
     try:
@@ -78,32 +62,3 @@ async def update_email(request: UpdateEmailRequest):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"An error occurred: {str(e)}"
         ) 
-
-
-# @router.put("/update-email")
-# def updateEmail(request: UpdateEmailRequest):
-#     try:
-#         service = user_service()  
-#         result =  service.update_email(request)  # Call service layer
-#         return JSONResponse(status_code=status.HTTP_200_OK, content=result)
-#     except HTTPException as e:
-#         raise e
-#     except Exception as e:
-#         raise HTTPException(
-#             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-#             detail=f"An error occurred: {str(e)}"
-#         )
-
-# @router.put("/update-username")
-# def updateUsername(request: update_username_request):
-#     try:
-#         service = user_service()  
-#         result =  service.update_username(request)  # Call service layer
-#         return JSONResponse(status_code=status.HTTP_200_OK, content=result)
-#     except HTTPException as e:
-#         raise e
-#     except Exception as e:
-#         raise HTTPException(
-#             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-#             detail=f"An error occurred: {str(e)}"
-#         )

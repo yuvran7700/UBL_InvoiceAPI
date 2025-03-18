@@ -2,7 +2,7 @@ import pytest
 from fastapi.testclient import TestClient
 from src.main import app
 from src.repositories.user_repository import delete_all_users, get_user
-from src.utils.user_helpers import  verify_password
+from src.utils.user_helpers import verify_password
 from tests.conftest import sample_user_json
 
 client = TestClient(app)
