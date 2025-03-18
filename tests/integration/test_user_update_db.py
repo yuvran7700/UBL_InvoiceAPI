@@ -100,7 +100,7 @@ def test_update_email(sample_user_json):
     response = client.put("/v1/users/update-email", json=update_data)
     print("This is the response:", response)
     assert response.status_code == 200
-    assert response.json()["message"] == "Business name updated successfully"   
+    assert response.json()["message"] == "Email updated successfully"   
   
     # Fetch user from DB and verify update
     updated_user = get_user(new_email)  # Assuming this retrieves the updated user

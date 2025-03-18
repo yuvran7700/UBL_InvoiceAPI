@@ -1,11 +1,25 @@
 import uuid
 import logging
-from fastapi import HTTPException, status
 from passlib.context import CryptContext
-from src.models.user_models import UpdateEmailRequest, UpdatePasswordRequest, UpdateUsernameRequest, UserIn, UserInDB
-from src.repositories.user_repository import get_user, save_user, update_email_in_db, update_user_password_in_db, update_username_in_db
+from src.models.user_models import (
+    UpdateEmailRequest, 
+    UpdatePasswordRequest, 
+    UpdateUsernameRequest, 
+    UserIn, 
+    UserInDB)
+from src.repositories.user_repository import (
+    get_user, 
+    save_user, 
+    update_email_in_db, 
+    update_user_password_in_db, 
+    update_username_in_db
+    )
 from src.utils.user_helpers import  hash_password
-from src.validators.user_validator import check_user_exists, validate_abn, check_email_exists, validate_password
+from src.validators.user_validator import (
+    check_user_exists, 
+    validate_abn, 
+    check_email_exists, 
+    validate_password)
 
 logger = logging.getLogger(__name__)
 
@@ -75,87 +89,3 @@ def update_user_email(request: UpdateEmailRequest):
     user_id = user.user_id
 
     update_email_in_db(user_id, new_email)
-
-
-
-# def update_email(self, request_data: UpdateEmailRequest): 
-#     """
-#     Update a user's email.
-    
-#     Args:
-#         request_data (UpdateEmailRequest): User data including current and new email
-        
-#     Returns:
-#         dict: Success message
-        
-#     Raises:
-#         HTTPException: If validation fails or database operations fail
-#     """
-#     try:
-#         # Get the user from DynamoDB
-#         user_data = user.get(request_data.email)
-        
-#         # Validate the new email does not exist
-#         check_email_exists(request_data.updated_email)
-    
-#         # Update the user's email in DynamoDB
-#         result = user.update_user(
-#             user_id=user_data['user_id'],
-#             update_data={'email': request_data.updated_email}
-#         )
-
-#         if not result.get('message'):
-#             raise HTTPException(
-#                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-#                 detail="Failed to update email"
-#             )
-
-#         return {"message": "Email updated successfully"}
-
-#     except HTTPException:
-#         raise
-#     except Exception as e:
-#         raise HTTPException(
-#             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-#             detail=f"Error updating email: {str(e)}"
-#         )
-    
-# def update_username(self, request_data: update_username_request):   
-    """
-    Update a user's username.
-    
-    Args:
-        request_data (update_username_request): User data including current and new username
-        
-    Returns:
-        dict: Success message
-        
-    Raises:
-        HTTPException: If validation fails or database operations fail
-    
-    try:
-        # Get the user from DynamoDB
-        user_data = user.get(request_data.email)
-        
-        # Update the user's username in DynamoDB
-        result = user.update_user(
-            user_id=user_data['user_id'],
-            update_data={'businessName': request_data.updated_username}
-        )
-
-        if not result.get('message'):
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Failed to update username"
-            )
-
-        return {"message": "Username updated successfully"}
-
-    except HTTPException:
-        raise
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error updating username: {str(e)}"
-        )"
-    """
