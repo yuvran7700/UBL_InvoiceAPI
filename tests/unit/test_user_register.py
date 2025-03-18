@@ -28,6 +28,34 @@ def test_user_in_db_map_sucess(sample_user_json):
     assert user_in_db.hashed_password == fake_hashed_password
     assert user_in_db.user_id == user_id
 
+@pytest.mark.convert
+def test_model_to_dict_conversion(sample_user_json):
+    user_in = UserIn(**sample_user_json)
+    user_id = "142562728920"
+    fake_hashed_password = "hhh77snn09"
+
+    user_in_db = UserInDB(
+            business_name=user_in.business_name,
+            email=user_in.email,
+            hashed_password=fake_hashed_password,
+            abn=user_in.abn,
+            user_id=user_id
+        )
+    
+    user = user_in_db
+    user_dict = user.model_dump()
+    
+    result = {
+        "business_name": "Test1 Business",
+        "email": "test1@example.com",
+        "hashed_password": "hhh77snn09",
+        "abn": "51824753556",
+        "user_id": "142562728920"
+    }
+    
+    # Assert that the dictionary matches the expected output
+    assert user_dict == result
+
 @pytest.mark.unit
 def test_invalid_abn():
     """

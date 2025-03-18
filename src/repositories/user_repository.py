@@ -3,7 +3,7 @@ from typing import List
 from boto3.dynamodb.conditions import Key
 
 from src.db.dynamodb_client import user_table
-from src.exceptions.db_exceptions import DatabaseReadError
+from src.exceptions.db_exceptions import DatabaseReadError, DatabaseWriteError
 from src.exceptions.error_handler import DatabaseErrorHandler, ErrorContext
 from src.exceptions.user_exceptions import UserNotFoundError
 from src.models.user_models import UserInDB
@@ -20,20 +20,26 @@ def save_user(user_in_db: UserInDB) -> None:
         Exception: If there is an error storing the user in DynamoDB.
     """
     try:
-        user_table.put_item(Item=user_in_db)
+        user_in_db_dic = user_in_db.model_dump()
+        user_table.put_item(Item=user_in_db_dic)
     except Exception as e:
-        raise Exception(f"Failed to store invoice in DynamoDB: {e}")
+        error_handler = ErrorContext(DatabaseErrorHandler())
+        error_handler.handle_error(DatabaseWriteError(f"Error putting user by email: {str(e)}")) 
 
 
 def get_user(email: str) -> UserInDB:
     """
-    Retrieves an invoice from DynamoDB by its unique identifier.
+    Retrieves a user from DynamoDB by their email address.
 
     Args:
-        invoice_id (str): The unique invoice identifier.
+        email (str): The email address of the user.
 
     Returns:
-        InvoiceType: The retrieved invoice if found, otherwise None.
+        UserInDB: The retrieved user if found.
+
+    Raises:
+        UserNotFoundError: If no user is found with the given email.
+        DatabaseReadError: If there is an error reading from the database.
     """
     try:
 
@@ -52,7 +58,7 @@ def get_user(email: str) -> UserInDB:
     except Exception as e:
         error_handler = ErrorContext(DatabaseErrorHandler())
         error_handler.handle_error(DatabaseReadError(f"Error retrieving user by email: {str(e)}")) 
-  
+        raise
 
 
 def delete_all_users():

@@ -7,6 +7,7 @@ from src.exceptions.user_exceptions import (
     ABNValidationError,
     EmailAlreadyRegisteredError,
     PasswordValidationError,
+    UserNotFoundError,
 )
 from src.repositories.user_repository import get_user
 
@@ -49,12 +50,17 @@ def check_email_exists(email: str):
         # Use get_user to check if user exists by email.
         user = get_user(email)
         
-        # If user exists, raise an EmailAlreadyRegisteredError
-        if user:
-            error_handler = ErrorContext(ValidationErrorHandler())
-            error_handler.handle_error(EmailAlreadyRegisteredError())
+        # If get_user succeeds, it means the user exists, so raise EmailAlreadyRegisteredError
+        error_handler = ErrorContext(ValidationErrorHandler())
+        error_handler.handle_error(EmailAlreadyRegisteredError(f"Email {email} is already registered."))
+        raise EmailAlreadyRegisteredError(f"Email {email} is already registered.")
+
+    except UserNotFoundError():
+        # If UserNotFoundError is raised, the email is not registered, so do nothing
+        pass
 
     except Exception as e:
         # Handle any unexpected errors and log them
         error_handler = ErrorContext(ValidationErrorHandler())
         error_handler.handle_error(Exception(f"Unexpected error while checking email: {str(e)}"))
+        raise  # Re-raise the exception after handling it

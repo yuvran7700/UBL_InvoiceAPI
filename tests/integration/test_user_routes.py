@@ -27,7 +27,7 @@ def test_invalid_password(sample_user_json):
     """
     Test that the user registration endpoint correctly handles an invalid password.
     """
-    sample_user_json['password'] = 'password'
+    sample_user_json['password'] = 'PasswordS'
     response = client.post("/v1/users/register", json=sample_user_json)
     assert response.status_code == 400
     assert response.json()["detail"] == "Password must contain at least one number"
