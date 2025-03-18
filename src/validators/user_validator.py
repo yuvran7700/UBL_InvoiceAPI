@@ -4,8 +4,10 @@ import abn
 from src.exceptions.error_handler import ErrorContext, ValidationErrorHandler
 from src.exceptions.user_exceptions import (
     ABNValidationError,
+    EmailAlreadyRegisteredError,
     PasswordValidationError,
 )
+from src.repositories.user_repository import get_user
 
 #This file handles all the validation required for account creation
 
@@ -51,30 +53,19 @@ def check_email_exists(email: str):
         
     
     """
-    if not get_user(email): 
-        error_handler = ErrorContext(ValidationErrorHandler())
-        error_handler.handle_error(ABNValidationError("ABN", "Invalid ABN format"))
-        
     try:
-        # Scan for email instead of getting by primary key
-        response = user_table.scan(
-            FilterExpression='email = :email',
-            ExpressionAttributeValues={':email': email}
-        )
-        if response.get('Items'):
-            logger.warning(f"Email already registered: {email}")
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Email already registered"
-            )
-    except HTTPException:
-        raise
+        # Use get_user to check if user exists by email.
+        user = get_user(email)
+        
+        # If user exists, raise an EmailAlreadyRegisteredError
+        if user:
+            error_handler = ErrorContext(ValidationErrorHandler())
+            error_handler.handle_error(EmailAlreadyRegisteredError())
+
     except Exception as e:
-        raise HTTPException(
-            logger.error(f"Error checking email: {str(e)}")
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error checking email: {str(e)}"
-        )
+        # Handle any unexpected errors and log them
+        error_handler = ErrorContext(ValidationErrorHandler())
+        error_handler.handle_error(Exception(f"Unexpected error while checking email: {str(e)}"))
 
 
 ''''  
