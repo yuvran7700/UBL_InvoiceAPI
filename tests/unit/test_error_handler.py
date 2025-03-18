@@ -7,6 +7,7 @@ from src.exceptions.error_handler import (
     ErrorContext,
 )
 
+
 def test_validation_error_handler():
     handler = ValidationErrorHandler()
     with pytest.raises(HTTPException) as exc_info:
@@ -14,6 +15,7 @@ def test_validation_error_handler():
     exc = exc_info.value
     assert exc.status_code == status.HTTP_400_BAD_REQUEST
     assert exc.detail == "Validation failed"
+
 
 def test_database_error_handler():
     handler = DatabaseErrorHandler()
@@ -24,6 +26,7 @@ def test_database_error_handler():
     # Note: detail is fixed regardless of the error message
     assert exc.detail == "Database operation failed"
 
+
 def test_not_found_error_handler():
     handler = NotFoundErrorHandler()
     with pytest.raises(HTTPException) as exc_info:
@@ -31,6 +34,7 @@ def test_not_found_error_handler():
     exc = exc_info.value
     assert exc.status_code == status.HTTP_404_NOT_FOUND
     assert exc.detail == "Item not found"
+
 
 def test_error_context_with_validation_handler():
     context = ErrorContext(ValidationErrorHandler())
@@ -40,6 +44,7 @@ def test_error_context_with_validation_handler():
     assert exc.status_code == status.HTTP_400_BAD_REQUEST
     assert exc.detail == "Context validation error"
 
+
 def test_error_context_with_database_handler():
     context = ErrorContext(DatabaseErrorHandler())
     with pytest.raises(HTTPException) as exc_info:
@@ -47,6 +52,7 @@ def test_error_context_with_database_handler():
     exc = exc_info.value
     assert exc.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
     assert exc.detail == "Database operation failed"
+
 
 def test_error_context_with_not_found_handler():
     context = ErrorContext(NotFoundErrorHandler())

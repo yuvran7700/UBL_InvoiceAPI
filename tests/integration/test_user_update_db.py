@@ -2,7 +2,7 @@ import time
 import pytest
 from fastapi.testclient import TestClient
 from src.main import app
-from src.utils.user_helpers import  verify_password
+from src.utils.user_helpers import verify_password
 from tests.conftest import sample_user_json
 from src.repositories.user_repository import delete_all_users, get_user
 
@@ -16,7 +16,7 @@ def cleanup_database():
     """
     delete_all_users()  # Clean before test
     yield
-    delete_all_users()   # Clean after test
+    delete_all_users()  # Clean after test
 
 
 @pytest.mark.update_tests
@@ -24,16 +24,13 @@ def test_update_password(sample_user_json):
     """
     Test the full password update process, including validating the user in DynamoDB.
     """
-   
+
     response = client.post("/v1/users/register", json=sample_user_json)
     assert response.status_code == 200
     user = response.json()
 
     new_password = "NewSecurePassword123"
-    update_data = {
-        "email": user["email"],
-        "new_password": new_password  # New password
-    }
+    update_data = {"email": user["email"], "new_password": new_password}  # New password
     response = client.put("/v1/users/update-password", json=update_data)
     assert response.status_code == 200
     response_data = response.json()
@@ -56,6 +53,7 @@ def test_update_password(sample_user_json):
     # Verify the new password
     assert verify_password(new_password, stored_user["hashed_password"])
 
+
 @pytest.mark.update_tests
 def test_update_business_name(sample_user_json):
     """
@@ -71,7 +69,7 @@ def test_update_business_name(sample_user_json):
     new_business_name = "Updated Business Name"
     update_data = {
         "email": user["email"],
-        "new_business_name": new_business_name  # New business name
+        "new_business_name": new_business_name,  # New business name
     }
     response = client.put("/v1/users/update-business-name", json=update_data)
     print("This is the response:", response)
@@ -85,7 +83,7 @@ def test_update_business_name(sample_user_json):
 
 
 @pytest.mark.update_email
-def test_update_email(sample_user_json):    
+def test_update_email(sample_user_json):
     # Register the user
     response = client.post("/v1/users/register", json=sample_user_json)
     assert response.status_code == 200
@@ -93,21 +91,18 @@ def test_update_email(sample_user_json):
 
     # Update the user's email
     new_email = "Newemail@gmail.com"
-    update_data = {
-        "email": user["email"],
-        "new_email": new_email  # New email
-    }
+    update_data = {"email": user["email"], "new_email": new_email}  # New email
     response = client.put("/v1/users/update-email", json=update_data)
     print("This is the response:", response)
     assert response.status_code == 200
-    assert response.json()["message"] == "Email updated successfully"   
-  
+    assert response.json()["message"] == "Email updated successfully"
+
     # Fetch user from DB and verify update
     updated_user = get_user(new_email)  # Assuming this retrieves the updated user
     assert updated_user.email == new_email
 
 
-'''
+"""
 @pytest.mark.update_tests
 def test_update_email(sample_user_json):    
     # Register the user
@@ -158,4 +153,4 @@ def test_update_username(sample_user_json):
     assert "hashed_password" in stored_user
     assert "user_id" in stored_user
     assert stored_user["businessName"] == new_username
-    '''
+    """

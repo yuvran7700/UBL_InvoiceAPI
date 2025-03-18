@@ -15,7 +15,8 @@ def cleanup_database():
     """
     delete_all_users()  # Clean before test
     yield
-    delete_all_users()   # Clean after test
+    delete_all_users()  # Clean after test
+
 
 @pytest.mark.user_db_tests
 def test_user_registration(sample_user_json):
@@ -33,12 +34,12 @@ def test_user_registration(sample_user_json):
     assert user["email"] == sample_user_json["email"]
     assert user["business_name"] == sample_user_json["business_name"]
     assert user["abn"] == sample_user_json["abn"]
-    assert "user_id" not in user  
-    assert "password" not in user  
+    assert "user_id" not in user
+    assert "password" not in user
 
     # Ensure the user is correctly stored in the database with hashed password
     user_in_db = get_user(sample_user_json["email"])
-    #convert UserInDB model into json
+    # convert UserInDB model into json
     stored_user = user_in_db.model_dump()
     assert stored_user is not None
     assert stored_user["email"] == sample_user_json["email"]
