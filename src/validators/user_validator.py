@@ -47,11 +47,12 @@ def validate_password(password: str):
 #Checks if the user's email exists in the database
 def check_email_exists(email: str):
     """Check if email is already registered.
-        args: email 
-        calls db get method that checks user exists 
-        raises: user already exists error 
-        
     
+    Args:
+        email (str): The email to check for registration.
+    
+    Raises:
+        EmailAlreadyRegisteredError: If the email is already registered in the system.
     """
     try:
         # Use get_user to check if user exists by email.
