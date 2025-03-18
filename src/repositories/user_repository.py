@@ -43,7 +43,8 @@ def get_user(email: str) -> UserInDB:
 
         response = user_table.query(
             IndexName="email-index",  # Ensure your GSI is set up
-            KeyConditionExpression=Key("email").eq(email)
+            KeyConditionExpression=Key("email").eq(email),
+            ConsistentRead=False
         )
 
         items = response.get('Items', [])
@@ -57,12 +58,12 @@ def get_user(email: str) -> UserInDB:
         error_handler.handle_error(DatabaseReadError(f"Error retrieving user by email: {str(e)}")) 
         raise
 
-def update_user_password_in_db(user_id: str, email: str, new_hashed_password: str): 
+def update_user_password_in_db(user_id: str,  new_hashed_password: str): 
     '''
     '''
     try: 
         user_table.update_item(
-            Key={"user_id": user_id, "email": email},
+            Key={"user_id": user_id},
             UpdateExpression="set #hashed_password = :n",
             ExpressionAttributeNames={
                 "#hashed_password": "hashed_password",
@@ -77,12 +78,12 @@ def update_user_password_in_db(user_id: str, email: str, new_hashed_password: st
         error_handler.handle_error(DatabaseWriteError(f"Error updating user password: {str(e)}")) 
         raise
 
-def update_username_in_db(user_id: str, email: str, new_username: str): 
+def update_username_in_db(user_id: str, new_username: str): 
     '''
     '''
     try: 
         user_table.update_item(
-            Key={"user_id": user_id, "email": email},
+            Key={"user_id": user_id},
             UpdateExpression="set #business_name = :n",
             ExpressionAttributeNames={
                 "#business_name": "business_name",
@@ -95,6 +96,35 @@ def update_username_in_db(user_id: str, email: str, new_username: str):
     except Exception as e:
         error_handler = ErrorContext(DatabaseErrorHandler())
         error_handler.handle_error(DatabaseWriteError(f"Error updating business name: {str(e)}")) 
+        raise
+
+def update_email_in_db(user_id: str, new_email: str): 
+    '''
+    '''
+    try: 
+        response = user_table.update_item(
+            Key={"user_id": user_id},
+            UpdateExpression="set #email = :n",
+            ExpressionAttributeNames={
+                "#email": "email",
+            },
+            ExpressionAttributeValues={
+                ":n": new_email,
+            },
+            ReturnValues="UPDATED_NEW",
+        )
+
+        print(f"Update response: {response}") 
+        
+        updated_email = response.get("Attributes", {}).get("email")
+        if updated_email:
+            print(f"Updated email in DB: {updated_email}")
+        else:
+            print("Email update failed.")
+
+    except Exception as e:
+        error_handler = ErrorContext(DatabaseErrorHandler())
+        error_handler.handle_error(DatabaseWriteError(f"Error updating email: {str(e)}")) 
         raise
 
 def delete_all_users():
@@ -110,7 +140,7 @@ def delete_all_users():
     with user_table.batch_writer() as batch:
         for item in items:
             print(f"Deleting user with email: {item['email']}")  # Debugging line
-            batch.delete_item(Key={"user_id": item["user_id"], "email": item["email"]})
+            batch.delete_item(Key={"user_id": item["user_id"]})
     
 
 # class user():

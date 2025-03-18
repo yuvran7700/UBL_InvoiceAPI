@@ -2,8 +2,8 @@ import uuid
 import logging
 from fastapi import HTTPException, status
 from passlib.context import CryptContext
-from src.models.user_models import UpdatePasswordRequest, UpdateUsernameRequest, UserIn, UserInDB
-from src.repositories.user_repository import get_user, save_user, update_user_password_in_db, update_username_in_db
+from src.models.user_models import UpdateEmailRequest, UpdatePasswordRequest, UpdateUsernameRequest, UserIn, UserInDB
+from src.repositories.user_repository import get_user, save_user, update_email_in_db, update_user_password_in_db, update_username_in_db
 from src.utils.user_helpers import  hash_password
 from src.validators.user_validator import check_user_exists, validate_abn, check_email_exists, validate_password
 
@@ -49,7 +49,7 @@ def update_user_password(request: UpdatePasswordRequest):
     user = get_user(request.email)
     user_id = user.user_id
 
-    update_user_password_in_db(user_id, request.email, new_hashed_password)
+    update_user_password_in_db(user_id, new_hashed_password)
 
 def update_user_business_name(request: UpdateUsernameRequest):
     """
@@ -61,7 +61,20 @@ def update_user_business_name(request: UpdateUsernameRequest):
     user = get_user(request.email)
     user_id = user.user_id
 
-    update_username_in_db(user_id, request.email, new_business_name)
+    update_username_in_db(user_id, new_business_name)
+
+def update_user_email(request: UpdateEmailRequest):
+    """
+    Update a username.
+    """
+    check_user_exists(request.email)
+    check_email_exists(request.new_email)
+    new_email = request.new_email
+
+    user = get_user(request.email)
+    user_id = user.user_id
+
+    update_email_in_db(user_id, new_email)
 
 
 

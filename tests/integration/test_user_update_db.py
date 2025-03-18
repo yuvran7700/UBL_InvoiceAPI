@@ -1,3 +1,4 @@
+import time
 import pytest
 from fastapi.testclient import TestClient
 from src.main import app
@@ -81,6 +82,30 @@ def test_update_business_name(sample_user_json):
     # Fetch user from DB and verify update
     updated_user = get_user(user["email"])  # Assuming this retrieves the updated user
     assert updated_user.business_name == new_business_name
+
+
+@pytest.mark.update_email
+def test_update_email(sample_user_json):    
+    # Register the user
+    response = client.post("/v1/users/register", json=sample_user_json)
+    assert response.status_code == 200
+    user = response.json()
+
+    # Update the user's email
+    new_email = "Newemail@gmail.com"
+    update_data = {
+        "email": user["email"],
+        "new_email": new_email  # New email
+    }
+    response = client.put("/v1/users/update-email", json=update_data)
+    print("This is the response:", response)
+    assert response.status_code == 200
+    assert response.json()["message"] == "Business name updated successfully"   
+  
+    # Fetch user from DB and verify update
+    updated_user = get_user(new_email)  # Assuming this retrieves the updated user
+    assert updated_user.email == new_email
+
 
 '''
 @pytest.mark.update_tests
