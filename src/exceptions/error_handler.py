@@ -1,14 +1,3 @@
-# The above class defines an Error Handler that catches domain-specific exceptions and translates them into appropriate HTTP responses using a strategy pattern.
-''' This file defines the Error Handler that 
-    - catch these domain-specific exceptions 
-    - translates them into appropriate HTTP responses 
-        (with status codes and details).
-
-    Error Handler is created using a stragery pattern. 
-
-    Usage: Within code, use handler to raise the correct http expectins
-'''
-
 from abc import ABC, abstractmethod
 from fastapi import HTTPException, status
 import logging
@@ -18,6 +7,21 @@ logger = logging.getLogger(__name__)
 
 # Base error handling strategy
 class ErrorHandler(ABC):
+    """
+    Abstract base class for error-handling strategies.
+
+    This class defines the interface for handling different types of errors 
+    using the Strategy Pattern. Subclasses must implement the `handle` method 
+    to process specific exceptions and convert them into appropriate HTTP responses.
+
+    Subclasses:
+        - `ValidationErrorHandler`: Handles validation-related errors with HTTP 400.
+        - `DatabaseErrorHandler`: Handles database-related errors with HTTP 500.
+        - `NotFoundErrorHandler`: Handles missing resource errors with HTTP 404.
+
+    Methods:
+        handle(error): Abstract method to be implemented by subclasses for error handling.
+    """
     @abstractmethod
     def handle(self, error):
         pass
