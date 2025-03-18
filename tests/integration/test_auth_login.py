@@ -4,7 +4,7 @@ from tests.conftest import sample_user_json, sample_session_json # noqa: F401
 from tests.utils.utils_test import (delete_all_user_items, 
                                     delete_all_session_items, 
                                     reset_too_many_attemps)
-
+from src.repositories.user_repository
 client = TestClient(app)
 
 def test_login_user_wrong_password(sample_user_json): # noqa: F811

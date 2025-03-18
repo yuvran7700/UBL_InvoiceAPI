@@ -1,9 +1,10 @@
 """Adding routes for API usage"""
 from fastapi import FastAPI
 from src.routes.auth_routes import router as auth_router  # Adjust import as neede
-
+from src.routes.user_routes import router as user_router
 app = FastAPI()
 app.include_router(auth_router)
+app.include_router(user_router)
 
 
 @app.get("/")

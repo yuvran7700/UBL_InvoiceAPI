@@ -15,7 +15,6 @@ from src.validators.auth_validator import validate_abn, session_validation
 from src.repositories.auth_repository import (
     save_user_to_dynamodb,
     save_session_to_dynamodb,
-    get_user,
     get_token,
     remove_session_from_dynamodb,
     check_email_exists,
@@ -23,6 +22,9 @@ from src.repositories.auth_repository import (
     reset_failed_attempts
 )
 
+from src.repositories.user_repository import (
+    get_user
+)
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 # Session Expiration Time (in minutes)
@@ -43,45 +45,6 @@ def verify_password(plain_password: str, hashed_password: str):
             
     """
     return pwd_context.verify(plain_password, hashed_password)
-
-
-def register_user(request_data: dict):
-    """
-        Creates a new user.
-        
-        Args:
-            request_data (dict): User registration data
-            
-        Returns:
-            dict: Success message
-            
-        Raises:
-            HTTPException: If validation fails or database operations fail
-    """
-    try:
-        validate_abn(request_data["abn"])
-        check_email_exists(request_data["email"])
-
-        hashed_password = hash_password(request_data["password"])
-
-        user_id = str(uuid.uuid4())
-
-        user_item = {
-            "user_id": user_id,
-            "email": request_data["email"],
-            "businessName": request_data["businessName"],
-            "abn": request_data["abn"],
-            "hashed_password": hashed_password,
-        }
-
-        save_user_to_dynamodb(user_item)
-
-        return {"message": "User registered successfully"}
-
-    except HTTPException as e:
-        raise e  # Let FastAPI handle the HTTPException properly
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
 
 
 def create_session(request_data: dict):

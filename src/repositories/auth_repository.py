@@ -6,7 +6,7 @@ MAX_FAILED_ATTEMPTS = 3
 LOCKOUT_DURATION = timedelta(minutes=15)
 
 def check_email_exists(email: str):
-    response = user_table.get_item(Key={"email": email})
+    response = user_table.get_item(Key={"user_id": user_id})
     if "Item" in response:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail="Email already registered"
@@ -35,14 +35,6 @@ def save_session_to_dynamodb(email: str, JWT: dict):
         )
 
 
-def get_user(email: str):
-    try:
-        response = user_table.get_item(Key={"email": email})
-        return response["Item"]
-    except Exception:
-        return {}
-
-
 def get_token(JWT: str):
     try:
         response = session_table.get_item(Key={"JWT": JWT})
@@ -65,9 +57,12 @@ def add_failed_attempts(email: str, attempts: int):
     lockout_until = None
     if attempts >= MAX_FAILED_ATTEMPTS:
         lockout_until = (datetime.now(timezone.utc) + LOCKOUT_DURATION).isoformat()
+    
+    user = get_user(email)
+    user_id = user.user_id
 
     user_table.update_item(
-        Key={"email": email},
+        Key={"user_id": user_id},
         UpdateExpression="SET failed_attempts = :attempts, lockout_until = :lockout",
         ExpressionAttributeValues={
             ":attempts": attempts,
@@ -76,7 +71,11 @@ def add_failed_attempts(email: str, attempts: int):
     )
 
 def reset_failed_attempts(email: str):
+
+    user = get_user(email)
+    user_id = user.user_id
+
     user_table.update_item(
-        Key={"email": email},
+        Key={"user_id": user_id},
         UpdateExpression="REMOVE failed_attempts, lockout_until"
     )

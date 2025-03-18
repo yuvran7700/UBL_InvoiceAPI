@@ -12,9 +12,9 @@ def test_login_invalid(sample_session_json, sample_user_json): # noqa: F811
     delete_all_user_items()
     delete_all_session_items()
 
-    response = client.post("/v1/users/auth/register", 
+    response = client.post("/v1/users/register", 
                            json=sample_user_json) # noqa: F811
-    assert response.status_code == 201
+    assert response.status_code == 200
 
     # Send POST request to login the user
     response = client.post("/v1/users/auth/login", 
@@ -31,9 +31,9 @@ def test_login_expired(sample_user_json): # noqa: F811
     delete_all_user_items()
     delete_all_session_items()
 
-    response = client.post("/v1/users/auth/register", 
+    response = client.post("/v1/users/register", 
                            json=sample_user_json) # noqa: F811
-    assert response.status_code == 201
+    assert response.status_code == 200
     
     token = create_expired_token()
 
@@ -47,9 +47,9 @@ def test_login_missing(sample_session_json, sample_user_json): # noqa: F811
     delete_all_user_items()
     delete_all_session_items()
 
-    response = client.post("/v1/users/auth/register", 
+    response = client.post("/v1/users/register", 
                            json=sample_user_json) # noqa: F811
-    assert response.status_code == 201
+    assert response.status_code == 200
 
     # Send POST request to login the user
     response = client.post("/v1/users/auth/login", 
@@ -66,7 +66,7 @@ def test_login_user_success(sample_session_json, sample_user_json): # noqa: F811
     delete_all_user_items()
     delete_all_session_items()
     
-    response = client.post("/v1/users/auth/register", 
+    response = client.post("/v1/users/register", 
                            json=sample_user_json) # noqa: F811
 
     # Send POST request to login the user
