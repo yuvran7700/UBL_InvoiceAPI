@@ -17,7 +17,7 @@ async def register(user_in: UserIn):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"An error occurred: {str(e)}"
         )
-    return {"message": "User registered successfully", "user": user}
+    return user
 
 # @router.put("/update-password")
 # def updatePassword(request: UpdatePasswordRequest):

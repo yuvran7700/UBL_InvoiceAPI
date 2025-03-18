@@ -5,7 +5,6 @@ from boto3.dynamodb.conditions import Key
 from src.db.dynamodb_client import user_table
 from src.exceptions.db_exceptions import DatabaseReadError, DatabaseWriteError
 from src.exceptions.error_handler import DatabaseErrorHandler, ErrorContext
-from src.exceptions.user_exceptions import UserNotFoundError
 from src.models.user_models import UserInDB
 
 
@@ -50,10 +49,11 @@ def get_user(email: str) -> UserInDB:
 
         items = response.get('Items', [])
 
-        if not items: 
-            raise UserNotFoundError(f"User with email {email} not found.")
+        if  items: 
+             return UserInDB.model_validate(items[0])
+        return None
       
-        return UserInDB.model_validate(items[0])
+       
     
     except Exception as e:
         error_handler = ErrorContext(DatabaseErrorHandler())
