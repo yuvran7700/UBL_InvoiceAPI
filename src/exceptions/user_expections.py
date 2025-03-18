@@ -1,12 +1,14 @@
 from fastapi import HTTPException, status
-
-class InvalidABNError(HTTPException):
+from validation_exceptions import ValidationError
+class ABNValiError(ValidationError):
     """Raised when the ABN is invalid."""
-    def __init__(self):
-        super().__init__(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid ABN format"
-        )
+    def __init__(self, field_name: str = None, message: str = None):
+        self.field_name = field_name
+        if not message:
+            message = f"ABN validation failed"
+            if field_name:
+                message += f" for field: {field_name}"
+        super().__init__(message)
 
 class EmailAlreadyRegisteredError(HTTPException):
     """Raised when the email is already registered."""
