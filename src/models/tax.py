@@ -8,5 +8,4 @@ class ClassifiedTaxCategoryPatch(BaseModel):
 
 class TaxScheme(BaseModel):
     id: str
-    name: Optional[str]
     tax_type_code: Optional[str]

@@ -47,24 +47,49 @@ def test_extract_header_from_json(sample_order_json):
     assert header.buyer_reference == "CON0095678"
     assert header.order_reference == "AEG012345"
 
-# Test case for extracting Party from XML
-def test_extract_party_from_xml(sample_order_xml):
+def test_extract_buyer_party_from_xml(sample_order_xml):
+    """
+    Test the unmarshal_party method to extract buyer party data from XML.
+    """
     unmarshaller = OrderXmlUnmarshaller()
-    party = unmarshaller.unmarshal_party(sample_order_xml)
+    buyer_party = unmarshaller.unmarshal_party(sample_order_xml, "cac:BuyerCustomerParty")
     
-    assert party.party_name == "IYT Corporation"
-    assert party.postal_address["street"] == "Avon Way"
-    assert party.postal_address["city"] == "Bridgtow"
-    assert party.postal_address["postal_code"] == "ZZ99 1ZZ"
-    assert party.postal_address["country"] == "GB"
+    # Validate buyer party fields
+    assert buyer_party.party_name == "IYT Corporation"
+    assert buyer_party.postal_address["street"] == "Avon Way"
+    assert buyer_party.postal_address["city"] == "Bridgtow"
+    assert buyer_party.party_legal_entity["registration_name"] == "Bridgtow District Council"
+    
+    # Validate contact extraction
+    assert buyer_party.contact is not None
+    assert buyer_party.contact.name == "Mr Fred Churchill"
+    assert buyer_party.contact.telephone == "0127 2653214"
+    assert buyer_party.contact.telefax == "0127 2653215"
+    assert buyer_party.contact.electronic_mail == "fred@iytcorporation.gov.uk"
+    
+    # Validate tax scheme extraction
+    assert buyer_party.party_tax_scheme is not None
+    assert buyer_party.party_tax_scheme.company_id == "12356478"
+    assert buyer_party.party_tax_scheme.exemption_reason == "Local Authority"
+    
+    # Validate the tax scheme inside party_tax_scheme
+    assert buyer_party.party_tax_scheme.tax_scheme is not None
+    assert buyer_party.party_tax_scheme.tax_scheme.id == "UK VAT"
+    assert buyer_party.party_tax_scheme.tax_scheme.tax_type_code == "VAT"
 
-# Test case for extracting Party from JSON
-def test_extract_party_from_json(sample_order_json):
-    unmarshaller = OrderJsonUnmarshaller()
-    party = unmarshaller.unmarshal_party(sample_order_json)
+
+
+def test_extract_seller_party_from_xml(sample_order_xml):
+    """
+    Test the unmarshal_party method to extract seller party data from XML.
+    """
+    unmarshaller = OrderXmlUnmarshaller()
+    seller_party = unmarshaller.unmarshal_party(sample_order_xml, "cac:SellerSupplierParty")
     
-    assert party.party_name == "IYT Corporation"
-    assert party.postal_address["street"] == "Avon Way"
-    assert party.postal_address["city"] == "Bridgtow"
-    assert party.postal_address["postal_code"] == "ZZ99 1ZZ"
-    assert party.postal_address["country"] == "GB"
+    # Validate seller party fields
+    assert seller_party.party_name == "Consortial"
+    assert seller_party.postal_address["street"] == "Busy Street"
+    assert seller_party.postal_address["city"] == "Farthing"
+    assert seller_party.contact.name == "Mrs Bouquet"
+    assert seller_party.party_legal_entity["registration_name"] == "Farthing Purchasing Consortium"
+

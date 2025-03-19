@@ -63,18 +63,19 @@ class OrderJsonUnmarshaller(OrderUnmarshaller):
             ) if tax_scheme_data else None
         )
 
-    def unmarshal_party(json_content: str) -> Party:
+    def unmarshal_party(self, json_content: str, party_type_elem: str) -> Party:
         """
-        Unmarshals a Party object from the provided JSON content.
+        Unmarshal party (buyer or seller) from JSON data, where `party_type_elem` specifies the party element.
         """
         try:
             order_data = json.loads(json_content)
         except json.JSONDecodeError:
             raise HTTPException(status_code=400, detail="Invalid JSON content")
-        
-        party_data = order_data.get("Party", {})
-        
-        # Extract basic party info
+
+        party_data = order_data.get("Order", {}).get(party_type_elem, {})
+        if not party_data:
+            raise HTTPException(status_code=400, detail=f"Missing {party_type_elem}")
+
         party_name = party_data.get("PartyName", {}).get("Name", {}).get("_")
         postal_address = {
             "street": party_data.get("PostalAddress", {}).get("StreetName", {}).get("_"),
@@ -82,22 +83,12 @@ class OrderJsonUnmarshaller(OrderUnmarshaller):
             "postal_code": party_data.get("PostalAddress", {}).get("PostalZone", {}).get("_"),
             "country": party_data.get("PostalAddress", {}).get("Country", {}).get("IdentificationCode", {}).get("_")
         }
-        party_legal_entity = {"registration_name": party_data.get("PartyLegalEntity", {}).get("RegistrationName", {}).get("_")}
-
-        # Extract Contact info (if exists)
-        contact_data = party_data.get("Contact", {})
-        contact = OrderJsonUnmarshaller.unmarshal_contact(contact_data)
-        
-        # Extract PartyTaxScheme info (if exists)
-        party_tax_scheme_data = party_data.get("PartyTaxScheme", {})
-        party_tax_scheme = OrderJsonUnmarshaller.unmarshal_party_tax_scheme(party_tax_scheme_data)
-
+       
         return Party(
-            endpoint_id=None,  # Set by the user later (e.g., JWT token)
-            party_identification=[],  # Set later if needed (e.g., VAT IDs)
+            endpoint_id=None,
+            
             party_name=party_name,
             postal_address=postal_address,
-            party_legal_entity=party_legal_entity,
-            contact=contact,
-            party_tax_scheme=party_tax_scheme
+            contact=None,
+            party_tax_scheme=None
         )

@@ -17,7 +17,6 @@ class InvoiceHeader(BaseModel):
 
 
 class PartyTaxScheme(BaseModel):
-    registration_name: Optional[str] = None
     company_id: str
     exemption_reason: Optional[str] = None
     tax_scheme: TaxScheme
@@ -29,11 +28,10 @@ class Contact(BaseModel):
     electronic_mail: Optional[str] = None
 
 class Party(BaseModel):
-    endpoint_id: str #to be set later
-    party_identification: Optional[List[Dict[str, str]]] = []  # List of party identifiers (e.g., VAT IDs)
-    party_name: Optional[str] = None
+    endpoint_id: Optional[str] #to be set later
+    party_name: str 
     postal_address: Dict[str, str]  # Address of the party (e.g., street, city, postal code)
-    party_legal_entity: Dict[str, str]  # Legal entity info (e.g., registration name)
+    party_legal_entity: Dict[str, str]  # RegistrattionName - found in <cac:PartyTaxScheme>/<cbc:RegistrationName>
 
     # Using the nested models for more detailed information
     contact: Optional[Contact] = None  # Optional contact information for the party
