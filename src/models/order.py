@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import Optional, Dict
+from typing import Optional, Dict, List
 
 class OrderUploadRequest(BaseModel):
     ubl_file_format: str  # "xml" or "json"

@@ -5,10 +5,13 @@ This endpoint accepts a UBL XML order document, extracts its data,
 and creates a draft invoice.
 """
 
+import json
+import xml.etree.ElementTree as ET
 from fastapi import APIRouter, UploadFile, File, HTTPException
+import magic
 from src.services.invoice_service import create_invoice
-from src.models.invoice_type import InvoiceType
-from src.order_type_creation.order_director import OrderDirector
+from src.models.order import OrderUploadRequest
+from src.order_type_creation.invoice_director import InvoiceDirector
 
 router = APIRouter()
 
@@ -16,19 +19,24 @@ router = APIRouter()
 @router.post("/upload", response_model=InvoiceType)
 async def upload_order(file: UploadFile = File(...)):
     """
-    Handle the upload of a UBL XML order document.
-
-    :param file: The uploaded XML file.
-    :return: The created draft invoice.
-    :raises HTTPException: If the file type is not supported
-        or if there is an error parsing the XML.
+    Handle the upload of a UBL order document (XML or JSON), extract data, and generate a draft invoice.
     """
-    if file.content_type not in ["application/xml", "text/xml"]:
-        raise HTTPException(
-            status_code=415, detail="Unsupported Media Type. Only XML is supported."
-        )
-
+    
+    # Check if it's an XML file
     content = await file.read()
-    order = OrderDirector.construct_order_from_xml(content)
-    invoice = create_invoice(order)
+
+    # Use python-magic to check the MIME type of the file
+    file_type = magic.Magic(mime=True).from_buffer(content)
+
+
+    # Validate the MIME type
+    if file_type == "application/xml":
+        draft_invoice = InvoiceDirector.construct_invoice_from_data(content, "xml")
+    elif file_type == "application/json":
+        draft_invoice = InvoiceDirector.construct_invoice_from_data(content, "json")
+    else:
+        raise HTTPException(status_code=415, detail="Unsupported file type. Only XML and JSON are supported.")
+    
+    # Generate the invoice from the parsed order
+    invoice = create_invoice(draft_invoice)
     return invoice

@@ -1,6 +1,6 @@
 import pytest
 from datetime import date
-from src.order_type_creation.order_director import OrderDirector
+from src.order_type_creation.invoice_director import OrderDirector
 from src.marshallers.invoice_marshaller import InvoiceMarshaller
 from src.models.invoice_type import InvoiceType
 

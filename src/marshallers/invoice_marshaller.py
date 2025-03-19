@@ -5,48 +5,46 @@ Handles calculation of monetary totals and assigns invoice-specific fields.
 
 from datetime import date
 from nanoid import generate
-from src.models.order_type import OrderType
-from src.models.invoice_type import InvoiceType
+from src.models.invoice import Invoice
 from src.utils.invoice_calculations import calculate_line_extension
-
 
 class InvoiceMarshaller:
     """
-    A marshaller class to transform an OrderType into an InvoiceType.
+    A marshaller class to transform an Order into an Invoice.
     """
 
     @staticmethod
-    def marshall_order_to_invoice(order: OrderType) -> InvoiceType:
+    def marshall_order_to_invoice(order) -> Invoice:
         """
-        Converts an OrderType to an InvoiceType by calculating each invoice line's extension amount
+        Converts an order to an Invoice by calculating each invoice line's extension amount
         and summing these to get the total invoice amount.
 
         Args:
-            order (OrderType): The order to convert.
+            order (Order): The order to convert.
 
         Returns:
-            InvoiceType: The resulting invoice with computed totals and current date.
+            Invoice: The resulting invoice with computed totals and current date.
         """
         total_invoice_amount = InvoiceMarshaller._calculate_total_invoice_amount(order)
         invoice_id = generate(size=10)
-        return InvoiceType(
+        return Invoice(
             invoice_id=invoice_id,
             issue_date=date.today(),
-            invoice_type_code="380",  # Example code for a commercial invoice.
+            invoice_type_code="380",  # Example invoice type code
             legal_monetary_total=total_invoice_amount,
             payment_means=order.payment_terms,
-            order=order,  # Embed the complete order data.
+            order=order,  # Embed the order data in the invoice
             status="draft",
         )
 
     @staticmethod
-    def _calculate_total_invoice_amount(order: OrderType) -> float:
+    def _calculate_total_invoice_amount(order) -> float:
         """
         Iterates through each invoice line, calculates its extension amount, updates the DTO,
         and accumulates the total invoice amount.
 
         Args:
-            order (OrderType): The order containing invoice lines.
+            order (Order): The order containing invoice lines.
 
         Returns:
             float: The total calculated invoice amount.

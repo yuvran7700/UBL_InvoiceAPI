@@ -7,12 +7,13 @@ from src.models.tax import ClassifiedTaxCategoryPatch, TaxScheme
 class InvoiceHeader(BaseModel):
     customization_id: str
     profile_id: str
-    invoice_id: str
+    invoice_id: Optional[str]
     issue_date: date
     due_date: Optional[date]
     invoice_type_code: str
     document_currency_code: str
-    buyer_reference: Optional[str]
+    buyer_reference: Optional[str] #Order Document's order number
+    order_reference: Optional[str] #Order Document's unique identifier
 
 
 class PartyTaxScheme(BaseModel):
@@ -28,7 +29,7 @@ class Contact(BaseModel):
     electronic_mail: Optional[str] = None
 
 class Party(BaseModel):
-    endpoint_id: str
+    endpoint_id: str #to be set later
     party_identification: Optional[List[Dict[str, str]]] = []  # List of party identifiers (e.g., VAT IDs)
     party_name: Optional[str] = None
     postal_address: Dict[str, str]  # Address of the party (e.g., street, city, postal code)
@@ -40,17 +41,19 @@ class Party(BaseModel):
 
 
 
-class InvoiceLine(BaseModel):
-    id: str
-    invoiced_quantity: float
-    line_extension_amount: float  # Total amount (without taxes)
-    item: "Item"  # Item details (including tax)
-    price: Dict[str, float]
-
 class Item(BaseModel):
     name: str
     description: Optional[str]
     classified_tax_category: Optional["ClassifiedTaxCategoryPatch"]  # Always patchable
+    
+class InvoiceLine(BaseModel):
+    id: str
+    invoiced_quantity: float
+    line_extension_amount: float  # Total amount (without taxes)
+    item: Item  # Item details (including tax)
+    price: Dict[str, float]
+
+
 
 class Invoice(BaseModel):
     header: InvoiceHeader
