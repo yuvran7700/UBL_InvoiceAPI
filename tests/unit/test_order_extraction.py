@@ -124,3 +124,20 @@ def test_extract_buyer_party_from_json(sample_order_json):
     
 
 
+def test_unmarshal_invoice_lines(sample_order_json):
+    """
+    Test unmarshal_invoice_lines() correctly parses the OrderLine into InvoiceLine models.
+    """
+    unmarshaller = OrderJsonUnmarshaller()
+    invoice_lines = unmarshaller.unmarshal_invoice_lines(sample_order_json)
+
+    # Ensure we have the expected number of lines
+    assert len(invoice_lines) == 1
+
+    line = invoice_lines[0]
+    # Validate fields
+    assert line.id == "1"
+    assert line.invoiced_quantity == 100
+    assert line.item.name == "beeswax"
+    assert line.item.description == "Acme beeswax"
+    assert line.price["price_amount"] == 100.00

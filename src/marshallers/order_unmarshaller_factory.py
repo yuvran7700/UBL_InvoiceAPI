@@ -1,8 +1,8 @@
 
 from abc import ABC, abstractmethod
-from typing import Dict, Optional
+from typing import Dict, List, Optional
 
-from src.models.invoice import Contact, Party, PartyTaxScheme
+from src.models.invoice import Contact, InvoiceLine, Item, Party, PartyTaxScheme
 from src.models.tax import TaxScheme
 
 class OrderUnmarshaller(ABC):
@@ -23,12 +23,21 @@ class OrderUnmarshaller(ABC):
         pass
     
     @abstractmethod
+    def extract_item(self, item_elem, ns=None) -> Optional[Item]:
+        pass
+    
+    @abstractmethod
     def unmarshal_party(self, data: bytes, party_type_elem: str) -> Party:
         pass
     
     @abstractmethod
     def unmarshal_header(self, data: bytes) -> dict:
         pass
+    
+    @abstractmethod
+    def unmarshal_invoice_lines(self, data: bytes) -> List[InvoiceLine]:
+        pass
+    
 
     
     

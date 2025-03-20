@@ -1,8 +1,8 @@
 import json
-from typing import Optional
+from typing import List, Optional
 from fastapi import HTTPException
 
-from src.models.invoice import Contact, Party, PartyTaxScheme, InvoiceHeader
+from src.models.invoice import Contact, InvoiceLine, Item, Party, PartyTaxScheme, InvoiceHeader
 from src.models.tax import TaxScheme
 from src.marshallers.order_unmarshaller_factory import OrderUnmarshaller  # The abstract interface
 
@@ -71,6 +71,15 @@ class OrderJsonUnmarshaller(OrderUnmarshaller):
             exemption_reason=exemption_reason,
             tax_scheme=self.extract_tax_scheme(party_tax_scheme_elem.get("TaxScheme", {})),
         )
+        
+    def extract_item(self, item_elem, ns=None) -> Optional[Item]:
+        if not item_elem:
+            return None
+        return Item(
+            name=self.unwrap_and_extract(item_elem.get("Name")),
+            description=self.unwrap_and_extract(item_elem.get("Description")),
+            classified_tax_category=None  # Optional: handle if needed later
+        )
 
 
     def unmarshal_party(self, data: bytes, party_type_elem: str) -> Party:
@@ -130,3 +139,27 @@ class OrderJsonUnmarshaller(OrderUnmarshaller):
             buyer_reference=self.unwrap(header_data.get("SalesOrderID")),
             order_reference=self.unwrap(header_data.get("ID")),
         )
+        
+    
+
+    def unmarshal_invoice_lines(self, data: bytes) -> List[InvoiceLine]:
+        order_data = self.load_json(data)
+        lines_data = order_data.get("Order", {}).get("OrderLine", [])
+        
+        invoice_lines = []
+        for line in lines_data:
+            line_item = line.get("LineItem", {})
+            invoice_lines.append(
+                InvoiceLine(
+                    id=self.unwrap_and_extract(line_item.get("ID")),
+                    invoiced_quantity=float(self.unwrap_and_extract(line_item.get("Quantity"))),
+                    line_extension_amount=None, #Calculation done later when building
+                    item=self.extract_item(line_item.get("Item")),
+                    price={
+                        "price_amount": float(self.unwrap_and_extract(line_item.get("Price", {}).get("PriceAmount")))
+                    }
+                )
+            )
+
+        return invoice_lines
+

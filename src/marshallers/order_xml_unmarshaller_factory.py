@@ -1,8 +1,8 @@
-from typing import Optional
+from typing import List, Optional
 import xml.etree.ElementTree as ET
 from datetime import datetime
 from fastapi import HTTPException
-from src.models.invoice import InvoiceHeader, Party, PartyTaxScheme, Contact
+from src.models.invoice import InvoiceHeader, InvoiceLine, Item, Party, PartyTaxScheme, Contact
 from src.models.tax import TaxScheme
 from src.marshallers.order_unmarshaller_factory import OrderUnmarshaller
 
@@ -152,3 +152,54 @@ class OrderXmlUnmarshaller(OrderUnmarshaller):
             order_reference=self.get_text(root, "./cbc:ID", ns=ns),
         )
         return header
+    
+    def extract_item(self, item_elem, ns=None) -> Optional[Item]:
+        """
+        Extracts an Item object from an XML element.
+        """
+        if item_elem is None:
+            return None
+        ns = ns or self.NAMESPACES
+
+        # UBL allows Item/Description to be a list of descriptions; get the first if present
+        description_elem = item_elem.find("./cbc:Description", ns)
+        description = description_elem.text.strip() if description_elem is not None else None
+
+        return Item(
+            name=self.get_text(item_elem, "./cbc:Name", required=True, ns=ns),
+            description=description,
+            classified_tax_category=None  # Can be extended later if needed
+        )
+
+    def unmarshal_invoice_lines(self, data: bytes) -> List[InvoiceLine]:
+        """
+        Extracts a list of InvoiceLine objects from the provided UBL XML content.
+        """
+        try:
+            root = ET.fromstring(data)
+        except ET.ParseError:
+            raise HTTPException(status_code=400, detail="Invalid XML content")
+        ns = self.NAMESPACES
+
+        invoice_lines = []
+        # UBL equivalent of invoice lines is <cac:OrderLine> containing <cac:LineItem>
+        for order_line_elem in root.findall(".//cac:OrderLine", ns):
+            line_item_elem = order_line_elem.find("./cac:LineItem", ns)
+            if line_item_elem is None:
+                continue  # Skip if no LineItem
+
+            item_elem = line_item_elem.find("./cac:Item", ns)
+            price_elem = line_item_elem.find("./cac:Price", ns)
+
+            invoice_lines.append(
+                InvoiceLine(
+                    id=self.get_text(line_item_elem, "./cbc:ID", required=True, ns=ns),
+                    invoiced_quantity=float(self.get_text(line_item_elem, "./cbc:Quantity", required=True, ns=ns)),
+                    line_extension_amount=None,  # Calculation deferred to business logic
+                    item=self.extract_item(item_elem, ns),
+                    price={
+                        "price_amount": float(self.get_text(price_elem, "./cbc:PriceAmount", required=True, ns=ns))
+                    }
+                )
+            )
+        return invoice_lines

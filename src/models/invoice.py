@@ -42,13 +42,13 @@ class Party(BaseModel):
 class Item(BaseModel):
     name: str
     description: Optional[str]
-    classified_tax_category: Optional["ClassifiedTaxCategoryPatch"]  # Always patchable
+    classified_tax_category: Optional["ClassifiedTaxCategoryPatch"]  #Nested object - To be added by user later
     
 class InvoiceLine(BaseModel):
     id: str
     invoiced_quantity: float
-    line_extension_amount: float  # Total amount (without taxes)
-    item: Item  # Item details (including tax)
+    line_extension_amount: Optional[float]  # Not extracted to be calculate - Line Extension Amount = (Invoiced Quantity × (Item Net Price / Item Price Base Quantity))
+    item: Item  # Nested Object - Item details (including tax)
     price: Dict[str, float]
 
 
