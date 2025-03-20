@@ -9,6 +9,7 @@ import json
 import xml.etree.ElementTree as ET
 from fastapi import APIRouter, UploadFile, File, HTTPException
 import magic
+from src.models.invoice import Invoice
 from src.services.invoice_service import create_invoice
 from src.models.order import OrderUploadRequest
 from src.order_type_creation.invoice_director import InvoiceDirector
@@ -16,27 +17,26 @@ from src.order_type_creation.invoice_director import InvoiceDirector
 router = APIRouter()
 
 
-@router.post("/upload", response_model=InvoiceType)
+@router.post("/upload", response_model=Invoice)
 async def upload_order(file: UploadFile = File(...)):
     """
-    Handle the upload of a UBL order document (XML or JSON), extract data, and generate a draft invoice.
+    Handle the upload of a UBL order document (XML or JSON), extract data, and generate a invoice object.
     """
     
-    # Check if it's an XML file
+    # Read the content of the uploaded file
     content = await file.read()
 
     # Use python-magic to check the MIME type of the file
     file_type = magic.Magic(mime=True).from_buffer(content)
 
-
-    # Validate the MIME type
+    # Initialize the InvoiceDirector
     if file_type == "application/xml":
-        draft_invoice = InvoiceDirector.construct_invoice_from_data(content, "xml")
+        draft_invoice = order_service.construct_invoice_from_data(content, "xml")
     elif file_type == "application/json":
-        draft_invoice = InvoiceDirector.construct_invoice_from_data(content, "json")
+        draft_invoice = order_service.construct_invoice_from_data(content, "json")
     else:
         raise HTTPException(status_code=415, detail="Unsupported file type. Only XML and JSON are supported.")
     
-    # Generate the invoice from the parsed order
-    invoice = create_invoice(draft_invoice)
-    return invoice
+
+    # Return the generated draft invoice
+    return draft_invoice

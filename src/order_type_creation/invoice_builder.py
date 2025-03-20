@@ -77,7 +77,7 @@ class InvoiceBuilder:
         self._document_currency_code = document_currency_code
         return self
 
-    def set_invoice_lines(self, invoice_lines_data: List[Dict]) -> "InvoiceBuilder":
+    def set_invoice_lines(self, invoice_lines: List[InvoiceLine]) -> "InvoiceBuilder":
         """
         Dynamically set invoice lines by constructing InvoiceLine objects from extracted data.
         
@@ -87,23 +87,9 @@ class InvoiceBuilder:
         Returns:
             InvoiceBuilder: The builder instance for method chaining.
         """
-        self._invoice_lines = []
-        for line_data in invoice_lines_data:
-            item_data = line_data.get("item", {})
-            item = Item(
-                name=item_data.get("name"),
-                description=item_data.get("description"),
-                classified_tax_category=ClassifiedTaxCategoryPatch(**item_data.get("classified_tax_category", {})) if item_data.get("classified_tax_category") else None
-            )
-            invoice_line = InvoiceLine(
-                id=line_data["id"],
-                invoiced_quantity=line_data["invoiced_quantity"],
-                line_extension_amount=line_data["line_extension_amount"],
-                item=item,
-                price=line_data.get("price", {})
-            )
-            self._invoice_lines.append(invoice_line)
+        self._invoice_lines = invoice_lines
         return self
+
 
     def _build_party(self, party_data: Dict) -> Party:
         """

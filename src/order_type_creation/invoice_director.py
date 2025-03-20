@@ -37,20 +37,17 @@ class InvoiceDirector:
         # Use the builder to create the invoice
         invoice_builder = InvoiceBuilder()
         invoice = (
-            invoice_builder.set_invoice_id("INV0012345")  # Example ID
-            .set_issue_date(order_data["header"]["issue_date"])
-            .set_invoice_type_code("380")  # Example invoice type code
-            .set_legal_monetary_total(1500.0)  # Example total amount
-            .set_due_date(order_data["header"].get("due_date"))
-            .set_payment_means(order_data["payment_terms"])
+            invoice_builder.set_invoice_id("INV0012345")
+            .set_issue_date(order_data["header"].issue_date)
+            .set_invoice_type_code(order_data["header"].invoice_type_code)
+            .set_legal_monetary_total(order_data["total"]["line_extension_amount"])
+            .set_due_date(order_data["header"].due_date)
+            .set_payment_means(order_data.get("payment_terms"))
             .set_status("draft")
-            .set_invoice_lines(order_data["invoice_lines"])
-            .set_header(
-                order_reference=order_data["header"]["order_reference"],
-                buyer_reference=order_data["header"]["buyer_reference"],
-                note=order_data["header"].get("note"),
-                document_currency_code="USD"  # Example currency
-            )
+            .set_invoice_lines(order_data["invoice_lines"])  # Already Pydantic objects
+            .set_invoice_header(order_data["header"])
+            .set_supplier_party(order_data["supplier_party"])
+            .set_customer_party(order_data["customer_party"])
             .build()
         )
         return invoice
