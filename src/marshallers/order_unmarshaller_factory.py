@@ -9,10 +9,6 @@ class OrderUnmarshaller(ABC):
     """
     Interface for unmarshalling order data from various formats (XML, JSON).
     """
-
-    @abstractmethod
-    def get_text(self, element, path, required=False, error_message=None, ns=None) -> str:
-        pass
     
     @abstractmethod
     def extract_contact(self, contact_elem, ns=None) -> Optional[Contact]:

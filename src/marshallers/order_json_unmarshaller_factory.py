@@ -1,94 +1,132 @@
 import json
-from fastapi import HTTPException
 from typing import Optional
+from fastapi import HTTPException
 
-from src.models.invoice import Contact, InvoiceHeader, Party, PartyTaxScheme
+from src.models.invoice import Contact, Party, PartyTaxScheme, InvoiceHeader
 from src.models.tax import TaxScheme
-from src.marshallers.order_unmarshaller_factory import OrderUnmarshaller
+from src.marshallers.order_unmarshaller_factory import OrderUnmarshaller  # The abstract interface
+
 
 class OrderJsonUnmarshaller(OrderUnmarshaller):
     """
-    Utility class to unmarshal structured order data from JSON format.
+    JSON unmarshaller that extracts structured UBL order data
+    and converts it into Pydantic models.
     """
 
-    def unmarshal_header(self, json_content: bytes) -> InvoiceHeader:
+    def unwrap(self, value):
+        if isinstance(value, dict) and "_" in value:
+            return value["_"]
+        return value
+
+    def unwrap_list(self, value):
+        if isinstance(value, list) and value:
+            return value[0]
+        elif isinstance(value, dict):
+            return value  # already unwrapped
+        return {}
+    
+    def unwrap_and_extract(self, value):
+        return self.unwrap(self.unwrap_list(value))
+    
+    def load_json(self, data: bytes) -> dict:
         try:
-            order_data = json.loads(json_content)
+            return json.loads(data)
         except json.JSONDecodeError:
             raise HTTPException(status_code=400, detail="Invalid JSON content")
+    
 
-        header = InvoiceHeader(
-            customization_id=order_data.get("Order", {}).get("CustomizationID", {}).get("_"),
-            profile_id=order_data.get("Order", {}).get("ProfileID", {}).get("_"),
-            invoice_id=None,  # Set later by the user
-            issue_date=order_data.get("Order", {}).get("IssueDate", {}).get("_"),
-            due_date=None,  # Set later by the user
-            invoice_type_code="380",  # Default
-            document_currency_code="AUD",  # Default
-            buyer_reference=order_data.get("Order", {}).get("SalesOrderID", {}).get("_"),
-            order_reference=order_data.get("Order", {}).get("ID", {}).get("_")
-        )
-        return header
-
-    def unmarshal_contact(contact_data) -> Optional[Contact]:
-        """
-        Helper function to unmarshal contact details from JSON data.
-        """
-        if not contact_data:
+    def extract_contact(self, contact_elem, ns=None) -> Optional[Contact]:
+        if not contact_elem:
             return None
 
         return Contact(
-            name=contact_data.get("Name", {}).get("_"),
-            telephone=contact_data.get("Telephone", {}).get("_"),
-            telefax=contact_data.get("Telefax", {}).get("_"),
-            electronic_mail=contact_data.get("ElectronicMail", {}).get("_")
+            name=self.unwrap(contact_elem.get("Name")),
+            telephone=self.unwrap(contact_elem.get("Telephone")),
+            telefax=self.unwrap(contact_elem.get("Telefax")),
+            electronic_mail=self.unwrap(contact_elem.get("ElectronicMail")),
+        )
+
+    def extract_tax_scheme(self, tax_scheme_elem, ns=None) -> Optional[TaxScheme]:
+        if not tax_scheme_elem:
+            return None
+
+        return TaxScheme(
+            id=self.unwrap(tax_scheme_elem.get("ID")),
+            tax_type_code=self.unwrap(tax_scheme_elem.get("TaxTypeCode")),
+        )
+
+    def extract_party_tax_scheme(self, party_tax_scheme_elem, ns=None) -> Optional[PartyTaxScheme]:
+        if not party_tax_scheme_elem:
+            return None
+
+        # Handle if it's a list (UBL JSON quirk)
+        party_tax_scheme_elem = self.unwrap_list(party_tax_scheme_elem)
+
+        # Proper unwrapping of ExemptionReason
+        exemption_reason = self.unwrap_and_extract(party_tax_scheme_elem.get("ExemptionReason"))
+
+
+        return PartyTaxScheme(
+            company_id=self.unwrap(party_tax_scheme_elem.get("CompanyID")),
+            exemption_reason=exemption_reason,
+            tax_scheme=self.extract_tax_scheme(party_tax_scheme_elem.get("TaxScheme", {})),
+        )
+
+
+    def unmarshal_party(self, data: bytes, party_type_elem: str) -> Party:
+        """
+        Orchestrates party extraction by delegating to extract_* methods.
+        """
+        order_data = self.load_json(data)
+
+        party_data = order_data.get("Order", {}).get(party_type_elem, {}).get("Party", {})
+        if not party_data:
+            raise HTTPException(status_code=400, detail=f"Missing {party_type_elem} in JSON")
+        
+        party_tax_scheme_raw = party_data.get("PartyTaxScheme", {})
+        party_tax_scheme_data = self.unwrap_list(party_tax_scheme_raw)
+    
+
+        registration_name = self.unwrap_and_extract(party_tax_scheme_data.get("RegistrationName")) if party_tax_scheme_data else None
+
+
+        # Handle the case where PartyName is a list
+        party_name = self.unwrap(self.unwrap_list(party_data.get("PartyName")).get("Name"))
+
+        return Party(
+            endpoint_id=None,  # Set later based on user/session
+            party_name=party_name,
+            postal_address={
+                "street": self.unwrap(party_data.get("PostalAddress", {}).get("StreetName")),
+                "city": self.unwrap(party_data.get("PostalAddress", {}).get("CityName")),
+                "postal_code": self.unwrap(party_data.get("PostalAddress", {}).get("PostalZone")),
+                "country": self.unwrap(party_data.get("PostalAddress", {}).get("CountrySubentity")),
+            },
+            party_legal_entity={
+                "registration_name": registration_name
+            },
+            contact=self.extract_contact(party_data.get("Contact")),
+            party_tax_scheme=self.extract_party_tax_scheme(party_data.get("PartyTaxScheme"))
         )
     
-    def unmarshal_party_tax_scheme(party_tax_scheme_data) -> Optional[PartyTaxScheme]:
+    def unmarshal_header(self, data: bytes) -> InvoiceHeader:
         """
-        Helper function to unmarshal party tax scheme from JSON data.
+        Extracts header info and converts it into an InvoiceHeader model.
         """
-        if not party_tax_scheme_data:
-            return None
-        
-        tax_scheme_data = party_tax_scheme_data.get("TaxScheme", {})
-        
-        return PartyTaxScheme(
-            registration_name=party_tax_scheme_data.get("RegistrationName", {}).get("_"),
-            company_id=party_tax_scheme_data.get("CompanyID", {}).get("_"),
-            exemption_reason=party_tax_scheme_data.get("ExemptionReason", [{}])[0].get("_"),
-            tax_scheme=TaxScheme(
-                id=tax_scheme_data.get("ID", {}).get("_"),
-                tax_type_code=tax_scheme_data.get("TaxTypeCode", {}).get("_")
-            ) if tax_scheme_data else None
-        )
+        order_data = self.load_json(data)
 
-    def unmarshal_party(self, json_content: str, party_type_elem: str) -> Party:
-        """
-        Unmarshal party (buyer or seller) from JSON data, where `party_type_elem` specifies the party element.
-        """
-        try:
-            order_data = json.loads(json_content)
-        except json.JSONDecodeError:
-            raise HTTPException(status_code=400, detail="Invalid JSON content")
+        header_data = order_data.get("Order", {})
+        if not header_data:
+            raise HTTPException(status_code=400, detail="Missing Order data")
 
-        party_data = order_data.get("Order", {}).get(party_type_elem, {})
-        if not party_data:
-            raise HTTPException(status_code=400, detail=f"Missing {party_type_elem}")
-
-        party_name = party_data.get("PartyName", {}).get("Name", {}).get("_")
-        postal_address = {
-            "street": party_data.get("PostalAddress", {}).get("StreetName", {}).get("_"),
-            "city": party_data.get("PostalAddress", {}).get("CityName", {}).get("_"),
-            "postal_code": party_data.get("PostalAddress", {}).get("PostalZone", {}).get("_"),
-            "country": party_data.get("PostalAddress", {}).get("Country", {}).get("IdentificationCode", {}).get("_")
-        }
-       
-        return Party(
-            endpoint_id=None,
-            
-            party_name=party_name,
-            postal_address=postal_address,
-            contact=None,
-            party_tax_scheme=None
+        return InvoiceHeader(
+            customization_id=self.unwrap(header_data.get("CustomizationID")),
+            profile_id=self.unwrap(header_data.get("ProfileID")),
+            invoice_id=None,  # To be set later
+            issue_date=self.unwrap(header_data.get("IssueDate")),
+            due_date=None,
+            invoice_type_code="380",  # Default
+            document_currency_code="AUD",  # Default
+            buyer_reference=self.unwrap(header_data.get("SalesOrderID")),
+            order_reference=self.unwrap(header_data.get("ID")),
         )
