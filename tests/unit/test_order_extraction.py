@@ -4,23 +4,17 @@ Unit tests for order XML extraction and order creation.
 Tests verify that header fields are renamed and that invoice_lines are used.
 """
 
-from fastapi import HTTPException
-import pytest
-from src.marshallers.order_unmarshaller_factory import OrderUnmarshaller
-from src.marshallers.order_xml_unmarshaller_factory import OrderXmlUnmarshaller
-from src.marshallers.order_json_unmarshaller_factory import OrderJsonUnmarshaller
-from src.order_type_creation.invoice_director import InvoiceDirector
-from src.order_type_creation.invoice_builder import InvoiceBuilder
-from src.models.invoice import Invoice, InvoiceHeader, InvoiceLine, Party, PartyTaxScheme
-from src.models.tax import TaxScheme
 from datetime import date
+from src.marshallers.strategies.xml_order_parser import XmlOrderParser
+from src.marshallers.strategies.json_order_parser import JsonOrderParser
+
 
 
 # Test extraction of header data with updated keys.
 def test_extract_header_from_xml(sample_order_xml):
-    unmarshaller = OrderXmlUnmarshaller()
+    unmarshaller = XmlOrderParser()
     header = unmarshaller.unmarshal_header(sample_order_xml)
-    
+
     assert header.customization_id == "urn:oasis:names:specification:ubl:xpath:Order-2.0:sbs-1.0-draft"
     assert header.profile_id == "bpid:urn:oasis:names:draft:bpss:ubl-2-sbs-order-with-simple-response-draft"
     assert header.invoice_id is None
@@ -36,8 +30,8 @@ def test_extract_buyer_party_from_xml(sample_order_xml):
     """
     Test the unmarshal_party method to extract buyer party data from XML.
     """
-    unmarshaller = OrderXmlUnmarshaller()
-    buyer_party = unmarshaller.unmarshal_party(sample_order_xml, "cac:BuyerCustomerParty")
+    unmarshaller = XmlOrderParser()
+    buyer_party = unmarshaller.unmarshal_party(sample_order_xml, "BuyerCustomerParty")
     
     # Validate buyer party fields
     assert buyer_party.party_name == "IYT Corporation"
@@ -68,8 +62,8 @@ def test_extract_seller_party_from_xml(sample_order_xml):
     """
     Test the unmarshal_party method to extract seller party data from XML.
     """
-    unmarshaller = OrderXmlUnmarshaller()
-    seller_party = unmarshaller.unmarshal_party(sample_order_xml, "cac:SellerSupplierParty")
+    unmarshaller = XmlOrderParser()
+    seller_party = unmarshaller.unmarshal_party(sample_order_xml, "SellerSupplierParty")
     
     # Validate seller party fields
     assert seller_party.party_name == "Consortial"
@@ -80,7 +74,7 @@ def test_extract_seller_party_from_xml(sample_order_xml):
 
 #Test case for extracting header from JSON
 def test_extract_header_from_json(sample_order_json):
-    unmarshaller = OrderJsonUnmarshaller()
+    unmarshaller = JsonOrderParser()
     header = unmarshaller.unmarshal_header(sample_order_json)
     
     assert header.customization_id == "urn:oasis:names:specification:ubl:xpath:Order-2.0:sbs-1.0-draft"
@@ -98,7 +92,7 @@ def test_extract_buyer_party_from_json(sample_order_json):
     """
     Test the unmarshal_party method to extract buyer party data from JSON.
     """
-    unmarshaller = OrderJsonUnmarshaller()
+    unmarshaller = JsonOrderParser()
     buyer_party = unmarshaller.unmarshal_party(sample_order_json, "BuyerCustomerParty")
 
     # Assert the extracted buyer party fields
@@ -128,7 +122,7 @@ def test_unmarshal_invoice_lines(sample_order_json):
     """
     Test unmarshal_invoice_lines() correctly parses the OrderLine into InvoiceLine models.
     """
-    unmarshaller = OrderJsonUnmarshaller()
+    unmarshaller = JsonOrderParser()
     invoice_lines = unmarshaller.unmarshal_invoice_lines(sample_order_json)
 
     # Ensure we have the expected number of lines

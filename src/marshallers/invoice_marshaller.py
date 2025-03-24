@@ -1,22 +1,33 @@
 """
-    InvoiceMarshaller is responsible for extracting structured data from 
-    raw UBL order content (XML or JSON) and assembling it into the Invoice
-    domain model.
+    Strategy context class that orchestrates the construction of an Invoice object from XML or JSON.
 """
 
 from src.marshallers.strategies.order_parsing_strategy import OrderParsingStrategy
-from src.marshallers.order_unmarshaller_factory import OrderUnmarshaller
 from src.models.invoice import Invoice
 
 class InvoiceMarshaller:
     """
-    Director class that orchestrates the construction of an Invoice object from XML or JSON.
+    Strategy context class that orchestrates the construction of an Invoice object from XML or JSON.
     """
 
     def __init__(self, unmarshaller: OrderParsingStrategy):
         self.unmarshaller = unmarshaller
 
     def construct_invoice_from_data(self, content: bytes) -> Invoice:
+        """
+        Constructs an Invoice object from the provided content.
+        This method processes the given binary content to extract and construct
+        the necessary components of an invoice, including the header, supplier
+        party, customer party, invoice lines, and calculates the total payable
+        amount.
+        Args:
+            content (bytes): The binary content containing invoice data.
+        Returns:
+            Invoice: An Invoice object populated with the extracted data.
+        Raises:
+            ValueError: If the content is invalid or required fields are missing.
+        """
+
         header = self.unmarshaller.unmarshal_header(content)
 
         supplier_party = self.unmarshaller.unmarshal_party(content, "SellerSupplierParty")

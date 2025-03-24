@@ -5,14 +5,12 @@ This endpoint accepts a UBL XML order document, extracts its data,
 and creates a draft invoice.
 """
 
-import json
-import xml.etree.ElementTree as ET
 from fastapi import APIRouter, UploadFile, File, HTTPException
 import magic
+from src.marshallers.order_xml_unmarshaller_factory import OrderXmlUnmarshaller
+from src.marshallers.order_json_unmarshaller_factory import OrderJsonUnmarshaller
 from src.models.invoice import Invoice
-from src.services.invoice_service import create_invoice
-from src.models.order import OrderUploadRequest
-from src.order_type_creation.invoice_director import InvoiceDirector
+from src.draft_invoice_creation.invoice_director import InvoiceDirector
 from src.utils.missing_field_checker import find_missing_fields
 
 

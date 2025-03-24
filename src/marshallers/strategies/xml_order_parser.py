@@ -135,7 +135,8 @@ class XmlOrderParser(OrderParsingStrategy):
 
     def unmarshal_header(self, data: bytes) -> InvoiceHeader:
         """
-        Extracts the header fields from the provided UBL XML content and returns an InvoiceHeader object.
+        Extracts the header fields from the provided UBL XML content and 
+         returns an InvoiceHeader object.
         """
         try:
             root = ET.fromstring(data)
@@ -155,7 +156,7 @@ class XmlOrderParser(OrderParsingStrategy):
             order_reference=self.get_text(root, "./cbc:ID", ns=ns),
         )
         return header
-    
+
     def extract_item(self, item_elem, ns=None) -> Optional[Item]:
         """
         Extracts an Item object from an XML element.
@@ -197,11 +198,13 @@ class XmlOrderParser(OrderParsingStrategy):
             invoice_lines.append(
                 InvoiceLine(
                     id=self.get_text(line_item_elem, "./cbc:ID", required=True, ns=ns),
-                    invoiced_quantity=float(self.get_text(line_item_elem, "./cbc:Quantity", required=True, ns=ns)),
+                    invoiced_quantity=float(
+                        self.get_text(line_item_elem, "./cbc:Quantity", required=True, ns=ns)),
                     line_extension_amount=None,  # Calculation deferred to business logic
                     item=self.extract_item(item_elem, ns),
                     price={
-                        "price_amount": float(self.get_text(price_elem, "./cbc:PriceAmount", required=True, ns=ns))
+                        "price_amount": float(
+                            self.get_text(price_elem, "./cbc:PriceAmount", required=True, ns=ns))
                     }
                 )
             )
