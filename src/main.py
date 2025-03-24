@@ -3,15 +3,27 @@ Main entry point for the FastAPI application.
 Initializes the app and includes API routes.
 """
 
+"""Adding routes for API usage"""
 from fastapi import FastAPI
-from src.routes.order_routes import router as order_upload_router
+from src.routes.auth_routes import router as auth_router  # Adjust import as neede
+from src.routes.user_routes import router as user_router
+from src.routes.order_routes import router as order_router
+from src.routes.invoice_routes import router as invoice_router
+
 
 app = FastAPI()
+app.include_router(auth_router)
+app.include_router(user_router)
+app.include_router(order_router)  # Base order routes
+app.include_router(invoice_router)
 
-# Include the order upload routes under the '/v1/admin/order' prefix.
-app.include_router(order_upload_router, prefix="/v1/admin/order")
+
+@app.get("/")
+def read_root():
+    """Ensuring API is running"""
+    return {"message": "UBL Invoice API is running!"}
+
 
 if __name__ == "__main__":
     import uvicorn
-
-    uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)

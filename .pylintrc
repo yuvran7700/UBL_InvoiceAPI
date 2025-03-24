@@ -52,7 +52,11 @@ ignore=CVS
 # ignore-list. The regex matches against paths and can be in Posix or Windows
 # format. Because '\\' represents the directory delimiter on Windows systems,
 # it can't be used as an escape character.
+<<<<<<< HEAD
 ignore-paths= tests/conftest.py
+=======
+ignore-paths=
+>>>>>>> 0de7d6f4d7ea215f03dac3b6d6e09dfb5539ddb8
 
 # Files or directories matching the regular expression patterns are skipped.
 # The regex matches against base names, not paths. The default value ignores
