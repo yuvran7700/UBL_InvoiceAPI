@@ -13,7 +13,7 @@ class InvoiceMarshaller:
     def __init__(self, unmarshaller: OrderParsingStrategy):
         self.unmarshaller = unmarshaller
 
-    def construct_invoice_from_data(self, content: bytes) -> Invoice:
+    def marshal(self, content: bytes) -> Invoice:
         """
         Constructs an Invoice object from the provided content.
         This method processes the given binary content to extract and construct

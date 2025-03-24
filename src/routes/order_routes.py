@@ -5,47 +5,29 @@ This endpoint accepts a UBL XML order document, extracts its data,
 and creates a draft invoice.
 """
 
-from fastapi import APIRouter, UploadFile, File, HTTPException
+from fastapi import APIRouter, UploadFile, File
 import magic
-from src.marshallers.order_xml_unmarshaller_factory import OrderXmlUnmarshaller
-from src.marshallers.order_json_unmarshaller_factory import OrderJsonUnmarshaller
-from src.models.invoice import Invoice
-from src.draft_invoice_creation.invoice_director import InvoiceDirector
-from src.utils.missing_field_checker import find_missing_fields
+from src.services.invoice_service import InvoiceService
+
 
 
 router = APIRouter()
+invoice_service = InvoiceService()
 
 
-@router.post("/upload", response_model=Invoice)
+@router.post("/upload")
 async def upload_order(file: UploadFile = File(...)):
     """
-    Handle the upload of a UBL order document (XML or JSON), extract data, and generate a invoice object.
+    Handles the upload of a UBL order document (XML or JSON),
+    detects content type, and delegates to the service layer for processing.
     """
-    
-    # Read the content of the uploaded file
+    # Read the uploaded file once
     content = await file.read()
 
-    # Use python-magic to check the MIME type of the file
+    # MIME type detection happens in the route (HTTP layer concern)
     file_type = magic.Magic(mime=True).from_buffer(content)
 
-   # Choose the correct unmarshaller based on MIME
-    if file_type == "application/xml":
-        unmarshaller = OrderXmlUnmarshaller()
-    elif file_type == "application/json":
-        unmarshaller = OrderJsonUnmarshaller()
-    else:
-        raise HTTPException(status_code=415, detail="Unsupported file type. Only XML and JSON are supported.")
+    # Delegate to the service with content and MIME type
+    result = invoice_service.generate_draft_invoice(content, file_type)
 
-    # Build the draft invoice using the director
-    director = InvoiceDirector(unmarshaller)
-    draft_invoice = director.construct_invoice_from_data(content)
-
-    # Check for missing required fields
-    missing_fields = find_missing_fields(draft_invoice)
-
-    # Optionally: attach missing fields to the response or wrap the invoice in a response model
-    return {
-        "invoice": draft_invoice,
-        "missing_fields": missing_fields
-    }
+    return result

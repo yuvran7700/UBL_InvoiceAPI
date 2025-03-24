@@ -1,25 +1,25 @@
 """
 This module contains unit tests for verifying business rules and the process
-of building draft invoices using the InvoiceDirector and related components.
+of building draft invoices using the InvoiceMarshaller and related components.
 """
 
 
 from fastapi import HTTPException
 import pytest
-from src.marshallers.order_unmarshaller_factory import OrderUnmarshaller
-from src.marshallers.order_xml_unmarshaller_factory import OrderXmlUnmarshaller
-from src.marshallers.order_json_unmarshaller_factory import OrderJsonUnmarshaller
-from src.draft_invoice_creation.invoice_director import InvoiceDirector
+from src.marshallers.strategies.order_parsing_strategy import OrderParsingStrategy
+from src.marshallers.strategies.xml_order_parser import XmlOrderParser
+from src.marshallers.strategies.json_order_parser import JsonOrderParser
+from src.marshallers.invoice_marshaller import InvoiceMarshaller
 from src.utils.missing_field_checker import find_missing_fields
 
 
 
 def test_invoice_director_construct_invoice_xml(sample_order_xml):
     """
-    Test that InvoiceDirector builds the Invoice object correctly from XML.
+    Test that InvoiceMarshaller builds the Invoice object correctly from XML.
     """
-    unmarshaller = OrderXmlUnmarshaller()
-    director = InvoiceDirector(unmarshaller)
+    unmarshaller = XmlOrderParser()
+    director = InvoiceMarshaller(unmarshaller)
 
     invoice = director.construct_invoice_from_data(sample_order_xml)
 
@@ -39,10 +39,10 @@ def test_invoice_director_construct_invoice_xml(sample_order_xml):
 
 def test_invoice_director_construct_invoice_json(sample_order_json):
     """
-    Test that InvoiceDirector builds the Invoice object correctly from JSON.
+    Test that InvoiceMarshaller builds the Invoice object correctly from JSON.
     """
-    unmarshaller = OrderJsonUnmarshaller()
-    director = InvoiceDirector(unmarshaller)
+    unmarshaller = JsonOrderParser()
+    director = InvoiceMarshaller(unmarshaller)
 
     invoice = director.construct_invoice_from_data(sample_order_json)
 
@@ -64,8 +64,8 @@ def test_missing_fields_from_xml(sample_order_xml):
     """
     Test that find_missing_fields() detects missing fields in an XML order.
     """
-    unmarshaller = OrderXmlUnmarshaller()
-    director = InvoiceDirector(unmarshaller)
+    unmarshaller = XmlOrderParser()
+    director = InvoiceMarshaller(unmarshaller)
 
     # Build the invoice (your sample XML has some missing fields)
     invoice = director.construct_invoice_from_data(sample_order_xml)
