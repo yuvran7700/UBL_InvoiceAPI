@@ -1,39 +1,83 @@
+"""
+This module contains a concrete parsing strategy for UBL JSON order documents.
+"""
+
 import json
 from typing import List, Optional
 from fastapi import HTTPException
-
 from src.models.invoice import Contact, InvoiceLine, Item, Party, PartyTaxScheme, InvoiceHeader
 from src.models.tax import TaxScheme
-from src.marshallers.order_unmarshaller_factory import OrderUnmarshaller  # The abstract interface
+from src.marshallers.strategies.order_parsing_strategy import OrderParsingStrategy
 
 
-class OrderJsonUnmarshaller(OrderUnmarshaller):
+class JsonOrderParser(OrderParsingStrategy):
     """
-    JSON unmarshaller that extracts structured UBL order data
-    and converts it into Pydantic models.
+    Concrete parsing strategy for UBL JSON order documents.
     """
 
     def unwrap(self, value):
+        """
+        Unwraps a value from a dict if it's a UBL JSON object.
+        
+        Args:
+            value (Any): The value to unwrap.
+        
+        Returns:
+            Any: The unwrapped value if the key with an underscore exists, 
+                    otherwise the original value.
+        """
         if isinstance(value, dict) and "_" in value:
             return value["_"]
         return value
 
     def unwrap_list(self, value):
+        """
+        Handles unwrapping of lists or dictionaries, returning the first element 
+         of a list or the dictionary itself if it's not a list.
+
+        Args:
+            Aalue (any): The value to unwrap, typically a list or dictionary.
+
+        Returns:
+            Any: The first element of the list, the dictionary itself, 
+             or an empty dictionary if the input is invalid.
+        """
         if isinstance(value, list) and value:
             return value[0]
         elif isinstance(value, dict):
             return value  # already unwrapped
         return {}
-    
+
     def unwrap_and_extract(self, value):
+        """
+        Combines the functionality of `unwrap` and `unwrap_list` to handle 
+         nested unwrapping.
+
+        Args:
+            value (any): The value to unwrap, typically a nested structure.
+
+        Returns:
+            any: The fully unwrapped value.
+        """
         return self.unwrap(self.unwrap_list(value))
-    
+  
     def load_json(self, data: bytes) -> dict:
+        """
+        Loads JSON data from a byte string and returns a dictionary.
+        
+        Args:
+            data (bytes): The JSON data as a byte string.
+
+        Returns:
+            dict: The parsed JSON object.
+
+        Raises:
+            HTTPException: If the JSON data is invalid or cannot be parsed.
+        """
         try:
             return json.loads(data)
         except json.JSONDecodeError:
             raise HTTPException(status_code=400, detail="Invalid JSON content")
-    
 
     def extract_contact(self, contact_elem, ns=None) -> Optional[Contact]:
         if not contact_elem:
@@ -71,7 +115,7 @@ class OrderJsonUnmarshaller(OrderUnmarshaller):
             exemption_reason=exemption_reason,
             tax_scheme=self.extract_tax_scheme(party_tax_scheme_elem.get("TaxScheme", {})),
         )
-        
+
     def extract_item(self, item_elem, ns=None) -> Optional[Item]:
         if not item_elem:
             return None
@@ -80,7 +124,6 @@ class OrderJsonUnmarshaller(OrderUnmarshaller):
             description=self.unwrap_and_extract(item_elem.get("Description")),
             classified_tax_category=None  # Optional: handle if needed later
         )
-
 
     def unmarshal_party(self, data: bytes, party_type_elem: str) -> Party:
         """
@@ -91,13 +134,12 @@ class OrderJsonUnmarshaller(OrderUnmarshaller):
         party_data = order_data.get("Order", {}).get(party_type_elem, {}).get("Party", {})
         if not party_data:
             raise HTTPException(status_code=400, detail=f"Missing {party_type_elem} in JSON")
-        
+
         party_tax_scheme_raw = party_data.get("PartyTaxScheme", {})
         party_tax_scheme_data = self.unwrap_list(party_tax_scheme_raw)
-    
-
-        registration_name = self.unwrap_and_extract(party_tax_scheme_data.get("RegistrationName")) if party_tax_scheme_data else None
-
+        registration_name = self.unwrap_and_extract(
+                                party_tax_scheme_data.get(
+                                    "RegistrationName")) if party_tax_scheme_data else None
 
         # Handle the case where PartyName is a list
         party_name = self.unwrap(self.unwrap_list(party_data.get("PartyName")).get("Name"))
@@ -117,7 +159,7 @@ class OrderJsonUnmarshaller(OrderUnmarshaller):
             contact=self.extract_contact(party_data.get("Contact")),
             party_tax_scheme=self.extract_party_tax_scheme(party_data.get("PartyTaxScheme"))
         )
-    
+
     def unmarshal_header(self, data: bytes) -> InvoiceHeader:
         """
         Extracts header info and converts it into an InvoiceHeader model.
@@ -139,13 +181,12 @@ class OrderJsonUnmarshaller(OrderUnmarshaller):
             buyer_reference=self.unwrap(header_data.get("SalesOrderID")),
             order_reference=self.unwrap(header_data.get("ID")),
         )
-        
-    
+
 
     def unmarshal_invoice_lines(self, data: bytes) -> List[InvoiceLine]:
         order_data = self.load_json(data)
         lines_data = order_data.get("Order", {}).get("OrderLine", [])
-        
+
         invoice_lines = []
         for line in lines_data:
             line_item = line.get("LineItem", {})
@@ -156,10 +197,10 @@ class OrderJsonUnmarshaller(OrderUnmarshaller):
                     line_extension_amount=None, #Calculation done later when building
                     item=self.extract_item(line_item.get("Item")),
                     price={
-                        "price_amount": float(self.unwrap_and_extract(line_item.get("Price", {}).get("PriceAmount")))
+                        "price_amount": float(
+                            self.unwrap_and_extract(line_item.get("Price", {}).get("PriceAmount")))
                     }
                 )
             )
 
         return invoice_lines
-

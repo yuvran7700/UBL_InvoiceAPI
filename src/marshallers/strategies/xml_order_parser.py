@@ -4,11 +4,11 @@ from datetime import datetime
 from fastapi import HTTPException
 from src.models.invoice import InvoiceHeader, InvoiceLine, Item, Party, PartyTaxScheme, Contact
 from src.models.tax import TaxScheme
-from src.marshallers.order_unmarshaller_factory import OrderUnmarshaller
+from src.marshallers.strategies.order_parsing_strategy import OrderParsingStrategy
 
-class OrderXmlUnmarshaller(OrderUnmarshaller):
+class XmlOrderParser(OrderParsingStrategy):
     """
-    Concrete implementation of the abstract factory to unmarshall order data from XML.
+    Concrete parsing strategy for UBL XML order documents.
     """
 
     NAMESPACES = {
@@ -20,7 +20,7 @@ class OrderXmlUnmarshaller(OrderUnmarshaller):
         """
         Retrieves the trimmed text from an XML element based on the provided XPath.
         """
-        ns = ns or OrderXmlUnmarshaller.NAMESPACES
+        ns = ns or XmlOrderParser.NAMESPACES
         child = element.find(path, ns)
         text = (
             child.text.strip() if child is not None and child.text is not None else None
@@ -47,7 +47,7 @@ class OrderXmlUnmarshaller(OrderUnmarshaller):
         """
         if contact_elem is None:
             return None
-        ns = ns or OrderXmlUnmarshaller.NAMESPACES
+        ns = ns or XmlOrderParser.NAMESPACES
         return Contact(
             name=self.get_text(contact_elem, ".//cbc:Name", required=True, ns=ns),
             telephone=self.get_text(contact_elem, ".//cbc:Telephone", ns=ns),
@@ -61,7 +61,7 @@ class OrderXmlUnmarshaller(OrderUnmarshaller):
         """
         if tax_scheme_elem is None:
             return None
-        ns = ns or OrderXmlUnmarshaller.NAMESPACES
+        ns = ns or XmlOrderParser.NAMESPACES
         return TaxScheme(
             id=self.get_text(tax_scheme_elem, "./cbc:ID", required=True, ns=ns),
             tax_type_code=self.get_text(tax_scheme_elem, "./cbc:TaxTypeCode", ns=ns),
@@ -73,7 +73,7 @@ class OrderXmlUnmarshaller(OrderUnmarshaller):
         """
         if party_tax_scheme_elem is None:
             return None
-        ns = ns or OrderXmlUnmarshaller.NAMESPACES
+        ns = ns or XmlOrderParser.NAMESPACES
         tax_scheme_elem = party_tax_scheme_elem.find("./cac:TaxScheme", ns)
         return PartyTaxScheme(
             company_id=self.get_text(
@@ -93,8 +93,11 @@ class OrderXmlUnmarshaller(OrderUnmarshaller):
             root = ET.fromstring(data)
         except ET.ParseError:
             raise HTTPException(status_code=400, detail="Invalid XML content")
-        ns = OrderXmlUnmarshaller.NAMESPACES
+        ns = XmlOrderParser.NAMESPACES
 
+         # Auto-prefix 'cac:' if not already present
+        if not party_type_elem.startswith("cac:"):
+            party_type_elem = f"cac:{party_type_elem}"
         # Get the party element (either BuyerCustomerParty or SellerSupplierParty)
         party_elem = root.find(f".//{party_type_elem}", ns)
         if party_elem is None:
@@ -138,7 +141,7 @@ class OrderXmlUnmarshaller(OrderUnmarshaller):
             root = ET.fromstring(data)
         except ET.ParseError:
             raise HTTPException(status_code=400, detail="Invalid XML content")
-        ns = OrderXmlUnmarshaller.NAMESPACES
+        ns = XmlOrderParser.NAMESPACES
 
         header = InvoiceHeader(
             customization_id=self.get_text(root, "./cbc:CustomizationID", ns=ns),
