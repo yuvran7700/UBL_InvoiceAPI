@@ -13,6 +13,8 @@ from src.models.invoice import Invoice
 from src.services.invoice_service import create_invoice
 from src.models.order import OrderUploadRequest
 from src.order_type_creation.invoice_director import InvoiceDirector
+from src.utils.missing_field_checker import find_missing_fields
+
 
 router = APIRouter()
 
@@ -29,14 +31,23 @@ async def upload_order(file: UploadFile = File(...)):
     # Use python-magic to check the MIME type of the file
     file_type = magic.Magic(mime=True).from_buffer(content)
 
-    # Initialize the InvoiceDirector
+   # Choose the correct unmarshaller based on MIME
     if file_type == "application/xml":
-        draft_invoice = order_service.construct_invoice_from_data(content, "xml")
+        unmarshaller = OrderXmlUnmarshaller()
     elif file_type == "application/json":
-        draft_invoice = order_service.construct_invoice_from_data(content, "json")
+        unmarshaller = OrderJsonUnmarshaller()
     else:
         raise HTTPException(status_code=415, detail="Unsupported file type. Only XML and JSON are supported.")
-    
 
-    # Return the generated draft invoice
-    return draft_invoice
+    # Build the draft invoice using the director
+    director = InvoiceDirector(unmarshaller)
+    draft_invoice = director.construct_invoice_from_data(content)
+
+    # Check for missing required fields
+    missing_fields = find_missing_fields(draft_invoice)
+
+    # Optionally: attach missing fields to the response or wrap the invoice in a response model
+    return {
+        "invoice": draft_invoice,
+        "missing_fields": missing_fields
+    }
