@@ -2,7 +2,7 @@ from typing import List, Optional
 import xml.etree.ElementTree as ET
 from datetime import datetime
 from fastapi import HTTPException
-from src.models.invoice import InvoiceHeader, InvoiceLine, Item, Party, PartyTaxScheme, Contact
+from src.models.invoice import InvoiceHeader, InvoiceLine, Item, Party, PartyTaxScheme, Contact, Price
 from src.models.tax import TaxScheme
 from src.marshallers.strategies.order_parsing_strategy import OrderParsingStrategy
 

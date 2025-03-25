@@ -6,6 +6,7 @@ of building draft invoices using the InvoiceMarshaller and related components.
 
 from fastapi import HTTPException
 import pytest
+from src.models.invoice import Price
 from src.marshallers.strategies.order_parsing_strategy import OrderParsingStrategy
 from src.marshallers.strategies.xml_order_parser import XmlOrderParser
 from src.marshallers.strategies.json_order_parser import JsonOrderParser
@@ -34,7 +35,7 @@ def test_invoice_director_construct_invoice_xml(sample_order_xml):
 
     # Check line extension amount calculation
     for line in invoice.invoice_lines:
-        assert line.line_extension_amount == line.invoiced_quantity * line.price["price_amount"]
+        assert line.line_extension_amount == line.invoiced_quantity * line.price.price_amount
 
 
 def test_invoice_director_construct_invoice_json(sample_order_json):
@@ -57,7 +58,9 @@ def test_invoice_director_construct_invoice_json(sample_order_json):
 
     # Check line extension amount calculation
     for line in invoice.invoice_lines:
-        assert line.line_extension_amount == line.invoiced_quantity * line.price["price_amount"]
+        assert line.line_extension_amount == line.invoiced_quantity * line.price.price_amount
+
+
 
 
 def test_missing_fields_from_xml(sample_order_xml):

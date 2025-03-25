@@ -2,7 +2,7 @@
 
 from typing import List
 from pydantic import BaseModel
-from src.models.invoice import Invoice
+from src.models.invoice import Invoice, Price
 
 MANDATORY_FIELDS = [
     # ---------- Header ----------

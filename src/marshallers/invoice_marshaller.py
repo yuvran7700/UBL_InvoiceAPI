@@ -38,7 +38,7 @@ class InvoiceMarshaller:
         # Calculate LineExtensionAmount total
         line_extension_total = 0
         for line in invoice_lines:
-            line.line_extension_amount = line.invoiced_quantity * line.price["price_amount"]
+            line.line_extension_amount = line.invoiced_quantity * line.price.price_amount
             line_extension_total += line.line_extension_amount
 
         legal_monetary_total = LegalMonetaryTotal(

@@ -134,4 +134,4 @@ def test_unmarshal_invoice_lines(sample_order_json):
     assert line.invoiced_quantity == 100
     assert line.item.name == "beeswax"
     assert line.item.description == "Acme beeswax"
-    assert line.price["price_amount"] == 100.00
+    assert line.price.price_amount == 100.00

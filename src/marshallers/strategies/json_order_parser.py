@@ -5,7 +5,7 @@ This module contains a concrete parsing strategy for UBL JSON order documents.
 import json
 from typing import List, Optional
 from fastapi import HTTPException
-from src.models.invoice import Contact, InvoiceLine, Item, Party, PartyTaxScheme, InvoiceHeader
+from src.models.invoice import Contact, InvoiceLine, Item, Party, PartyTaxScheme, InvoiceHeader, Price
 from src.models.tax import TaxScheme
 from src.marshallers.strategies.order_parsing_strategy import OrderParsingStrategy
 
