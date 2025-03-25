@@ -1,16 +1,44 @@
-from fastapi import APIRouter, UploadFile, File, HTTPException, Depends
+# routes/invoice_routes.py
+"""
+API route handler for processing UBL Order UBL documents and then generating UBL Invoices.
+"""
+
+from fastapi import APIRouter, UploadFile, File
+from fastapi import Depends
 import magic
 from src.services.invoice_service import InvoiceService
-from src.auth.auth_utils import get_current_user_id 
-from typing import Dict
+from src.services.auth_service import get_current_user_id
+
+
 
 router = APIRouter()
 invoice_service = InvoiceService()
 
+
+@router.post("/v1/user/invoices/upload")
+async def upload_invoice_order(
+    file: UploadFile = File(...),
+    user_id: str = Depends(get_current_user_id)
+):
+    """
+    Handles the upload of a UBL order document (XML or JSON),
+    detects content type, and delegates to the service layer for processing.
+    """
+    # Read the uploaded file once
+    content = await file.read()
+
+    # MIME type detection happens in the route (HTTP layer concern)
+    file_type = magic.Magic(mime=True).from_buffer(content)
+
+    # Delegate to the service with content and MIME type
+    result = invoice_service.generate_draft_invoice(content, file_type, user_id)
+
+    return result
+
 @router.post("/v1/user/invoices/complete")
-async def complete_draft(invoice_data: dict, user_id: str = Depends(get_current_user_id)):
-    """
-    Completes the user’s draft invoice by re-validating the user-filled fields.
-    """
-    result = invoice_service.complete_draft_invoice(invoice_data, user_id)
+async def complete_invoice(
+    invoice_data: dict,
+    user_id: str = Depends(get_current_user_id)
+):
+    result = invoice_service.complete_invoice(invoice_data, user_id)
     return result

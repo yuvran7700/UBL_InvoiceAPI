@@ -14,8 +14,8 @@ dynamodb = boto3.resource("dynamodb", region_name=AWS_REGION)
 
 # Reference tables
 invoices_table = dynamodb.Table("invoices")
-users_table = dynamodb.Table("users")
-sessions_table = dynamodb.Table("sessions")
+user_table = dynamodb.Table("users")
+session_table = dynamodb.Table("sessions")
 
 
 def check_table_status(table, table_name):

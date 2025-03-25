@@ -7,14 +7,12 @@ Initializes the app and includes API routes.
 from fastapi import FastAPI
 from src.routes.auth_routes import router as auth_router  # Adjust import as neede
 from src.routes.user_routes import router as user_router
-from src.routes.order_routes import router as order_router
 from src.routes.invoice_routes import router as invoice_router
 
 
 app = FastAPI()
 app.include_router(auth_router)
 app.include_router(user_router)
-app.include_router(order_router)  # Base order routes
 app.include_router(invoice_router)
 
 

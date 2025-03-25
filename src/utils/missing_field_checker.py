@@ -1,5 +1,7 @@
+#src/utils/missing_field_checker.py
 
 from typing import List
+from pydantic import BaseModel
 from src.models.invoice import Invoice
 
 MANDATORY_FIELDS = [
@@ -15,61 +17,71 @@ MANDATORY_FIELDS = [
     "header.order_reference",
 
     # ---------- Supplier Party ----------
-    "supplier_party.party_name",
-    "supplier_party.postal_address.street",
-    "supplier_party.postal_address.city",
-    "supplier_party.postal_address.postal_code",
-    "supplier_party.postal_address.country",
-    "supplier_party.party_legal_entity.registration_name",
-    "supplier_party.contact.name",
-    "supplier_party.party_tax_scheme.company_id",
-    "supplier_party.party_tax_scheme.tax_scheme.id",
+    "accounting_supplier_party.party_name",
+    "accounting_supplier_party.postal_address.street",
+    "accounting_supplier_party.postal_address.city",
+    "accounting_supplier_party.postal_address.postal_code",
+    "accounting_supplier_party.postal_address.country",
+    "accounting_supplier_party.party_legal_entity.registration_name",
+    "accounting_supplier_party.contact.name",
+    "accounting_supplier_party.party_tax_scheme.company_id",
+    "accounting_supplier_party.party_tax_scheme.tax_scheme.id",
 
     # ---------- Customer Party ----------
-    "customer_party.party_name",
-    "customer_party.postal_address.street",
-    "customer_party.postal_address.city",
-    "customer_party.postal_address.postal_code",
-    "customer_party.postal_address.country",
-    "customer_party.party_legal_entity.registration_name",
-    "customer_party.contact.name",
-    "customer_party.party_tax_scheme.company_id",
-    "customer_party.party_tax_scheme.tax_scheme.id",
+    "accounting_customer_party.party_name",
+    "accounting_customer_party.postal_address.street",
+    "accounting_customer_party.postal_address.city",
+    "accounting_customer_party.postal_address.postal_code",
+    "accounting_customer_party.postal_address.country",
+    "accounting_customer_party.party_legal_entity.registration_name",
+    "accounting_customer_party.contact.name",
+    "accounting_customer_party.party_tax_scheme.company_id",
+    "accounting_customer_party.party_tax_scheme.tax_scheme.id",
 
     # ---------- Invoice Totals ----------
-    "total.payable_amount",
+    "legal_monetary_total.payable_amount",
+    "legal_monetary_total.line_extension_amount",
+    
+]
 
-    # ---------- Invoice Lines Mandatory Fields (checking first line) ----------
-    "invoice_lines",
-    "invoice_lines[0].id",
-    "invoice_lines[0].invoiced_quantity",
-    "invoice_lines[0].line_extension_amount",
-    "invoice_lines[0].item.name",
-
-    # ---------- Nested Classified Tax Category ----------
-    "invoice_lines[0].item.classified_tax_category.cbc_id",
-    "invoice_lines[0].item.classified_tax_category.cbc_percent",
-    "invoice_lines[0].item.classified_tax_category.tax_scheme_id",
-
-    # ---------- Pricing ----------
-    "invoice_lines[0].price.price_amount"
+MANDATORY_FIELDS_PER_LINE = [
+    "id",
+    "invoiced_quantity",
+    "line_extension_amount",
+    "item.name",
+    "item.classified_tax_category.cbc_id",
+    "item.classified_tax_category.cbc_percent",
+    "item.classified_tax_category.tax_scheme_id",
+    "price.price_amount",
 ]
 
 
 def find_missing_fields(invoice: Invoice) -> List[str]:
+    data = invoice
     missing = []
+
     for field_path in MANDATORY_FIELDS:
-        try:
-            # Dynamically walk through nested attributes/dict keys
-            parts = field_path.split('.')
-            current = invoice
-            for part in parts:
-                if isinstance(current, dict):
-                    current = current.get(part)
-                else:
-                    current = getattr(current, part, None)
-            if current is None:
-                missing.append(field_path)
-        except AttributeError:
+        parts = field_path.split('.')
+        current = data
+        for part in parts:
+            if isinstance(current, BaseModel):
+                current = getattr(current, part, None)
+            elif isinstance(current, dict):
+                current = current.get(part)
+            else:
+                current = None
+                break
+        if current is None:
             missing.append(field_path)
     return missing
+
+
+def drill_down(current, field_path):
+    for part in field_path.split('.'):
+        if isinstance(current, BaseModel):
+            current = getattr(current, part, None)
+        elif isinstance(current, dict):
+            current = current.get(part)
+        else:
+            return None
+    return current

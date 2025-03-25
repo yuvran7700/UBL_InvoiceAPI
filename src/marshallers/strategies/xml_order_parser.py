@@ -202,10 +202,10 @@ class XmlOrderParser(OrderParsingStrategy):
                         self.get_text(line_item_elem, "./cbc:Quantity", required=True, ns=ns)),
                     line_extension_amount=None,  # Calculation deferred to business logic
                     item=self.extract_item(item_elem, ns),
-                    price={
-                        "price_amount": float(
-                            self.get_text(price_elem, "./cbc:PriceAmount", required=True, ns=ns))
-                    }
+                    price=Price(
+                        price_amount=float(self.get_text(
+                            price_elem, "./cbc:PriceAmount", required=True, ns=ns))
+                    )
                 )
             )
         return invoice_lines

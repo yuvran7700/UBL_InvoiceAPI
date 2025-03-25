@@ -196,10 +196,11 @@ class JsonOrderParser(OrderParsingStrategy):
                     invoiced_quantity=float(self.unwrap_and_extract(line_item.get("Quantity"))),
                     line_extension_amount=None, #Calculation done later when building
                     item=self.extract_item(line_item.get("Item")),
-                    price={
-                        "price_amount": float(
-                            self.unwrap_and_extract(line_item.get("Price", {}).get("PriceAmount")))
-                    }
+                    price=Price(
+                        price_amount=float(
+                            self.unwrap_and_extract(
+                                line_item.get("Price", {}).get("PriceAmount")))
+                    )
                 )
             )
 

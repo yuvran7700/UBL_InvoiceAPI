@@ -21,16 +21,16 @@ def test_invoice_director_construct_invoice_xml(sample_order_xml):
     unmarshaller = XmlOrderParser()
     director = InvoiceMarshaller(unmarshaller)
 
-    invoice = director.construct_invoice_from_data(sample_order_xml)
+    invoice = director.marshal(sample_order_xml)
 
     # Print the built Invoice
     print("\n--- Constructed Invoice from XML ---")
-    #print(invoice.model_dump_json(indent=4))
+    print(invoice.model_dump_json(indent=4))
 
     # Basic assertions
     assert invoice.header.buyer_reference == "CON0095678"
-    assert invoice.supplier_party.party_name == "Consortial"
-    assert invoice.customer_party.party_name == "IYT Corporation"
+    assert invoice.accounting_supplier_party.party_name == "Consortial"
+    assert invoice.accounting_customer_party.party_name == "IYT Corporation"
 
     # Check line extension amount calculation
     for line in invoice.invoice_lines:
@@ -44,7 +44,7 @@ def test_invoice_director_construct_invoice_json(sample_order_json):
     unmarshaller = JsonOrderParser()
     director = InvoiceMarshaller(unmarshaller)
 
-    invoice = director.construct_invoice_from_data(sample_order_json)
+    invoice = director.marshal(sample_order_json)
 
     # Print the built Invoice
     print("\n--- Constructed Invoice from JSON ---")
@@ -52,8 +52,8 @@ def test_invoice_director_construct_invoice_json(sample_order_json):
 
     # Basic assertions
     assert invoice.header.buyer_reference == "CON0095678"
-    assert invoice.supplier_party.party_name == "Consortial"
-    assert invoice.customer_party.party_name == "IYT Corporation"
+    assert invoice.accounting_supplier_party.party_name == "Consortial"
+    assert invoice.accounting_customer_party.party_name == "IYT Corporation"
 
     # Check line extension amount calculation
     for line in invoice.invoice_lines:
@@ -68,11 +68,11 @@ def test_missing_fields_from_xml(sample_order_xml):
     director = InvoiceMarshaller(unmarshaller)
 
     # Build the invoice (your sample XML has some missing fields)
-    invoice = director.construct_invoice_from_data(sample_order_xml)
+    invoice = director.marshal(sample_order_xml)
 
     # Run the missing field detection
     missing = find_missing_fields(invoice)
 
-    # ✅ Print for debugging
+    # Print for debugging
     print("\n--- Missing Fields from XML ---")
     print(missing)

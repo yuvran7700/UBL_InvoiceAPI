@@ -1,11 +1,11 @@
 """
-Users service.
+Auth service.
 Handles the persistence (CRUD) operations for users.
 """
 import uuid
 from datetime import datetime, timezone
 from passlib.context import CryptContext
-from fastapi import HTTPException
+from fastapi import Header, HTTPException
 from src.utils.auth_helpers import (
     hash_password,
     create_access_token,
@@ -163,3 +163,23 @@ def token_logout_valid(JWT: str): # pylint: disable = invalid-name
             status_code=401, detail = "Invalid token - user still logged in"
         )
     return {"valid": True}
+
+
+async def get_current_user_id(Authorization: str = Header(...)) -> str:
+    """
+    Dependency to extract the user_id or email from the JWT token.
+
+    :param Authorization: Bearer token from the Authorization header.
+    :return: user_id or email of the authenticated user.
+    :raises HTTPException: If the token is invalid or expired.
+    """
+    try:
+        token = Authorization.replace("Bearer ", "")
+        decoded = decode_token(token)  # Use your team's JWT decoding utility
+        session_validation(decoded)    # Optional: check expiry, validity
+        user_id = decoded.get("user_id") or decoded.get("email")
+        if not user_id:
+            raise HTTPException(status_code=401, detail="User ID missing from token")
+        return user_id
+    except Exception:
+        raise HTTPException(status_code=401, detail="Invalid or expired token")

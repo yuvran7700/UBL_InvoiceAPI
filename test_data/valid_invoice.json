@@ -1,0 +1,89 @@
+{
+    "header": {
+      "customization_id": "urn:oasis:names:specification:ubl:xpath:Invoice-2.0:sbs-1.0-draft",
+      "profile_id": "bpid:urn:oasis:names:draft:bpss:ubl-2-sbs-invoice-draft",
+      "invoice_id": "INV-001",
+      "issue_date": "2023-12-01",
+      "due_date": "2023-12-15",
+      "invoice_type_code": "380",
+      "document_currency_code": "EUR",
+      "buyer_reference": "BUY123456",
+      "order_reference": "ORD987654"
+    },
+    "accounting_supplier_party": {
+      "endpoint_id": "SUPP-001",
+      "party_name": "Supplier Company",
+      "postal_address": {
+        "street": "123 Supplier St",
+        "city": "SupplierCity",
+        "postal_code": "12345",
+        "country": "DE"
+      },
+      "party_legal_entity": {
+        "registration_name": "Supplier Ltd."
+      },
+      "contact": {
+        "name": "Supplier Contact",
+        "telephone": "+49 123 456789",
+        "electronic_mail": "supplier@example.com"
+      },
+      "party_tax_scheme": {
+        "company_id": "DE123456789",
+        "tax_scheme": {
+          "id": "VAT",
+          "tax_type_code": "VAT"
+        }
+      }
+    },
+    "accounting_customer_party": {
+      "endpoint_id": "CUST-001",
+      "party_name": "Customer Company",
+      "postal_address": {
+        "street": "456 Customer Rd",
+        "city": "CustomerCity",
+        "postal_code": "67890",
+        "country": "FR"
+      },
+      "party_legal_entity": {
+        "registration_name": "Customer Ltd."
+      },
+      "contact": {
+        "name": "Customer Contact",
+        "telephone": "+33 987 654321",
+        "electronic_mail": "customer@example.com"
+      },
+      "party_tax_scheme": {
+        "company_id": "FR987654321",
+        "tax_scheme": {
+          "id": "VAT",
+          "tax_type_code": "VAT"
+        }
+      }
+    },
+    "invoice_lines": [
+      {
+        "id": "1",
+        "invoiced_quantity": 10,
+        "line_extension_amount": 1000,
+        "item": {
+          "name": "Laptop",
+          "description": "High-end laptop",
+          "classified_tax_category": {
+            "cbc_id": "S",
+            "cbc_percent": 20,
+            "tax_scheme_id": "VAT"
+          }
+        },
+        "price": {
+          "price_amount": 100.0
+        }
+      }
+    ],
+    "legal_monetary_total": {
+      "line_extension_amount": 1000,
+      "tax_exclusive_amount": 1000,
+      "tax_inclusive_amount": 1200,
+      "payable_amount": 1200
+    }
+  }
+  

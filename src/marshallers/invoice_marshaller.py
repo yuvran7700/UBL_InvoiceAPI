@@ -3,7 +3,8 @@
 """
 
 from src.marshallers.strategies.order_parsing_strategy import OrderParsingStrategy
-from src.models.invoice import Invoice
+from src.models.invoice import Invoice, LegalMonetaryTotal
+
 
 class InvoiceMarshaller:
     """
@@ -34,16 +35,21 @@ class InvoiceMarshaller:
         customer_party = self.unmarshaller.unmarshal_party(content, "BuyerCustomerParty")
         invoice_lines = self.unmarshaller.unmarshal_invoice_lines(content)
 
-        # Calculate line extensions
-        total = 0
+        # Calculate LineExtensionAmount total
+        line_extension_total = 0
         for line in invoice_lines:
             line.line_extension_amount = line.invoiced_quantity * line.price["price_amount"]
-            total += line.line_extension_amount
+            line_extension_total += line.line_extension_amount
+
+        legal_monetary_total = LegalMonetaryTotal(
+            line_extension_amount=line_extension_total
+            # tax_exclusive_amount, tax_inclusive_amount, payable_amount to be filled later
+        )
 
         return Invoice(
             header=header,
-            supplier_party=supplier_party,
-            customer_party=customer_party,
+            accounting_supplier_party=supplier_party,
+            accounting_customer_party=customer_party,
             invoice_lines=invoice_lines,
-            total={"payable_amount": total}
+            legal_monetary_total=legal_monetary_total
         )
