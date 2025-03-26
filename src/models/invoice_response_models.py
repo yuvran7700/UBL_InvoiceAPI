@@ -10,3 +10,7 @@ class MissingFieldsReport(BaseModel):
 class DraftInvoiceResponse(BaseModel):
     invoice: Dict
     missing_fields_report: MissingFieldsReport
+
+class CompletedInvoiceResponse(BaseModel):
+    invoice_id: str
+    invoice: Dict

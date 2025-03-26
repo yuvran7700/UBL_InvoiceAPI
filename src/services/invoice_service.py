@@ -8,8 +8,10 @@ from fastapi import HTTPException
 from src.marshallers.strategies.xml_order_parser import XmlOrderParser
 from src.marshallers.strategies.json_order_parser import JsonOrderParser
 from src.marshallers.invoice_marshaller import InvoiceMarshaller
-from src.models.invoice_response_models import DraftInvoiceResponse
+from src.models.invoice_response_models import CompletedInvoiceResponse, DraftInvoiceResponse
 from src.models.invoice_update import InvoiceUpdateModel
+from src.repositories.invoice_repository import save_invoice
+from src.validators.invoice_validator import InvoiceValidator
 from src.validators.missing_field_checker import MissingFieldChecker
 
 
@@ -65,39 +67,36 @@ class InvoiceService:
                 detail="Unsupported file type. Only XML and JSON are supported.",
             )
 
-    def complete_invoice(self, invoice_data: dict, user_id: str) -> dict:
-        # Convert dict to Invoice model
-        invoice = InvoiceUpdateModel(**invoice_data)
+    def complete_invoice(self, invoice: InvoiceUpdateModel, user_id: str) -> CompletedInvoiceResponse:
 
-        # Debugging Purposes
-        print("Populated Invoice Model:\n", invoice.model_dump_json(indent=2))
+        # Debugging Purposes - print("Populated Invoice Model:\n", invoice.model_dump_json(indent=2))
 
-        missing_fields = find_missing_fields(invoice)
-        if missing_fields:
-            # Return early to frontend if incomplete
-            raise HTTPException(
-                status_code=400, detail={"missing_fields": missing_fields}
-            )
+        # 1. Check for missing fields (pass the model, not the dict)
+        missing_report = MissingFieldChecker(invoice).run()
+        
+        if missing_report.missing_invoice_fields or missing_report.missing_invoice_lines:
+            raise HTTPException(status_code=400, detail=missing_report.model_dump())
 
-        # 1. Validate mandatory fields and business rules
-        #InvoiceValidator.raise_if_invalid(invoice)
+        # 2. Validate mandatory fields and business rules
+        InvoiceValidator.raise_if_invalid(invoice)
 
-        # 2. Perform legal calculations
+        # 3. Perform monetary calculations
         self._compute_legal_monetary_totals(invoice)
 
-        # (Optional) Compute Tax Total if needed
-        # tax_total = self._calculate_tax(invoice.invoice_lines)
-
         # 4. Save the completed invoice (to DynamoDB or DB)
-        #save_invoice(invoice, user_id)
+        save_invoice(invoice, user_id)
 
-        return {"invoice_id": invoice.header.invoice_id, "invoice": invoice}
+        # Return Pydantic response model
+        return CompletedInvoiceResponse(
+            invoice_id=invoice.id,
+            invoice=invoice
+        )
+
 
     def _compute_legal_monetary_totals(self, invoice: InvoiceUpdateModel):
-        # Use the already populated line_extension_amount from marshaller
         line_extension_total = invoice.legal_monetary_total.line_extension_amount
-
         total_tax_amount = 0.0
+
         for line in invoice.invoice_lines:
             tax_category = line.item.classified_tax_category
             if tax_category and tax_category.cbc_percent is not None:
@@ -106,9 +105,5 @@ class InvoiceService:
                 total_tax_amount += tax_amount
 
         invoice.legal_monetary_total.tax_exclusive_amount = line_extension_total
-        invoice.legal_monetary_total.tax_inclusive_amount = (
-            line_extension_total + total_tax_amount
-        )
-        invoice.legal_monetary_total.payable_amount = (
-            invoice.legal_monetary_total.tax_inclusive_amount
-        )
+        invoice.legal_monetary_total.tax_inclusive_amount = line_extension_total + total_tax_amount
+        invoice.legal_monetary_total.payable_amount = invoice.legal_monetary_total.tax_inclusive_amount
