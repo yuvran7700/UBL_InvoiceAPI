@@ -54,22 +54,21 @@ def remove_session_from_dynamodb(JWT: str):
             detail=f"Error updating item: {str(e)}",
         )
 
+
 def add_failed_attempts(email: str, attempts: int):
     lockout_until = None
     if attempts >= MAX_FAILED_ATTEMPTS:
         lockout_until = (datetime.now(timezone.utc) + LOCKOUT_DURATION).isoformat()
-    
+
     user = get_user(email)
     user_id = user.user_id
 
     user_table.update_item(
         Key={"user_id": user_id},
         UpdateExpression="SET failed_attempts = :attempts, lockout_until = :lockout",
-        ExpressionAttributeValues={
-            ":attempts": attempts,
-            ":lockout": lockout_until
-        }
+        ExpressionAttributeValues={":attempts": attempts, ":lockout": lockout_until},
     )
+
 
 def reset_failed_attempts(email: str):
 
@@ -78,5 +77,5 @@ def reset_failed_attempts(email: str):
 
     user_table.update_item(
         Key={"user_id": user_id},
-        UpdateExpression="REMOVE failed_attempts, lockout_until"
+        UpdateExpression="REMOVE failed_attempts, lockout_until",
     )

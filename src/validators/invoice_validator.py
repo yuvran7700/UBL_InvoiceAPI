@@ -18,7 +18,10 @@ class InvoiceValidator:
             errors.append("IssueDate cannot be in the future.")
 
         # Due Date cannot be before Issue Date
-        if invoice.header.due_date and invoice.header.due_date < invoice.header.issue_date:
+        if (
+            invoice.header.due_date
+            and invoice.header.due_date < invoice.header.issue_date
+        ):
             errors.append("DueDate cannot be earlier than IssueDate.")
 
         # Validate each invoice line
@@ -31,7 +34,9 @@ class InvoiceValidator:
             # 4. Validate VAT percentage range
             tax = line.item.classified_tax_category
             if tax and not (0 <= tax.cbc_percent <= 100):
-                errors.append(f"Invoice Line {idx}: VAT percent must be between 0 and 100.")
+                errors.append(
+                    f"Invoice Line {idx}: VAT percent must be between 0 and 100."
+                )
 
         # 5. Validate Total consistency if needed (optional)
         # Example: Check if line_extension_amount is correctly calculated

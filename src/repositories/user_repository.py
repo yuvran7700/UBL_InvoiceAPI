@@ -142,6 +142,7 @@ def delete_all_users():
             print(f"Deleting user with email: {item['email']}")  # Debugging line
             batch.delete_item(Key={"user_id": item["user_id"]})
 
+
 def get_user_item(email: str):
     try:
         user = get_user(email)
@@ -150,4 +151,3 @@ def get_user_item(email: str):
         return response["Item"]
     except Exception:
         return {}
-

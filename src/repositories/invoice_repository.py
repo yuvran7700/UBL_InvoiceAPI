@@ -22,8 +22,8 @@ def save_invoice(invoice: Invoice, user_id: str) -> None:
     """
     invoice_dict = invoice.dict()
     invoice_dict = convert_data_for_dynamodb(invoice_dict)
-    invoice_dict['user_id'] = user_id
-    invoice_dict['invoice_id'] = invoice.header.invoice_id
+    invoice_dict["user_id"] = user_id
+    invoice_dict["invoice_id"] = invoice.header.invoice_id
 
     try:
         invoices_table.put_item(Item=invoice_dict)
@@ -83,6 +83,6 @@ def update_invoice_fields(user_id: str, invoice_id: str, updates: dict) -> dict:
         ExpressionAttributeValues=expr_values,
         ExpressionAttributeNames=expr_names,
         ConditionExpression="attribute_exists(invoice_id)",
-        ReturnValues="ALL_NEW"
+        ReturnValues="ALL_NEW",
     )
     return response.get("Attributes")

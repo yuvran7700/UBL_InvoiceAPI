@@ -1,9 +1,5 @@
-"""
-Main entry point for the FastAPI application.
-Initializes the app and includes API routes.
-"""
+# This is the main file that will run the FastAPI application
 
-"""Adding routes for API usage"""
 from fastapi import FastAPI
 from src.routes.auth_routes import router as auth_router  # Adjust import as neede
 from src.routes.user_routes import router as user_router
@@ -24,4 +20,5 @@ def read_root():
 
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)

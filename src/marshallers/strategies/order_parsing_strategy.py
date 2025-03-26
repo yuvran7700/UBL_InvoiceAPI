@@ -1,15 +1,15 @@
-
-""""
-Defines the abstract strategy interface for parsing UBL order data 
+""" "
+Defines the abstract strategy interface for parsing UBL order data
     from different formats (XML, JSON).
 """
 
 from abc import ABC, abstractmethod
-from typing import List, Optional
+from typing import Dict, List, Optional, Any, Union
 
-from src.models.invoice import Contact, InvoiceLine, Item, Party, PartyTaxScheme
-from src.models.tax import TaxScheme
-
+from src.models.invoice_update import (
+    Address, Contact, InvoiceLine, Item, Party, PartyTaxScheme,
+    InvoicePeriod, OrderReference
+)
 class OrderParsingStrategy(ABC):
     """
     Abstract strategy interface defining the contract for parsing UBL order data
@@ -17,7 +17,16 @@ class OrderParsingStrategy(ABC):
     """
 
     @abstractmethod
-    def extract_contact(self, contact_elem, ns=None) -> Optional[Contact]:
+    def load_data(self, data: Union[bytes, str]) -> Any:
+        """
+        Loads the raw data (JSON/XML) and returns a parsed object
+        (e.g., dict for JSON or ElementTree for XML).
+        """
+        pass
+
+
+    @abstractmethod
+    def extract_contact(self, contact_elem: Any) -> Optional[Contact]:
         """
         Extracts contact details from the provided element.
 
@@ -30,22 +39,9 @@ class OrderParsingStrategy(ABC):
         """
         pass
 
-    @abstractmethod
-    def extract_tax_scheme(self, tax_scheme_elem, ns=None) -> Optional[TaxScheme]:
-        """
-        Extracts tax scheme details from the provided element.
-
-        Args:
-            tax_scheme_elem (any): The element containing tax scheme information.
-            ns (any, optional): Namespace information, if applicable.
-
-        Returns:
-            Optional[TaxScheme]: A `TaxScheme` object if data is available, otherwise `None`.
-        """
-        pass
 
     @abstractmethod
-    def extract_party_tax_scheme(self, party_tax_scheme_elem, ns=None) -> Optional[PartyTaxScheme]:
+    def extract_party_tax_scheme(self, party_tax_scheme_elem: Any) -> Optional[PartyTaxScheme]:
         """
         Extracts party tax scheme details from the provided element.
 
@@ -53,35 +49,64 @@ class OrderParsingStrategy(ABC):
             party_tax_scheme_elem (any): The element containing party tax scheme information.
             ns (any, optional): Namespace information, if applicable.
 
-        Returns: Optional[PartyTaxScheme]: 
+        Returns: Optional[PartyTaxScheme]:
             A `PartyTaxScheme` object if data is available, otherwise `None`.
         """
         pass
 
+
     @abstractmethod
-    def extract_item(self, item_elem, ns=None) -> Optional[Item]:
+    def extract_address(self, address_elem: Any) -> Optional[Address]:
+        """
+        Extracts address details from the provided element.
+        """
+        pass
+
+    @abstractmethod
+    def extract_item(self, item_elem: Any) -> Optional[Item]:
         """
         Parse individual order line items and item model.
         """
         pass
 
     @abstractmethod
-    def unmarshal_party(self, data: bytes, party_type_elem: str) -> Party:
+    def extract_party(self, order_data: Any, party_type_elem: str) -> Optional[Party]:
         """
         Parse buyer or supplier party section based on party_type.
         """
         pass
 
     @abstractmethod
-    def unmarshal_header(self, data: bytes) -> dict:
+    def extract_invoice_period(self, period_elem: Any) -> Optional[InvoicePeriod]:
         """
-        Parse the order header section and return an InvoiceHeader model.
+        Extracts invoice period details from the provided element.
         """
         pass
 
     @abstractmethod
-    def unmarshal_invoice_lines(self, data: bytes) -> List[InvoiceLine]:
+    def extract_order_reference(self, ref_elem: Any) -> Optional[OrderReference]:
+        """
+        Extracts order reference details from the provided element.
+        """
+        pass
+
+    @abstractmethod
+    def extract_invoice_lines(self, lines_data: Any) -> List[InvoiceLine]:
         """
         Parse all order line items and return a list of InvoiceLine models.
+        """
+        pass
+
+    @abstractmethod
+    def extract_header_fields(self, order_data: Any) -> Dict[str, Optional[Union[str, float]]]:
+        """
+        Extracts top-level order metadata fields needed for invoice assembly.
+        """
+        pass
+
+    @abstractmethod
+    def get_order_lines(self, order_data: Any) -> List[Any]:
+        """
+        Uniform way to fetch the order lines section for both JSON and XML.
         """
         pass

@@ -6,19 +6,18 @@ API route handler for processing UBL Order UBL documents and then generating UBL
 from fastapi import APIRouter, UploadFile, File
 from fastapi import Depends
 import magic
+from src.models.invoice_response_models import DraftInvoiceResponse
 from src.services.invoice_service import InvoiceService
 from src.services.auth_service import get_current_user_id
-
 
 
 router = APIRouter()
 invoice_service = InvoiceService()
 
 
-@router.post("/v1/user/invoices/upload")
+@router.post("/v1/user/invoices/upload", response_model=DraftInvoiceResponse)
 async def upload_invoice_order(
-    file: UploadFile = File(...),
-    user_id: str = Depends(get_current_user_id)
+    file: UploadFile = File(...), user_id: str = Depends(get_current_user_id)
 ):
     """
     Handles the upload of a UBL order document (XML or JSON),
@@ -31,14 +30,12 @@ async def upload_invoice_order(
     file_type = magic.Magic(mime=True).from_buffer(content)
 
     # Delegate to the service with content and MIME type
-    result = invoice_service.generate_draft_invoice(content, file_type, user_id)
+    return invoice_service.generate_draft_invoice(content, file_type, user_id)
 
-    return result
 
 @router.post("/v1/user/invoices/complete")
 async def complete_invoice(
-    invoice_data: dict,
-    user_id: str = Depends(get_current_user_id)
+    invoice_data: dict, user_id: str = Depends(get_current_user_id)
 ):
     result = invoice_service.complete_invoice(invoice_data, user_id)
     return result

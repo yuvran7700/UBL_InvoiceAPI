@@ -5,6 +5,7 @@ Includes registration reequest, session request and logout request.
 
 from pydantic import BaseModel, EmailStr
 
+
 class RegisterRequest(BaseModel):
     """
     Represents a register request to create a new account.
@@ -15,6 +16,7 @@ class RegisterRequest(BaseModel):
         password (str): Password of user to log in.
         abn (str): Users Australian Business Number
     """
+
     businessName: str
     email: EmailStr
     password: str
@@ -22,7 +24,6 @@ class RegisterRequest(BaseModel):
 
 
 class SessionRequest(BaseModel):
-
     """
     Represents a session requests for logging in.
 
@@ -36,7 +37,6 @@ class SessionRequest(BaseModel):
 
 
 class LogOutRequest(BaseModel):
-
     """
     Represents a requests for logging out.
 

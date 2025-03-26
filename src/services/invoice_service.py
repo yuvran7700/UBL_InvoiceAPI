@@ -3,15 +3,15 @@ Invoice service module.
 Handles the creation and persistence of invoices from orders.
 """
 
-from fastapi import HTTPException
 from typing import Dict, List
+from fastapi import HTTPException
 from src.marshallers.strategies.xml_order_parser import XmlOrderParser
 from src.marshallers.strategies.json_order_parser import JsonOrderParser
 from src.marshallers.invoice_marshaller import InvoiceMarshaller
-from src.utils.missing_field_checker import find_missing_fields
-from src.validators.invoice_validator import InvoiceValidator
-from src.repositories.invoice_repository import save_invoice
-from src.models.invoice import Invoice
+from src.models.invoice_response_models import DraftInvoiceResponse
+from src.models.invoice_update import InvoiceUpdateModel
+from src.validators.missing_field_checker import MissingFieldChecker
+
 
 class InvoiceService:
     """
@@ -19,7 +19,9 @@ class InvoiceService:
     from UBL order data.
     """
 
-    def generate_draft_invoice(self, content: bytes, file_type: str, user_id: str) -> dict:
+    def generate_draft_invoice(
+        self, content: bytes, file_type: str, user_id: str
+    ) -> DraftInvoiceResponse:
         """
         Generates a draft Invoice from the uploaded UBL order data.
 
@@ -32,18 +34,19 @@ class InvoiceService:
 
         # Assemble the Invoice using the marshaller
         assembler = InvoiceMarshaller(parser)
-        invoice: Invoice = assembler.marshal(content)
+        invoice: InvoiceUpdateModel = assembler.marshal(content)
 
         # Validate required fields
-        missing_fields = find_missing_fields(invoice)
-        
+        missing_fields_report = MissingFieldChecker(invoice).run()
+
+
         # TODO: attach user_id, or store draft
         # self._save_draft(user_id, invoice)
 
-        return {
-            "invoice": invoice,
-            "missing_fields": missing_fields
-        }
+        return DraftInvoiceResponse(
+        invoice=invoice.dict(exclude_none=True),
+        missing_fields_report=missing_fields_report
+        )
 
     def _select_parsing_strategy(self, file_type: str):
         """
@@ -52,31 +55,32 @@ class InvoiceService:
         :param file_type: MIME type of the uploaded file.
         :return: Instance of a concrete parsing strategy.
         """
-        if file_type == "application/xml":
+        if "xml" in file_type:
             return XmlOrderParser()
-        elif file_type == "application/json":
+        elif "json" in file_type:
             return JsonOrderParser()
         else:
-            raise HTTPException(status_code=415, detail="Unsupported file type. Only XML and JSON are supported.")
+            raise HTTPException(
+                status_code=415,
+                detail="Unsupported file type. Only XML and JSON are supported.",
+            )
 
     def complete_invoice(self, invoice_data: dict, user_id: str) -> dict:
         # Convert dict to Invoice model
-        invoice = Invoice(**invoice_data)
-        
+        invoice = InvoiceUpdateModel(**invoice_data)
+
         # Debugging Purposes
         print("Populated Invoice Model:\n", invoice.model_dump_json(indent=2))
-
 
         missing_fields = find_missing_fields(invoice)
         if missing_fields:
             # Return early to frontend if incomplete
             raise HTTPException(
-                status_code=400,
-                detail={"missing_fields": missing_fields}
+                status_code=400, detail={"missing_fields": missing_fields}
             )
-    
+
         # 1. Validate mandatory fields and business rules
-        InvoiceValidator.raise_if_invalid(invoice)
+        #InvoiceValidator.raise_if_invalid(invoice)
 
         # 2. Perform legal calculations
         self._compute_legal_monetary_totals(invoice)
@@ -85,11 +89,11 @@ class InvoiceService:
         # tax_total = self._calculate_tax(invoice.invoice_lines)
 
         # 4. Save the completed invoice (to DynamoDB or DB)
-        save_invoice(invoice, user_id)
+        #save_invoice(invoice, user_id)
 
         return {"invoice_id": invoice.header.invoice_id, "invoice": invoice}
 
-    def _compute_legal_monetary_totals(self, invoice: Invoice):
+    def _compute_legal_monetary_totals(self, invoice: InvoiceUpdateModel):
         # Use the already populated line_extension_amount from marshaller
         line_extension_total = invoice.legal_monetary_total.line_extension_amount
 
@@ -102,5 +106,9 @@ class InvoiceService:
                 total_tax_amount += tax_amount
 
         invoice.legal_monetary_total.tax_exclusive_amount = line_extension_total
-        invoice.legal_monetary_total.tax_inclusive_amount = line_extension_total + total_tax_amount
-        invoice.legal_monetary_total.payable_amount = invoice.legal_monetary_total.tax_inclusive_amount
+        invoice.legal_monetary_total.tax_inclusive_amount = (
+            line_extension_total + total_tax_amount
+        )
+        invoice.legal_monetary_total.payable_amount = (
+            invoice.legal_monetary_total.tax_inclusive_amount
+        )

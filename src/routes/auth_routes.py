@@ -14,6 +14,7 @@ from src.models.auth_models import LogOutRequest, SessionRequest
 
 router = APIRouter(prefix="/v1/users/auth", tags=["auth"])
 
+
 @router.post("/login")
 async def login_user(request: SessionRequest):
     """
@@ -21,12 +22,12 @@ async def login_user(request: SessionRequest):
 
     :param file: Session Request.
     :return: String.
-    :raises HTTPException: If there is a server error or invalid credentials 
+    :raises HTTPException: If there is a server error or invalid credentials
 
     """
     try:
-        JWT = authenticate_user(request.model_dump()) # pylint: disable = invalid-name
-        print(f"JWT generated: {JWT}") 
+        JWT = authenticate_user(request.model_dump())  # pylint: disable = invalid-name
+        print(f"JWT generated: {JWT}")
         if not JWT:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials"
@@ -43,13 +44,13 @@ async def login_user(request: SessionRequest):
 
 
 @router.get("/validate/login", response_model=dict)
-async def login_validation(JWT: str = Query(...)): # pylint: disable = C0103
+async def login_validation(JWT: str = Query(...)):  # pylint: disable = C0103
     """
     Validates if the user is logged in.
 
     :param file: JWT (str)
     :return: String.
-    :raises HTTPException: If there is a server error or the token is missing  
+    :raises HTTPException: If there is a server error or the token is missing
 
     """
     try:
@@ -76,7 +77,7 @@ async def logout_user(request: LogOutRequest):
 
     :param file: LogOutRequest
     :return: String.
-    :raises HTTPException: If there is a server error or the token is missing  
+    :raises HTTPException: If there is a server error or the token is missing
 
     """
     try:
@@ -96,13 +97,13 @@ async def logout_user(request: LogOutRequest):
 
 
 @router.get("/validate/logout", response_model=dict)
-async def logout_validation(JWT: str = Query(...)): # pylint: disable = invalid-name
+async def logout_validation(JWT: str = Query(...)):  # pylint: disable = invalid-name
     """
     Validates that the user logged out.
 
     :param file: JWT (str)
     :return: String.
-    :raises HTTPException: If there is a server error or the token is missing  
+    :raises HTTPException: If there is a server error or the token is missing
 
     """
     try:

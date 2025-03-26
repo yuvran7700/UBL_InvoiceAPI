@@ -1,29 +1,71 @@
+"""
+Test order upload endpoint for JSON and XML files.
+Modules Tested: InvoiceRoutes, InvoiceService, InvoiceMarshaller, OrderParsingStrategy
+"""
+import json
 from fastapi.testclient import TestClient
 from src.main import app
-from tests.fixtures.data_fixtures import sample_order_json
-from src.services.auth_service import get_current_user_id  # Adjust the path based on your project
+from src.services.auth_service import get_current_user_id
 
-import pytest
-import os
 
+app.dependency_overrides[get_current_user_id] = lambda: "test-user"
 client = TestClient(app)
 
-def test_complete_invoice_persists_to_dynamo(sample_invoice_json):
-    app.dependency_overrides[get_current_user_id] = lambda: "test-user-id"
-
+def test_order_upload_json_success(sample_order_json):
     """
-    Integration test that POSTs a fully completed invoice JSON
-    to the /v1/user/invoices/complete route and checks for 200 OK.
+    Test successful JSON order upload and draft invoice generation.
     """
-    response = client.post("/v1/user/invoices/complete", json=sample_invoice_json, headers={"Authorization": "Bearer test-token"})
-    
-    # ✅ Check successful processing and save
-    assert response.status_code == 200, f"Expected 200, got {response.status_code}, Response: {response.text}"
+    response = client.post(
+        "/v1/user/invoices/upload",
+        files={"file": ("order.json", sample_order_json, "application/json")},
+        headers={"Authorization": "Bearer test-token"}  # Optional if auth is enabled
+    )
 
-    assert response.status_code == 200, f"Expected 200, got {response.status_code}"
-    response_data = response.json()
-    
-    # ✅ Confirm response has invoice_id (implies save success)
-    assert "invoice_id" in response_data
-    assert response_data["invoice"]["header"]["invoice_id"] == "INV-001"
-    app.dependency_overrides = {}
+    assert response.status_code == 200
+    result = response.json()
+
+    # Validate API returns expected structure
+    assert "invoice" in result
+    assert "missing_fields_report" in result
+    assert isinstance(result["invoice"], dict)
+    assert isinstance(result["missing_fields_report"]["missing_invoice_fields"], list)
+    assert isinstance(result["missing_fields_report"]["missing_invoice_lines"], list)
+
+    # Print result nicely for review
+    print("\n API Response:")
+    print(json.dumps(result, indent=2))
+
+def test_order_upload_xml_success(sample_order_xml):
+    """
+    Test successful XML order upload and draft invoice generation.
+    """
+    response = client.post(
+        "/v1/user/invoices/upload",
+        files={"file": ("order.xml", sample_order_xml, "application/xml")},
+        headers={"Authorization": "Bearer test-token"}
+    )
+
+    assert response.status_code == 200
+    result = response.json()
+
+    # Validate structure
+    assert "invoice" in result
+    assert "missing_fields_report" in result
+    assert isinstance(result["invoice"], dict)
+
+    # Optional: Print for debug
+    print("\n API Response (XML):")
+    print(json.dumps(result, indent=2))
+
+def test_order_upload_invalid_file_type():
+    """
+    Test upload with unsupported file type returns 415 error.
+    """
+    response = client.post(
+        "/v1/user/invoices/upload",
+        files={"file": ("order.txt", b"Random Text", "text/plain")},
+        headers={"Authorization": "Bearer test-token"}
+    )
+
+    assert response.status_code == 415
+    assert response.json()["detail"] == "Unsupported file type. Only XML and JSON are supported."
