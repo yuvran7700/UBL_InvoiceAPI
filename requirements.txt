@@ -59,7 +59,7 @@ platformdirs==4.3.6
 pluggy==1.5.0
 pyasn1==0.4.8
 pycodestyle==2.10.0
-pydantic==1.10.9
+pydantic==1.10.9in
 # pydantic_core==2.27.2
 pyflakes==3.0.1
 Pygments==2.19.1
@@ -67,6 +67,7 @@ pytest==7.2.2
 pytest-cov==6.0.0
 python-dateutil==2.9.0.post0
 python-dotenv==1.0.1
+python-magic
 python-multipart==0.0.20
 PyYAML==6.0.2
 rich==13.9.4
