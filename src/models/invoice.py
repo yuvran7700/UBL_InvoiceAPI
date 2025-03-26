@@ -1,5 +1,5 @@
-from pydantic import BaseModel
 from typing import List, Optional, Dict
+from pydantic import BaseModel
 from datetime import date
 
 from src.models.tax import ClassifiedTaxCategoryPatch, TaxScheme
