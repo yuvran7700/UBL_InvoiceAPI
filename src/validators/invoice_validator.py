@@ -1,7 +1,6 @@
 from fastapi import HTTPException
 from datetime import date
-from src.models.invoice import Invoice
-
+from src.models.invoice_update import InvoiceUpdateModel
 
 class InvoiceValidator:
     """
@@ -10,37 +9,33 @@ class InvoiceValidator:
     """
 
     @classmethod
-    def raise_if_invalid(cls, invoice: Invoice) -> None:
+    def raise_if_invalid(cls, invoice: InvoiceUpdateModel) -> None:
         errors = []
 
-        # Issue Date must not be in the future
-        if invoice.header.issue_date > date.today():
-            errors.append("IssueDate cannot be in the future.")
+        # 1. Issue Date must not be in the future
+        if invoice.issue_date and invoice.issue_date > date.today():
+            errors.append("issue_date cannot be in the future.")
 
-        # Due Date cannot be before Issue Date
-        if (
-            invoice.header.due_date
-            and invoice.header.due_date < invoice.header.issue_date
-        ):
-            errors.append("DueDate cannot be earlier than IssueDate.")
+        # 2. Due Date cannot be before Issue Date
+        if invoice.due_date and invoice.issue_date:
+            if invoice.due_date < invoice.issue_date:
+                errors.append("due_date cannot be earlier than issue_date.")
 
-        # Validate each invoice line
-        for idx, line in enumerate(invoice.invoice_lines, start=1):
-            if line.invoiced_quantity <= 0:
-                errors.append(f"Invoice Line {idx}: InvoicedQuantity must be positive.")
-            if line.price.price_amount < 0:
-                errors.append(f"Invoice Line {idx}: PriceAmount cannot be negative.")
+        # 3. Validate each invoice line
+        if invoice.invoice_lines:
+            for idx, line in enumerate(invoice.invoice_lines, start=1):
+                if line.invoiced_quantity is not None and line.invoiced_quantity <= 0:
+                    errors.append(f"Line {idx}: invoiced_quantity must be positive.")
 
-            # 4. Validate VAT percentage range
-            tax = line.item.classified_tax_category
-            if tax and not (0 <= tax.cbc_percent <= 100):
-                errors.append(
-                    f"Invoice Line {idx}: VAT percent must be between 0 and 100."
-                )
+                if line.price and line.price.price_amount is not None:
+                    if line.price.price_amount < 0:
+                        errors.append(f"Line {idx}: price_amount cannot be negative.")
 
-        # 5. Validate Total consistency if needed (optional)
-        # Example: Check if line_extension_amount is correctly calculated
+                tax = line.item.classified_tax_category if line.item else None
+                if tax and tax.percent is not None:
+                    if not (0 <= tax.percent <= 100):
+                        errors.append(f"Line {idx}: VAT percent must be between 0 and 100.")
 
-        # Raise if any errors
+        # 4. Raise if any errors
         if errors:
             raise HTTPException(status_code=400, detail={"validation_errors": errors})

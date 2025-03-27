@@ -16,7 +16,7 @@ def save_user(user_in_db: UserInDB) -> None:
         Exception: If there is an error storing the user in DynamoDB.
     """
     try:
-        user_in_db_dic = user_in_db.model_dump()
+        user_in_db_dic = user_in_db.dict()
         user_table.put_item(Item=user_in_db_dic)
     except Exception as e:
         error_handler = ErrorContext(DatabaseErrorHandler())
@@ -49,7 +49,7 @@ def get_user(email: str) -> UserInDB:
         items = response.get("Items", [])
 
         if items:
-            return UserInDB.model_validate(items[0])
+            return UserInDB(**items[0])
         return None
 
     except Exception as e:

@@ -1,5 +1,5 @@
 # This is the main file that will run the FastAPI application
-
+from mangum import Mangum
 from fastapi import FastAPI
 from src.routes.auth_routes import router as auth_router  # Adjust import as neede
 from src.routes.user_routes import router as user_router
@@ -22,3 +22,5 @@ if __name__ == "__main__":
     import uvicorn
 
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+
+handler = Mangum(app)

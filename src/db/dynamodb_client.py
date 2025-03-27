@@ -34,8 +34,8 @@ def initialize_dynamodb():
     Initializes and tests the connection to all required DynamoDB tables.
     """
     check_table_status(invoices_table, "invoices")
-    check_table_status(users_table, "users")
-    check_table_status(sessions_table, "sessions")
+    check_table_status(user_table, "users")
+    check_table_status(session_table, "sessions")
 
 
 # Call on startup

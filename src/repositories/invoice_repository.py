@@ -5,17 +5,17 @@ Encapsulates all interactions with DynamoDB for invoice operations using query o
 
 from typing import List
 from boto3.dynamodb.conditions import Key
-from src.models.invoice import Invoice
+from src.models.invoice_update import InvoiceUpdateModel
 from src.utils.dynamodb_data_converter import convert_data_for_dynamodb
 from src.db.dynamodb_client import invoices_table
 
 
-def save_invoice(invoice: Invoice, user_id: str) -> None:
+def save_invoice(invoice: InvoiceUpdateModel, user_id: str) -> None:
     """
     Saves the invoice to the DynamoDB table after converting its data.
 
     Args:
-        invoice (InvoiceType): The invoice to be saved.
+        invoice (InvoiceUpdateModel): The invoice to be saved.
 
     Raises:
         Exception: If there is an error storing the invoice in DynamoDB.
@@ -23,7 +23,8 @@ def save_invoice(invoice: Invoice, user_id: str) -> None:
     invoice_dict = invoice.dict()
     invoice_dict = convert_data_for_dynamodb(invoice_dict)
     invoice_dict["user_id"] = user_id
-    invoice_dict["invoice_id"] = invoice.header.invoice_id
+    invoice_dict["invoice_id"] = invoice.id
+
 
     try:
         invoices_table.put_item(Item=invoice_dict)
@@ -31,7 +32,7 @@ def save_invoice(invoice: Invoice, user_id: str) -> None:
         raise Exception(f"Failed to store invoice in DynamoDB: {e}")
 
 
-def get_invoice_by_id(invoice_id: str) -> Invoice:
+def get_invoice_by_id(invoice_id: str) -> InvoiceUpdateModel:
     """
     Retrieves an invoice from DynamoDB by its unique identifier.
 
@@ -52,7 +53,7 @@ def get_invoice_by_id(invoice_id: str) -> Invoice:
     return None
 
 
-def get_invoices_by_user(user_id: str) -> List[Invoice]:
+def get_invoices_by_user(user_id: str) -> List[InvoiceUpdateModel]:
     """
     Retrieves all invoices belonging to a specific user from DynamoDB.
 

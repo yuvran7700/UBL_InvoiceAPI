@@ -26,7 +26,7 @@ async def login_user(request: SessionRequest):
 
     """
     try:
-        JWT = authenticate_user(request.model_dump())  # pylint: disable = invalid-name
+        JWT = authenticate_user(request.dict())  # pylint: disable = invalid-name
         print(f"JWT generated: {JWT}")
         if not JWT:
             raise HTTPException(

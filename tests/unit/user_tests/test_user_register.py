@@ -21,7 +21,7 @@ def test_user_in_db_map_sucess(sample_user_json):
         user_id=user_id,
     )
 
-    print(user_in_db.model_dump_json())
+    print(user_in_db.json())
     assert user_in_db is not None
     assert user_in_db.email == sample_user_json["email"]
     assert user_in_db.business_name == sample_user_json["business_name"]
@@ -45,7 +45,7 @@ def test_model_to_dict_conversion(sample_user_json):
     )
 
     user = user_in_db
-    user_dict = user.model_dump()
+    user_dict = user.dict()
 
     result = {
         "business_name": "Test1 Business",

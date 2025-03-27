@@ -1,89 +1,67 @@
 {
-    "header": {
-      "customization_id": "urn:oasis:names:specification:ubl:xpath:Invoice-2.0:sbs-1.0-draft",
-      "profile_id": "bpid:urn:oasis:names:draft:bpss:ubl-2-sbs-invoice-draft",
-      "invoice_id": "INV-001",
-      "issue_date": "2023-12-01",
-      "due_date": "2023-12-15",
-      "invoice_type_code": "380",
-      "document_currency_code": "EUR",
-      "buyer_reference": "BUY123456",
-      "order_reference": "ORD987654"
+    "id": "INV-001",
+    "customization_id": "urn:...:ubl:invoice",
+    "profile_id": "urn:...:profile",
+    "issue_date": "2024-01-10",
+    "due_date": "2024-01-31",
+    "invoice_type_code": "380",
+    "document_currency_code": "AUD",
+    "buyer_reference": "REF123",
+    "order_reference": {
+        "id": "ORD-123"
     },
     "accounting_supplier_party": {
-      "endpoint_id": "SUPP-001",
-      "party_name": "Supplier Company",
+      "party_name": { "name": "Supplier Co" },
       "postal_address": {
-        "street": "123 Supplier St",
-        "city": "SupplierCity",
-        "postal_code": "12345",
-        "country": "DE"
+        "street_name": "123 Supply St",
+        "city_name": "Sydney",
+        "postal_zone": "2000",
+        "country": { "identification_code": "AU" }
       },
-      "party_legal_entity": {
-        "registration_name": "Supplier Ltd."
-      },
-      "contact": {
-        "name": "Supplier Contact",
-        "telephone": "+49 123 456789",
-        "electronic_mail": "supplier@example.com"
-      },
+      "party_legal_entity": { "registration_name": "Supplier Co Pty Ltd" },
       "party_tax_scheme": {
-        "company_id": "DE123456789",
-        "tax_scheme": {
-          "id": "VAT",
-          "tax_type_code": "VAT"
-        }
-      }
+        "company_id": "123456789",
+        "tax_scheme_id": "GST"
+      },
+      "contact": { "name": "John Smith" }
     },
     "accounting_customer_party": {
-      "endpoint_id": "CUST-001",
-      "party_name": "Customer Company",
+      "party_name": { "name": "Customer Pty" },
       "postal_address": {
-        "street": "456 Customer Rd",
-        "city": "CustomerCity",
-        "postal_code": "67890",
-        "country": "FR"
+        "street_name": "456 Customer Rd",
+        "city_name": "Melbourne",
+        "postal_zone": "3000",
+        "country": { "identification_code": "AU" }
       },
-      "party_legal_entity": {
-        "registration_name": "Customer Ltd."
-      },
-      "contact": {
-        "name": "Customer Contact",
-        "telephone": "+33 987 654321",
-        "electronic_mail": "customer@example.com"
-      },
+      "party_legal_entity": { "registration_name": "Customer Pty Ltd" },
       "party_tax_scheme": {
-        "company_id": "FR987654321",
-        "tax_scheme": {
-          "id": "VAT",
-          "tax_type_code": "VAT"
-        }
-      }
+        "company_id": "987654321",
+        "tax_scheme_id": "GST"
+      },
+      "contact": { "name": "Jane Doe" }
+    },
+    "legal_monetary_total": {
+      "line_extension_amount": 1000.0,
+       "payable_amount": 100.0
     },
     "invoice_lines": [
       {
         "id": "1",
         "invoiced_quantity": 10,
-        "line_extension_amount": 1000,
+        "unit_code": "E99",
+        "line_extension_amount": 1000.0,
         "item": {
-          "name": "Laptop",
-          "description": "High-end laptop",
+          "name": "Product A",
           "classified_tax_category": {
-            "cbc_id": "S",
-            "cbc_percent": 20,
-            "tax_scheme_id": "VAT"
+            "id": "S",
+            "percent": 10.0,
+            "tax_scheme_id": "GST"
           }
         },
         "price": {
           "price_amount": 100.0
         }
       }
-    ],
-    "legal_monetary_total": {
-      "line_extension_amount": 1000,
-      "tax_exclusive_amount": 1000,
-      "tax_inclusive_amount": 1200,
-      "payable_amount": 1200
-    }
+    ]
   }
   

@@ -41,7 +41,7 @@ def test_update_password(sample_user_json):
     assert updated_user_in_db is not None
 
     # Convert UserInDB model to a dictionary for assertions
-    stored_user = updated_user_in_db.model_dump()
+    stored_user = updated_user_in_db.dict()
 
     # Assert the user data is correct
     assert stored_user["email"] == sample_user_json["email"]

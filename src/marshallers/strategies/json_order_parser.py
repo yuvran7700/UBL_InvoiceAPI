@@ -192,7 +192,7 @@ class JsonOrderParser(OrderParsingStrategy):
             "invoice_type_code": "380",
             "document_currency_code": self.unwrap(order_section.get("DocumentCurrencyCode")) or "AUD",
             "due_date": self.unwrap(order_section.get("DueDate")),
-            "note": self.unwrap_and_extract(order_section.get("Note")),  # ✅ FIX
+            "note": self.unwrap_and_extract(order_section.get("Note")),  
             "accounting_cost": self.unwrap(order_section.get("AccountingCost")),
             "buyer_reference": self.unwrap(order_section.get("SalesOrderID")),
         }

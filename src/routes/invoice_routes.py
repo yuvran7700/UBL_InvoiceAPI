@@ -36,10 +36,12 @@ async def upload_invoice_order(
 
 @router.post("/v1/user/invoices/complete", response_model=CompletedInvoiceResponse)
 async def complete_invoice_route(
-    invoice_data: InvoiceUpdateModel, 
+    invoice_data: InvoiceUpdateModel,
     user_id: str = Depends(get_current_user_id)
 ):
     """
     Completes the draft invoice by performing validation, calculations, and storage.
+
+    :param invoice_data: A InvoiceUpdateModel with mandatory missing fields provided.
     """
     return invoice_service.complete_invoice(invoice_data, user_id)

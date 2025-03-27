@@ -52,7 +52,7 @@ def sample_invoice_xml():
 
     with open(file_path, "rb") as f:
         return f.read()
-    
+
 @pytest.fixture
 def sample_invoice_json():
     """
@@ -68,15 +68,9 @@ def sample_invoice_json():
         return json.load(f)
 
 @pytest.fixture
-def sample_invalid_invoice_json():
+def valid_token():
+    """"
+    Placeholder returns static token - Needs to return a valid test token for API testing.
+    Todo: call auth service to implement real token generation for testing.
     """
-    Loads the valid sample invoice JSON data for validator tests.
-    """
-    project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-    file_path = os.path.join(project_root, "test_data", "invalid_invoice.json")
-
-    if not os.path.exists(file_path):
-        raise FileNotFoundError(f"Test data file not found: {file_path}")
-
-    with open(file_path, "r") as f:
-        return json.load(f)
+    return "test-token"

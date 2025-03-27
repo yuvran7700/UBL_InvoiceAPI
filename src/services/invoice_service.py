@@ -4,6 +4,7 @@ Handles the creation and persistence of invoices from orders.
 """
 
 from typing import Dict, List
+from nanoid import generate
 from fastapi import HTTPException
 from src.marshallers.strategies.xml_order_parser import XmlOrderParser
 from src.marshallers.strategies.json_order_parser import JsonOrderParser
@@ -70,12 +71,15 @@ class InvoiceService:
     def complete_invoice(self, invoice: InvoiceUpdateModel, user_id: str) -> CompletedInvoiceResponse:
 
         # Debugging Purposes - print("Populated Invoice Model:\n", invoice.model_dump_json(indent=2))
+         # 0. Generate a new invoice ID
+        invoice_id = f"INV-{generate(size=8)}"
+        invoice.id = invoice_id  # Set the generated ID
 
         # 1. Check for missing fields (pass the model, not the dict)
         missing_report = MissingFieldChecker(invoice).run()
-        
+
         if missing_report.missing_invoice_fields or missing_report.missing_invoice_lines:
-            raise HTTPException(status_code=400, detail=missing_report.model_dump())
+            raise HTTPException(status_code=400, detail=missing_report.dict())
 
         # 2. Validate mandatory fields and business rules
         InvoiceValidator.raise_if_invalid(invoice)
@@ -88,7 +92,7 @@ class InvoiceService:
 
         # Return Pydantic response model
         return CompletedInvoiceResponse(
-            invoice_id=invoice.id,
+            invoice_id=invoice_id,
             invoice=invoice
         )
 
@@ -99,8 +103,8 @@ class InvoiceService:
 
         for line in invoice.invoice_lines:
             tax_category = line.item.classified_tax_category
-            if tax_category and tax_category.cbc_percent is not None:
-                tax_rate = tax_category.cbc_percent / 100
+            if tax_category and tax_category.percent is not None:
+                tax_rate = tax_category.percent / 100
                 tax_amount = line.line_extension_amount * tax_rate
                 total_tax_amount += tax_amount
 

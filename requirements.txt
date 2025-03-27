@@ -59,7 +59,7 @@ platformdirs==4.3.6
 pluggy==1.5.0
 pyasn1==0.4.8
 pycodestyle==2.10.0
-pydantic==1.10.9in
+pydantic==1.10.9
 # pydantic_core==2.27.2
 pyflakes==3.0.1
 Pygments==2.19.1

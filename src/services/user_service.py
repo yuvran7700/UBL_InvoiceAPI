@@ -50,7 +50,7 @@ def create_user(user_in: UserIn) -> UserInDB:
     user_id = str(uuid.uuid4())
 
     user_in_db = UserInDB(
-        **user_in.model_dump(), hashed_password=hashed_password, user_id=user_id
+        **user_in.dict(), hashed_password=hashed_password, user_id=user_id
     )
     save_user(user_in_db)
     return user_in_db

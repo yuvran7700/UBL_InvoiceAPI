@@ -40,7 +40,7 @@ def test_user_registration(sample_user_json):
     # Ensure the user is correctly stored in the database with hashed password
     user_in_db = get_user(sample_user_json["email"])
     # convert UserInDB model into json
-    stored_user = user_in_db.model_dump()
+    stored_user = user_in_db.dict()
     assert stored_user is not None
     assert stored_user["email"] == sample_user_json["email"]
     assert stored_user["business_name"] == sample_user_json["business_name"]
