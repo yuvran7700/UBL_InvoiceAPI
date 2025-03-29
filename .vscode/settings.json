@@ -10,5 +10,6 @@
     "python.testing.pytestArgs": [
         "tests"
     ],
-    "python.languageServer": "Pylance"
+    "python.languageServer": "Pylance",
+    "python.pythonPath": ".venv/bin/python",
 }

@@ -446,7 +446,12 @@ disable=raw-checker-failed,
         too-few-public-methods, 
         too-many-instance-attributes, 
         unnecessary-pass, 
-        W0107
+        W0107, 
+        W0511,
+        C0114,
+        W0613,
+        R0801,
+
 
 # Enable the message, report, category or checker with the given id(s). You can
 # either give multiple identifier separated by comma (,) or put this option
