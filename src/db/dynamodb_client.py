@@ -1,9 +1,12 @@
+#src.src/db/dynamodb_client.py
 """
 DynamoDB client initialization and connection testing.
 """
 
 import os
 import boto3
+
+from src.services.health_service import HealthService
 
 
 # Load AWS region from environment variables (default to us-east-1)
@@ -18,26 +21,19 @@ user_table = dynamodb.Table("users")
 session_table = dynamodb.Table("sessions")
 
 
-def check_table_status(table, table_name):
-    """
-    Generic function to check and print table status.
-    """
+def check_table_status(table, table_name: str, readiness: HealthService):
     try:
-        print(f"Checking DynamoDB connection for '{table_name}'...")
-        print(f"{table_name} Table Status: {table.table_status}")
+        _ = table.table_status
+        print(f"{table_name} is reachable.")
+        readiness.set_ready(f"dynamo.{table_name}", True)
     except Exception as e:
-        print(f"Error connecting to {table_name} table:", str(e))
+        print(f"{table_name} check failed: {e}")
 
 
-def initialize_dynamodb():
+def initialise_dynamodb(readiness: HealthService):
     """
     Initializes and tests the connection to all required DynamoDB tables.
     """
-    check_table_status(invoices_table, "invoices")
-    check_table_status(user_table, "users")
-    check_table_status(session_table, "sessions")
-
-
-# Call on startup
-if __name__ == "__main__":
-    initialize_dynamodb()
+    check_table_status(invoices_table, "invoices", readiness)
+    check_table_status(user_table, "users", readiness)
+    check_table_status(session_table, "sessions", readiness)

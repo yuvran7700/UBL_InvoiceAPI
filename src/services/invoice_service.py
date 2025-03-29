@@ -2,8 +2,6 @@
 Invoice service module.
 Handles the creation and persistence of invoices from orders.
 """
-
-from typing import Dict, List
 from nanoid import generate
 from fastapi import HTTPException
 from src.marshallers.strategies.xml_order_parser import XmlOrderParser
@@ -60,17 +58,26 @@ class InvoiceService:
         """
         if "xml" in file_type:
             return XmlOrderParser()
-        elif "json" in file_type:
+        if "json" in file_type:
             return JsonOrderParser()
-        else:
-            raise HTTPException(
-                status_code=415,
-                detail="Unsupported file type. Only XML and JSON are supported.",
-            )
 
-    def complete_invoice(self, invoice: InvoiceUpdateModel, user_id: str) -> CompletedInvoiceResponse:
+        raise HTTPException(
+            status_code=415,
+            detail="Unsupported file type. Only XML and JSON are supported.",)
 
-        # Debugging Purposes - print("Populated Invoice Model:\n", invoice.model_dump_json(indent=2))
+    def complete_invoice(
+            self,
+            invoice: InvoiceUpdateModel, user_id: str) -> CompletedInvoiceResponse:
+        """
+        Processes a submitted invoice through validation, calculation, and persistence steps.
+
+        :param invoice: Parsed invoice model submitted by the user.
+        :param user_id: Identifier of the user submitting the invoice.
+        :raises HTTPException: 400 if required fields are missing.
+        :return: CompletedInvoiceResponse containing the stored invoice data.
+        """
+
+        # Debuggi - print("Populated Invoice Model:\n", invoice.model_dump_json(indent=2))
          # 0. Generate a new invoice ID
         invoice_id = f"INV-{generate(size=8)}"
         invoice.id = invoice_id  # Set the generated ID
@@ -98,6 +105,14 @@ class InvoiceService:
 
 
     def _compute_legal_monetary_totals(self, invoice: InvoiceUpdateModel):
+        """
+        Helper function which calculates tax-exclusive, tax-inclusive, and payable monetary totals
+        for the given invoice based on its line items and tax categories.
+
+        Updates the `invoice.legal_monetary_total` fields in-place.
+
+        :param invoice: Invoice model with line items and tax data.
+        """
         line_extension_total = invoice.legal_monetary_total.line_extension_amount
         total_tax_amount = 0.0
 
@@ -108,6 +123,9 @@ class InvoiceService:
                 tax_amount = line.line_extension_amount * tax_rate
                 total_tax_amount += tax_amount
 
-        invoice.legal_monetary_total.tax_exclusive_amount = line_extension_total
-        invoice.legal_monetary_total.tax_inclusive_amount = line_extension_total + total_tax_amount
-        invoice.legal_monetary_total.payable_amount = invoice.legal_monetary_total.tax_inclusive_amount
+        invoice.legal_monetary_total.tax_exclusive_amount = (
+            line_extension_total)
+        invoice.legal_monetary_total.tax_inclusive_amount = (
+            line_extension_total + total_tax_amount)
+        invoice.legal_monetary_total.payable_amount = (
+            invoice.legal_monetary_total.tax_inclusive_amount)

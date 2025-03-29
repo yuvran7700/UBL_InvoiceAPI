@@ -3,12 +3,10 @@ Auth service.
 Handles the persistence (CRUD) operations for users.
 """
 
-import uuid
 from datetime import datetime, timezone
 from passlib.context import CryptContext
 from fastapi import Header, HTTPException
 from src.utils.auth_helpers import (
-    hash_password,
     create_access_token,
     decode_token,
 )
@@ -20,8 +18,6 @@ from src.repositories.auth_repository import (
     add_failed_attempts,
     reset_failed_attempts,
 )
-
-from src.validators.user_validator import validate_abn, check_email_exists
 
 from src.repositories.user_repository import get_user_item
 
@@ -164,7 +160,7 @@ def token_logout_valid(JWT: str):  # pylint: disable = invalid-name
     return {"valid": True}
 
 
-async def get_current_user_id(Authorization: str = Header(...)) -> str:
+async def get_current_user_id(authorization: str = Header(...)) -> str:
     """
     Dependency to extract the user_id or email from the JWT token.
 
@@ -173,7 +169,7 @@ async def get_current_user_id(Authorization: str = Header(...)) -> str:
     :raises HTTPException: If the token is invalid or expired.
     """
     try:
-        token = Authorization.replace("Bearer ", "")
+        token = authorization.replace("Bearer ", "")
         decoded = decode_token(token)  # Use your team's JWT decoding utility
         session_validation(decoded)  # Optional: check expiry, validity
         user_id = decoded.get("user_id") or decoded.get("email")

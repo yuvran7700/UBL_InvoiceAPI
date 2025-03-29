@@ -1,5 +1,5 @@
 # Official Python image to run the pipeline jobs
-image: python:latest
+image: python:3.11-slim
 
 # Set the pip cache directory
 variables:
@@ -29,7 +29,6 @@ lint:
   stage: lint
   script:
     - pip install pylint
-    - pylint tests/
     - pylint src/
   allow_failure: true
 
@@ -54,7 +53,7 @@ coverage:
   stage: coverage
   script: 
     - pip install coverage
-    - coverage run -m pytest
+    - coverage run -m pytest tests/
     - coverage report
     - coverage html
   artifacts:
