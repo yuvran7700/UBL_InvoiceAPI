@@ -1,3 +1,8 @@
+"""
+This module contains tests for the user update routes in the user_routes.py file.
+Modules Tested:
+    /update-password, /update-business-name, /update-email
+"""
 import time
 import pytest
 from fastapi.testclient import TestClient

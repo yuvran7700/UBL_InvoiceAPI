@@ -1,3 +1,7 @@
+"""
+Test cases for invoice creation logic
+Modules Tested: InvoiceService, InvoiceMarshaller, MissingFieldChecker
+"""
 import json
 from src.marshallers.strategies.xml_order_parser import XmlOrderParser
 from src.marshallers.invoice_marshaller import InvoiceMarshaller

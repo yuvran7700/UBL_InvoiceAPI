@@ -1,3 +1,10 @@
+"""
+This file contains unit tests for the user registration logic i.e., model mapping and conversions.
+
+Modules Tested:
+    UserIn, UserInDB, create_user, hash_password, validate_abn, validate_password
+
+"""
 from fastapi import HTTPException
 import pytest
 from src.models.user_models import UserIn, UserInDB

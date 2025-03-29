@@ -1,3 +1,8 @@
+""""
+This file contains tests for the user registration route that interact with the database.
+Modules Tested:
+    User registration route, user repository, user helpers
+"""
 import pytest
 from fastapi.testclient import TestClient
 from src.main import app

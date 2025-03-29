@@ -1,3 +1,9 @@
+"""
+This module contains tests for the user routes in the FastAPI application.
+Modules Tested:
+    /register, /update-password, /update-business-name, /update-email
+
+"""
 from fastapi.testclient import TestClient
 from src.main import app
 import pytest
