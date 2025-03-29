@@ -1,3 +1,10 @@
+"""
+Unit tests for the custom database exceptions.
+
+Modules Tested:
+    DatabaseError, DatabaseConnectionError, DatabaseWriteError, DatabaseReadError, DynamoDBError
+
+"""
 import pytest
 from src.exceptions.db_exceptions import (
     DatabaseError,

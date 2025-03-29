@@ -3,9 +3,8 @@
 API route handler for processing UBL Order UBL documents and then generating UBL Invoices.
 """
 
-from fastapi import APIRouter, UploadFile, File
+from fastapi import APIRouter, HTTPException, UploadFile, File
 from fastapi import Depends
-import magic
 from src.models.invoice_response_models import DraftInvoiceResponse, CompletedInvoiceResponse
 from src.models.invoice_update import InvoiceUpdateModel
 from src.services.invoice_service import InvoiceService
@@ -28,7 +27,16 @@ async def upload_invoice_order(
     content = await file.read()
 
     # MIME type detection happens in the route (HTTP layer concern)
-    file_type = magic.Magic(mime=True).from_buffer(content)
+    filename = file.filename.lower()
+    if filename.endswith(".xml"):
+        file_type = "application/xml"
+    elif filename.endswith(".json"):
+        file_type = "application/json"
+    else:
+        raise HTTPException(
+            status_code=415,
+            detail="Unsupported file type. Only XML and JSON are supported."
+        )
 
     # Delegate to the service with content and MIME type
     return invoice_service.generate_draft_invoice(content, file_type, user_id)

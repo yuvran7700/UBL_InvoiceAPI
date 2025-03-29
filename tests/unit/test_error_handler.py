@@ -1,3 +1,7 @@
+"""
+Unit tests for error handler module.
+Modules Tested: ValidationErrorHandler, DatabaseErrorHandler, NotFoundErrorHandler, ErrorContext
+"""
 import pytest
 from fastapi import HTTPException, status
 from src.exceptions.error_handler import (
