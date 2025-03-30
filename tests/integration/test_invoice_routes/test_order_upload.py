@@ -24,15 +24,27 @@ def test_order_upload_json_success(sample_order_json):
     assert response.status_code == 200
     result = response.json()
 
-    # Validate API returns expected structure
+    # Validate unified API response structure explicitly
+    assert "invoice_id" in result
     assert "invoice" in result
     assert "missing_fields_report" in result
+    assert "status" in result
+
+    # Check explicitly generated invoice_id even for drafts
+    assert result["invoice_id"] is not None
+    assert result["status"] == "draft"
+
+    # Validate types explicitly
     assert isinstance(result["invoice"], dict)
     assert isinstance(result["missing_fields_report"]["missing_invoice_fields"], list)
     assert isinstance(result["missing_fields_report"]["missing_invoice_lines"], list)
 
-    # Print result nicely for review
-    print("\n API Response:")
+    # Optional field validation explicitly
+    assert result["invoice"]["id"] == result["invoice_id"]
+    assert result["invoice"]["accounting_supplier_party"]["party_name"]["name"] == "Consortial"
+
+    # Print result explicitly for review
+    print("\nAPI Response (JSON):")
     print(json.dumps(result, indent=2))
 
 def test_order_upload_xml_success(sample_order_xml):
@@ -48,13 +60,25 @@ def test_order_upload_xml_success(sample_order_xml):
     assert response.status_code == 200
     result = response.json()
 
-    # Validate structure
+    # Validate unified API response structure explicitly
+    assert "invoice_id" in result
     assert "invoice" in result
     assert "missing_fields_report" in result
-    assert isinstance(result["invoice"], dict)
+    assert "status" in result
 
-    # Optional: Print for debug
-    print("\n API Response (XML):")
+    # Check explicitly generated invoice_id even for drafts
+    assert result["invoice_id"] is not None
+    assert result["status"] == "draft"
+
+    # Validate types explicitly
+    assert isinstance(result["invoice"], dict)
+    assert isinstance(result["missing_fields_report"]["missing_invoice_fields"], list)
+
+    # Optional field validation explicitly (adapt as needed based on sample data)
+    assert result["invoice"]["id"] == result["invoice_id"]
+
+    # Print result explicitly for debugging
+    print("\nAPI Response (XML):")
     print(json.dumps(result, indent=2))
 
 def test_order_upload_invalid_file_type():

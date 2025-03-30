@@ -21,11 +21,16 @@ def test_complete_invoice_success(sample_invoice_json):
         json=payload,
     )
 
-    print("\n Response JSON:", response.json()) 
+    print("\n Response JSON:", response.json())
     assert response.status_code == 200
     data = response.json()
+
+    # Validate unified response structure
     assert "invoice_id" in data
     assert "invoice" in data
+    assert "status" in data
+    assert data["status"] == "completed"
+    assert data["missing_fields_report"] is None
 
 
 def test_complete_invoice_missing_required_field(sample_invoice_json):
@@ -43,4 +48,6 @@ def test_complete_invoice_missing_required_field(sample_invoice_json):
 
     assert response.status_code == 400
     data = response.json()
+    # Confirm expected error structure
     assert "missing_invoice_fields" in data["detail"]
+    assert "accounting_supplier_party.party_legal_entity.registration_name" in data["detail"]["missing_invoice_fields"]

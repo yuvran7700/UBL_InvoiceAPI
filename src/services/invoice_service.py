@@ -4,12 +4,11 @@ Handles the creation and persistence of invoices from orders.
 """
 from nanoid import generate
 from fastapi import HTTPException
-from src.marshallers.strategies.xml_order_parser import XmlOrderParser
-from src.marshallers.strategies.json_order_parser import JsonOrderParser
-from src.marshallers.invoice_marshaller import InvoiceMarshaller
-from src.models.invoice_response_models import CompletedInvoiceResponse, DraftInvoiceResponse
 from src.models.invoice_update import InvoiceUpdateModel
-from src.repositories.invoice_repository import save_invoice
+from src.calculators.monetary_calculations import MonetaryCalculator
+from src.marshallers.marshaller_factory import MarshallerFactory
+from src.models.invoice_response_models import InvoiceResponse, InvoiceStatus
+from src.repositories.invoice_repository import save_invoice, get_invoice_by_id
 from src.validators.invoice_validator import InvoiceValidator
 from src.validators.missing_field_checker import MissingFieldChecker
 
@@ -22,7 +21,7 @@ class InvoiceService:
 
     def generate_draft_invoice(
         self, content: bytes, file_type: str, user_id: str
-    ) -> DraftInvoiceResponse:
+    ) -> InvoiceResponse:
         """
         Generates a draft Invoice from the uploaded UBL order data.
 
@@ -31,43 +30,30 @@ class InvoiceService:
         :return: Dictionary containing the Invoice and any missing mandatory fields.
         """
         # Select the correct parsing strategy
-        parser = self._select_parsing_strategy(file_type)
-
-        # Assemble the Invoice using the marshaller
-        assembler = InvoiceMarshaller(parser)
-        invoice: InvoiceUpdateModel = assembler.marshal(content)
+        invoice = MarshallerFactory().marshal_from_file(content, file_type)
 
         # Validate required fields
         missing_fields_report = MissingFieldChecker(invoice).run()
 
+        # Generate invoiceID and  assign draft status
+        invoice_id = f"INV-{generate(size=8)}"
+        invoice.id = invoice_id
+        status = InvoiceStatus.DRAFT
 
-        # TODO: attach user_id, or store draft
-        # self._save_draft(user_id, invoice)
+        # Store draft in dynamoDB
 
-        return DraftInvoiceResponse(
-        invoice=invoice.dict(exclude_none=True),
-        missing_fields_report=missing_fields_report
+        save_invoice(invoice, user_id, status)
+
+        return InvoiceResponse(
+            invoice_id=invoice_id,
+            invoice=invoice,
+            missing_fields_report=missing_fields_report,
+            status=status
         )
-
-    def _select_parsing_strategy(self, file_type: str):
-        """
-        Determines the appropriate parser based on file MIME type.
-
-        :param file_type: MIME type of the uploaded file.
-        :return: Instance of a concrete parsing strategy.
-        """
-        if "xml" in file_type:
-            return XmlOrderParser()
-        if "json" in file_type:
-            return JsonOrderParser()
-
-        raise HTTPException(
-            status_code=415,
-            detail="Unsupported file type. Only XML and JSON are supported.",)
 
     def complete_invoice(
             self,
-            invoice: InvoiceUpdateModel, user_id: str) -> CompletedInvoiceResponse:
+            invoice: InvoiceUpdateModel, user_id: str) -> InvoiceResponse:
         """
         Processes a submitted invoice through validation, calculation, and persistence steps.
 
@@ -78,9 +64,9 @@ class InvoiceService:
         """
 
         # Debuggi - print("Populated Invoice Model:\n", invoice.model_dump_json(indent=2))
-         # 0. Generate a new invoice ID
-        invoice_id = f"INV-{generate(size=8)}"
-        invoice.id = invoice_id  # Set the generated ID
+         # Ensure the invoice has an ID (draft must already exist)
+        if not invoice.id:
+            raise HTTPException(status_code=400, detail="Cannot complete invoice without an existing ID.")
 
         # 1. Check for missing fields (pass the model, not the dict)
         missing_report = MissingFieldChecker(invoice).run()
@@ -92,40 +78,49 @@ class InvoiceService:
         InvoiceValidator.raise_if_invalid(invoice)
 
         # 3. Perform monetary calculations
-        self._compute_legal_monetary_totals(invoice)
+        # 4. Compute totals using encapsulated logic
+        calculator = MonetaryCalculator(invoice)
+        calculator.compute_totals()
 
         # 4. Save the completed invoice (to DynamoDB or DB)
-        save_invoice(invoice, user_id)
+        save_invoice(invoice, user_id, InvoiceStatus.COMPLETED)
 
         # Return Pydantic response model
-        return CompletedInvoiceResponse(
-            invoice_id=invoice_id,
-            invoice=invoice
+        return InvoiceResponse(
+            invoice_id=invoice.id,
+            invoice=invoice,
+            missing_fields_report=None,
+            status=InvoiceStatus.COMPLETED
         )
 
 
-    def _compute_legal_monetary_totals(self, invoice: InvoiceUpdateModel):
+
+    def get_invoice(self, invoice_id: str, user_id: str) -> InvoiceResponse:
         """
-        Helper function which calculates tax-exclusive, tax-inclusive, and payable monetary totals
-        for the given invoice based on its line items and tax categories.
+        Retrieves a specific invoice for a given user.
 
-        Updates the `invoice.legal_monetary_total` fields in-place.
-
-        :param invoice: Invoice model with line items and tax data.
+        :param invoice_id: The unique invoice ID.
+        :param user_id: The ID of the authenticated user.
+        :raises HTTPException: 404 if the invoice does not exist.
+        :return: InvoiceResponse with invoice data and status.
         """
-        line_extension_total = invoice.legal_monetary_total.line_extension_amount
-        total_tax_amount = 0.0
+        result = get_invoice_by_id(invoice_id, user_id)
 
-        for line in invoice.invoice_lines:
-            tax_category = line.item.classified_tax_category
-            if tax_category and tax_category.percent is not None:
-                tax_rate = tax_category.percent / 100
-                tax_amount = line.line_extension_amount * tax_rate
-                total_tax_amount += tax_amount
+        if not result:
+            raise HTTPException(status_code=404, detail="Invoice not found.")
+        
+        invoice, status = result
 
-        invoice.legal_monetary_total.tax_exclusive_amount = (
-            line_extension_total)
-        invoice.legal_monetary_total.tax_inclusive_amount = (
-            line_extension_total + total_tax_amount)
-        invoice.legal_monetary_total.payable_amount = (
-            invoice.legal_monetary_total.tax_inclusive_amount)
+        # Re-compute missing fields for drafts
+        missing_fields_report = (
+            MissingFieldChecker(invoice).run()
+            if status == InvoiceStatus.DRAFT
+            else None
+        )
+
+        return InvoiceResponse(
+            invoice_id=invoice.id,
+            invoice=invoice,
+            missing_fields_report = missing_fields_report,
+            status=status
+        )
