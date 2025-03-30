@@ -6,11 +6,12 @@ Encapsulates all interactions with DynamoDB for invoice operations using query o
 from typing import List
 from boto3.dynamodb.conditions import Key
 from src.models.invoice_update import InvoiceUpdateModel
+from src.models.invoice_response_models import InvoiceStatus
 from src.utils.dynamodb_data_converter import convert_data_for_dynamodb
 from src.db.dynamodb_client import invoices_table
 
 
-def save_invoice(invoice: InvoiceUpdateModel, user_id: str) -> None:
+def save_invoice(invoice: InvoiceUpdateModel, user_id: str, status: InvoiceStatus) -> None:
     """
     Saves the invoice to the DynamoDB table after converting its data.
 
@@ -20,10 +21,11 @@ def save_invoice(invoice: InvoiceUpdateModel, user_id: str) -> None:
     Raises:
         Exception: If there is an error storing the invoice in DynamoDB.
     """
-    invoice_dict = invoice.dict()
-    invoice_dict = convert_data_for_dynamodb(invoice_dict)
+    invoice_dict = invoice.dict(exclude_none=True)
     invoice_dict["user_id"] = user_id
     invoice_dict["invoice_id"] = invoice.id
+    invoice_dict["status"] = status.value
+    invoice_dict = convert_data_for_dynamodb(invoice_dict)
 
 
     try:
@@ -32,7 +34,7 @@ def save_invoice(invoice: InvoiceUpdateModel, user_id: str) -> None:
         raise Exception(f"Failed to store invoice in DynamoDB: {e}")
 
 
-def get_invoice_by_id(invoice_id: str) -> InvoiceUpdateModel:
+def get_invoice_by_id(invoice_id: str, user_id: str) -> tuple[InvoiceUpdateModel, str] | None:
     """
     Retrieves an invoice from DynamoDB by its unique identifier.
 
@@ -43,14 +45,18 @@ def get_invoice_by_id(invoice_id: str) -> InvoiceUpdateModel:
         InvoiceType: The retrieved invoice if found, otherwise None.
     """
     response = invoices_table.query(
-        IndexName="invoice_id-index",  # Ensure your GSI is set up
-        KeyConditionExpression=Key("invoice_id").eq(invoice_id),
+        IndexName="invoice_lookup_index",  # Ensure your GSI is set up
+        KeyConditionExpression=Key("invoice_id").eq(invoice_id) & Key("user_id").eq(user_id)
     )
 
     items = response.get("Items", [])
-    if items:
-        return InvoiceType.parse_obj(items[0])
-    return None
+    if not items:
+        return None
+
+    item = items[0]
+    status = item.get("status", "unknown")  # fallback if somehow missing
+    invoice = InvoiceUpdateModel.parse_obj(item)
+    return invoice, status
 
 
 def get_invoices_by_user(user_id: str) -> List[InvoiceUpdateModel]:

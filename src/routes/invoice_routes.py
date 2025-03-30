@@ -5,7 +5,7 @@ API route handler for processing UBL Order UBL documents and then generating UBL
 
 from fastapi import APIRouter, HTTPException, UploadFile, File
 from fastapi import Depends
-from src.models.invoice_response_models import DraftInvoiceResponse, CompletedInvoiceResponse
+from src.models.invoice_response_models import InvoiceResponse
 from src.models.invoice_update import InvoiceUpdateModel
 from src.services.invoice_service import InvoiceService
 from src.services.auth_service import get_current_user_id
@@ -15,7 +15,7 @@ router = APIRouter()
 invoice_service = InvoiceService()
 
 
-@router.post("/v1/user/invoices/upload", response_model=DraftInvoiceResponse)
+@router.post("/v1/user/invoices/upload", response_model=InvoiceResponse)
 async def upload_invoice_order(
     file: UploadFile = File(...), user_id: str = Depends(get_current_user_id)
 ):
@@ -42,7 +42,7 @@ async def upload_invoice_order(
     return invoice_service.generate_draft_invoice(content, file_type, user_id)
 
 
-@router.post("/v1/user/invoices/complete", response_model=CompletedInvoiceResponse)
+@router.post("/v1/user/invoices/complete", response_model=InvoiceResponse)
 async def complete_invoice_route(
     invoice_data: InvoiceUpdateModel,
     user_id: str = Depends(get_current_user_id)
@@ -53,3 +53,12 @@ async def complete_invoice_route(
     :param invoice_data: A InvoiceUpdateModel with mandatory missing fields provided.
     """
     return invoice_service.complete_invoice(invoice_data, user_id)
+
+
+@router.get("/v1/user/invoices/{invoice_id}", response_model=InvoiceResponse)
+async def get_invoice(invoice_id: str, user_id: str = Depends(get_current_user_id)):
+    """
+    Retrieves a specific invoice by ID for the current user.
+    Returns the invoice data along with its current status.
+    """
+    return invoice_service.get_invoice(invoice_id, user_id)
