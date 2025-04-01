@@ -3,7 +3,7 @@ Invoice repository module.
 Encapsulates all interactions with DynamoDB for invoice operations using query operators.
 """
 
-from typing import List
+from typing import List, Optional
 from boto3.dynamodb.conditions import Key
 from src.models.invoice_update import InvoiceUpdateModel
 from src.models.invoice_response_models import InvoiceStatus
@@ -59,24 +59,42 @@ def get_invoice_by_id(invoice_id: str, user_id: str) -> tuple[InvoiceUpdateModel
     return invoice, status
 
 
-def get_invoices_by_user(user_id: str) -> List[InvoiceUpdateModel]:
+def get_invoices_by_user(
+    user_id: str,
+    status: Optional[InvoiceStatus],
+) -> List[tuple[InvoiceUpdateModel, str]]:
     """
-    Retrieves all invoices belonging to a specific user from DynamoDB.
+    Retrieves invoices for a user, optionally filtered by status using GSI.
 
     Args:
         user_id (str): The user ID.
+        status (InvoiceStatus | None): Optional status filter.
 
     Returns:
-        List[InvoiceType]: The retrieved invoices.
+        List of (InvoiceUpdateModel, status) tuples.
     """
-    response = invoices_table.query(
-        KeyConditionExpression=Key("user_id").eq(
-            user_id
-        )  # Query by partition key (user_id)
-    )
+    if status:
+        # Use status_filter_index: PK = user_id, SK = status
+        response = invoices_table.query(
+            IndexName="status_filter_index",
+            KeyConditionExpression=Key("user_id").eq(user_id) & Key("status").eq(status.value)
+        )
+    else:
+        # No status filter: fall back to base table
+        response = invoices_table.query(
+            KeyConditionExpression=Key("user_id").eq(user_id)
+        )
 
     items = response.get("Items", [])
-    return [InvoiceType.parse_obj(item) for item in items]
+    results = []
+
+    for item in items:
+        status_val = item.get("status", "unknown")
+        invoice = InvoiceUpdateModel.parse_obj(item)
+        results.append((invoice, status_val))
+
+    return results
+
 
 
 def update_invoice_fields(user_id: str, invoice_id: str, updates: dict) -> dict:
