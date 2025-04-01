@@ -3,9 +3,11 @@
 API route handler for processing UBL Order UBL documents and then generating UBL Invoices.
 """
 
-from fastapi import APIRouter, HTTPException, UploadFile, File
+from typing import List, Optional
+from datetime import date
+from fastapi import APIRouter, HTTPException, Query, UploadFile, File
 from fastapi import Depends
-from src.models.invoice_response_models import InvoiceResponse
+from src.models.invoice_response_models import InvoiceResponse, InvoiceStatus
 from src.models.invoice_update import InvoiceUpdateModel
 from src.services.invoice_service import InvoiceService
 from src.services.auth_service import get_current_user_id
@@ -62,3 +64,21 @@ async def get_invoice(invoice_id: str, user_id: str = Depends(get_current_user_i
     Returns the invoice data along with its current status.
     """
     return invoice_service.get_invoice(invoice_id, user_id)
+
+
+@router.get("/v1/user/invoices", response_model=List[InvoiceResponse])
+async def list_invoices(
+    status: Optional[InvoiceStatus] = Query(None, description="Filter invoices by status"),
+    issue_date_from: Optional[date] = Query(None, description="Start of issue date range (YYYY-MM-DD)"),
+    issue_date_to: Optional[date] = Query(None, description="End of issue date range (YYYY-MM-DD)"),
+    user_id: str = Depends(get_current_user_id),
+):
+    """
+    Lists all invoices for the current user, optionally filtered by status and issue date range.
+    """
+    return invoice_service.list_filtered_invoices(
+        user_id=user_id,
+        status=status,
+        issue_date_from=issue_date_from,
+        issue_date_to=issue_date_to,
+    )
