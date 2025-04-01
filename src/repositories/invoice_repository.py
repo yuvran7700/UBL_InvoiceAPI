@@ -95,6 +95,23 @@ def get_invoices_by_user(
 
     return results
 
+def delete_invoices_by_id(invoice_ids: List[str], user_id: str) -> None:
+    """
+    Batch deletes multiple invoices from DynamoDB for a given user.
+    Assumes the provided invoice IDs are already validated to be in draft status.
+    Uses batch_writer() for efficient deletion.
+    """
+    try:
+        with invoices_table.batch_writer() as batch:
+            for invoice_id in invoice_ids:
+                batch.delete_item(
+                    Key={
+                        "user_id": user_id,
+                        "invoice_id": invoice_id
+                    }
+                )
+    except Exception as e:
+        raise Exception(f"Failed to batch delete invoices: {e}")
 
 
 def update_invoice_fields(user_id: str, invoice_id: str, updates: dict) -> dict:

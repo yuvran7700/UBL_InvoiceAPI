@@ -7,7 +7,7 @@ from typing import List, Optional
 from datetime import date
 from fastapi import APIRouter, HTTPException, Query, UploadFile, File
 from fastapi import Depends
-from src.models.invoice_response_models import InvoiceResponse, InvoiceStatus
+from src.models.invoice_response_models import InvoiceResponse, InvoiceStatus, DeleteInvoicesRequest
 from src.models.invoice_update import InvoiceUpdateModel
 from src.services.invoice_service import InvoiceService
 from src.services.auth_service import get_current_user_id
@@ -82,3 +82,16 @@ async def list_invoices(
         issue_date_from=issue_date_from,
         issue_date_to=issue_date_to,
     )
+
+@router.delete("/v1/user/invoices", response_model=dict)
+async def delete_invoices(
+    request: DeleteInvoicesRequest,
+    user_id: str = Depends(get_current_user_id)
+):
+    """
+    Deletes one or more invoices for the current user.
+    Only invoices in draft status are permitted to be deleted.
+    Returns a summary with the list of successfully deleted invoices and errors for failures.
+    """
+    result = invoice_service.delete_user_invoices(request.invoice_ids, user_id)
+    return result

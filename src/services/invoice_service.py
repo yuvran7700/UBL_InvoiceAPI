@@ -2,7 +2,7 @@
 Invoice service module.
 Handles the creation and persistence of invoices from orders.
 """
-from typing import List, Optional
+from typing import List, Optional, Dict
 from datetime import date
 from nanoid import generate
 from fastapi import HTTPException
@@ -10,7 +10,7 @@ from src.models.invoice_update import InvoiceUpdateModel
 from src.domain.calculators.monetary_calculations import MonetaryCalculator
 from src.marshallers.marshaller_factory import MarshallerFactory
 from src.models.invoice_response_models import InvoiceResponse, InvoiceStatus
-from src.repositories.invoice_repository import get_invoices_by_user, save_invoice, get_invoice_by_id
+from src.repositories.invoice_repository import get_invoices_by_user, save_invoice, get_invoice_by_id, delete_invoices_by_id
 from src.validators.invoice_validator import InvoiceValidator
 from src.validators.missing_field_checker import MissingFieldChecker
 
@@ -168,3 +168,41 @@ class InvoiceService:
             )
 
         return filtered_responses
+
+    def delete_user_invoices(self, invoice_ids: List[str], user_id: str) -> Dict:
+        """
+        Deletes multiple invoices for a given user.
+        Uses the list_invoices repository function to pre-validate that each invoice:
+          - Exists, and
+          - Is in draft status.
+        Then, deletes all validated invoices in a single batch call.
+        Returns a summary dict containing:
+          - "deleted": list of successfully deleted invoice IDs
+          - "errors": list of dictionaries with invoice_id and failure reason.
+        """
+        # Step 1: Fetch all draft invoices for the user.
+        draft_invoices = get_invoices_by_user(user_id, status=InvoiceStatus.DRAFT)
+        # Convert the tuple list to a dictionary keyed by invoice ID.
+        draft_invoice_dict = {invoice.id: invoice for invoice, _ in draft_invoices}
+
+        # Debug: print("\n[DEBUG] Draft Invoice Dictionary:", draft_invoice_dict)
+
+        delete_list = []
+        errors = []
+
+        # Step 2: Validate provided invoice_ids against the draft invoices.
+        for inv_id in invoice_ids:
+            if inv_id in draft_invoice_dict:
+                delete_list.append(inv_id)
+            else:
+                errors.append(
+                    {"invoice_id": inv_id, "reason": "Invoice not found or not in draft status"})
+
+        # Step 3: Batch delete the validated invoice IDs.
+        if delete_list:
+            try:
+                delete_invoices_by_id(delete_list, user_id)
+            except Exception as e:
+                errors.append({"invoice_ids": delete_list, "reason": str(e)})
+
+        return {"deleted": delete_list, "errors": errors}

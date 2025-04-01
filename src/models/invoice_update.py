@@ -1,5 +1,5 @@
 from typing import List, Optional
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from datetime import date
 
 # Reuse existing nested models but make nested fields optional for PATCH
@@ -126,7 +126,7 @@ class InvoiceLine(BaseModel):
 class InvoiceUpdateModel(BaseModel):
     customization_id: Optional[str]  # REQUIRED
     profile_id: Optional[str]  # REQUIRED
-    id: Optional[str]  # REQUIRED (Invoice Number)
+    id: Optional[str] = Field(None, alias="invoice_id") # REQUIRED (Invoice Number)
     issue_date: Optional[date]  # REQUIRED
     invoice_type_code: Optional[str]  # REQUIRED (e.g., '380' = Tax Invoice)
     document_currency_code: Optional[str]  # REQUIRED (e.g., AUD)
@@ -155,3 +155,6 @@ class InvoiceUpdateModel(BaseModel):
     tax_total: Optional[TaxTotal]
     legal_monetary_total: Optional[MonetaryTotal]  # REQUIRED
     invoice_lines: Optional[List[InvoiceLine]]  # REQUIRED (At least one line)
+
+    class Config:
+        allow_population_by_field_name = True
