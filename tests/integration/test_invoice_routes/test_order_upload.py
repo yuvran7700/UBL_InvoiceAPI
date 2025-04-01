@@ -40,7 +40,7 @@ def test_order_upload_json_success(sample_order_json):
     assert isinstance(result["missing_fields_report"]["missing_invoice_lines"], list)
 
     # Optional field validation explicitly
-    assert result["invoice"]["id"] == result["invoice_id"]
+    assert result["invoice"]["invoice_id"] == result["invoice_id"]
     assert result["invoice"]["accounting_supplier_party"]["party_name"]["name"] == "Consortial"
 
     # Print result explicitly for review
@@ -75,7 +75,8 @@ def test_order_upload_xml_success(sample_order_xml):
     assert isinstance(result["missing_fields_report"]["missing_invoice_fields"], list)
 
     # Optional field validation explicitly (adapt as needed based on sample data)
-    assert result["invoice"]["id"] == result["invoice_id"]
+    assert result["invoice"]["invoice_id"] == result["invoice_id"]
+
 
     # Print result explicitly for debugging
     print("\nAPI Response (XML):")

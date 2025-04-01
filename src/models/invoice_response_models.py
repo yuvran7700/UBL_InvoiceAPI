@@ -23,3 +23,6 @@ class InvoiceResponse(BaseModel):
     invoice: InvoiceUpdateModel  # Full invoice structure (completed or draft)
     missing_fields_report: Optional[MissingFieldsReport]  # Only for drafts
     status: InvoiceStatus  # e.g., "draft" or "completed"
+
+class DeleteInvoicesRequest(BaseModel):
+    invoice_ids: List[str]
