@@ -7,12 +7,11 @@ from typing import List, Optional, Literal
 from datetime import date
 from fastapi import APIRouter, HTTPException, Query, UploadFile, File
 from fastapi import Depends
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, StreamingResponse
 from src.models.invoice_response_models import InvoiceResponse, InvoiceStatus, DeleteInvoicesRequest
 from src.models.invoice_update import InvoiceUpdateModel
 from src.services.invoice_service import InvoiceService
 from src.services.auth_service import get_current_user_id
-from src.repositories.invoice_repository import get_invoice_by_id
 
 
 router = APIRouter()
@@ -112,23 +111,23 @@ async def update_invoice_route(
     return invoice_service.update_draft_invoice(invoice_id, invoice_update, user_id)
 
 
-@router.get("/v1/user/invoices/{invoice_id}/json")
-async def download_invoice_json(invoice_id: str, user_id: str = Depends(get_current_user_id)):
+@router.get("/v1/user/invoices/{invoice_id}/download")
+async def download_invoice(
+    invoice_id: str,
+    format: Literal["json", "xml"] = Query("json"),
+    user_id: str = Depends(get_current_user_id)
+):
     """
-    Fetches invoice data as JSON using existing repository function.
+    Downloads a completed invoice in the requested format (JSON or XML).
+    Only completed invoices are downloadable.
     """
-    result = get_invoice_by_id(invoice_id, user_id)
-    if not result:
-        raise HTTPException(status_code=404, detail="Invoice not found.")
-
-    invoice, status = result
-    if status != "COMPLETED":
-        raise HTTPException(status_code=400, detail="Only completed invoices can be downloaded.")
-
-    # Directly return the invoice data as JSON
-    return JSONResponse(
-        content=invoice.dict(),
-        headers={"Content-Disposition": f"attachment; filename={invoice_id}.json"}
-    )
-
+    try:
+        file_bytes, media_type, filename = invoice_service.generate_invoice_download(invoice_id, format, user_id)
+        return StreamingResponse(
+            content=iter([file_bytes]),
+            media_type=media_type,
+            headers={"Content-Disposition": f"attachment; filename={filename}"}
+        )
+    except HTTPException as e:
+        raise e
 

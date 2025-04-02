@@ -3,9 +3,9 @@ Test cases for invoice creation logic
 Modules Tested: InvoiceService, InvoiceMarshaller, MissingFieldChecker
 """
 import json
-from src.marshallers.marshaller_factory import MarshallerFactory
-from src.marshallers.strategies.xml_order_parser import XmlOrderParser
-from src.marshallers.invoice_marshaller import InvoiceMarshaller
+from src.marshallers.parsers.marshaller_factory import MarshallerFactory
+from src.marshallers.parsers.strategies.xml_order_parser import XmlOrderParser
+from src.marshallers.parsers.invoice_marshaller import InvoiceMarshaller
 from src.services.invoice_service import InvoiceService
 from src.validators.missing_field_checker import MissingFieldChecker
 from src.models.invoice_response_models import InvoiceResponse, InvoiceStatus

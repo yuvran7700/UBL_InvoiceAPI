@@ -9,7 +9,7 @@ from src.models.invoice_update import (
     Party, Address, Contact, PartyTaxScheme, Country,
     InvoicePeriod, OrderReference, InvoiceLine, Item, Price
 )
-from src.marshallers.strategies.order_parsing_strategy import OrderParsingStrategy
+from src.marshallers.parsers.strategies.order_parsing_strategy import OrderParsingStrategy
 
 
 class JsonOrderParser(OrderParsingStrategy):

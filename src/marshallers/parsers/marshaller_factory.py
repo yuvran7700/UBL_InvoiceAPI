@@ -1,7 +1,7 @@
 from fastapi import HTTPException
-from src.marshallers.invoice_marshaller import InvoiceMarshaller
-from src.marshallers.strategies.json_order_parser import JsonOrderParser
-from src.marshallers.strategies.xml_order_parser import XmlOrderParser
+from src.marshallers.parsers.invoice_marshaller import InvoiceMarshaller
+from src.marshallers.parsers.strategies.json_order_parser import JsonOrderParser
+from src.marshallers.parsers.strategies.xml_order_parser import XmlOrderParser
 
 class MarshallerFactory:
     """
