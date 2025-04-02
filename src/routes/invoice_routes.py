@@ -3,14 +3,16 @@
 API route handler for processing UBL Order UBL documents and then generating UBL Invoices.
 """
 
-from typing import List, Optional
+from typing import List, Optional, Literal
 from datetime import date
 from fastapi import APIRouter, HTTPException, Query, UploadFile, File
 from fastapi import Depends
+from fastapi.responses import JSONResponse
 from src.models.invoice_response_models import InvoiceResponse, InvoiceStatus, DeleteInvoicesRequest
 from src.models.invoice_update import InvoiceUpdateModel
 from src.services.invoice_service import InvoiceService
 from src.services.auth_service import get_current_user_id
+from src.repositories.invoice_repository import get_invoice_by_id
 
 
 router = APIRouter()
@@ -95,3 +97,38 @@ async def delete_invoices(
     """
     result = invoice_service.delete_user_invoices(request.invoice_ids, user_id)
     return result
+
+
+@router.patch("/v1/user/invoices/{invoice_id}", response_model=InvoiceResponse)
+async def update_invoice_route(
+    invoice_id: str,
+    invoice_update: InvoiceUpdateModel,
+    user_id: str = Depends(get_current_user_id)
+):
+    """
+    Partially updates a draft invoice with new data provided by the user.
+    Returns the updated invoice along with a missing fields report.
+    """
+    return invoice_service.update_draft_invoice(invoice_id, invoice_update, user_id)
+
+
+@router.get("/v1/user/invoices/{invoice_id}/json")
+async def download_invoice_json(invoice_id: str, user_id: str = Depends(get_current_user_id)):
+    """
+    Fetches invoice data as JSON using existing repository function.
+    """
+    result = get_invoice_by_id(invoice_id, user_id)
+    if not result:
+        raise HTTPException(status_code=404, detail="Invoice not found.")
+
+    invoice, status = result
+    if status != "COMPLETED":
+        raise HTTPException(status_code=400, detail="Only completed invoices can be downloaded.")
+
+    # Directly return the invoice data as JSON
+    return JSONResponse(
+        content=invoice.dict(),
+        headers={"Content-Disposition": f"attachment; filename={invoice_id}.json"}
+    )
+
+

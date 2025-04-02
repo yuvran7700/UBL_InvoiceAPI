@@ -73,6 +73,7 @@ class InvoiceService:
         # 1. Check for missing fields (pass the model, not the dict)
         missing_report = MissingFieldChecker(invoice).run()
 
+
         if missing_report.missing_invoice_fields or missing_report.missing_invoice_lines:
             raise HTTPException(status_code=400, detail=missing_report.dict())
 
@@ -110,7 +111,7 @@ class InvoiceService:
 
         if not result:
             raise HTTPException(status_code=404, detail="Invoice not found.")
-        
+
         invoice, status = result
 
         # Re-compute missing fields for drafts
@@ -206,3 +207,39 @@ class InvoiceService:
                 errors.append({"invoice_ids": delete_list, "reason": str(e)})
 
         return {"deleted": delete_list, "errors": errors}
+
+    def update_draft_invoice(
+            self,
+            invoice_id: str,
+            update_data: InvoiceUpdateModel,
+            user_id: str
+            ) -> InvoiceResponse:
+        """"
+            Docstring To be Added
+        """
+        # Retrieve the existing draft invoice.
+        result = get_invoice_by_id(invoice_id, user_id)
+        if not result:
+            raise HTTPException(status_code=404, detail="Invoice not found.")
+
+        existing_invoice, current_status = result
+        if current_status != InvoiceStatus.DRAFT:
+            raise HTTPException(status_code=403, detail="Only draft invoices can be updated.")
+
+        # Merge the update into the existing invoice.
+        updated_invoice = existing_invoice.copy(update=update_data.dict(exclude_unset=True))
+
+        # Re-run the missing fields check.
+        missing_fields_report = MissingFieldChecker(updated_invoice).run()
+
+
+        # Save the updated draft invoice.
+        save_invoice(updated_invoice, user_id, InvoiceStatus.DRAFT)
+
+        # Return the updated invoice with missing fields report.
+        return InvoiceResponse(
+            invoice_id=updated_invoice.id,
+            invoice=updated_invoice,
+            missing_fields_report=missing_fields_report,
+            status=InvoiceStatus.DRAFT
+        )
