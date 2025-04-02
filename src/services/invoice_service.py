@@ -6,13 +6,18 @@ from typing import List, Optional, Dict
 from datetime import date
 from nanoid import generate
 from fastapi import HTTPException
+# --- Models/Domain Logic ---
 from src.models.invoice_update import InvoiceUpdateModel
-from src.domain.calculators.monetary_calculations import MonetaryCalculator
-from src.marshallers.marshaller_factory import MarshallerFactory
 from src.models.invoice_response_models import InvoiceResponse, InvoiceStatus
-from src.repositories.invoice_repository import get_invoices_by_user, save_invoice, get_invoice_by_id, delete_invoices_by_id
+from src.domain.calculators.monetary_calculations import MonetaryCalculator
+# --- Formatters Logic ---
+from src.marshallers.parsers.marshaller_factory import MarshallerFactory
+from src.marshallers.exporters.formatter_factory import FormatterFactory
+# --- Validators Logic ---
 from src.validators.invoice_validator import InvoiceValidator
 from src.validators.missing_field_checker import MissingFieldChecker
+# --- Repository Layers ---
+from src.repositories.invoice_repository import get_invoices_by_user, save_invoice, get_invoice_by_id, delete_invoices_by_id
 
 
 class InvoiceService:
@@ -243,3 +248,20 @@ class InvoiceService:
             missing_fields_report=missing_fields_report,
             status=InvoiceStatus.DRAFT
         )
+
+    def generate_invoice_download(self, invoice_id: str, format: str, user_id: str) -> tuple[bytes, str, str]:
+        result = get_invoice_by_id(invoice_id, user_id)
+
+        if not result:
+            raise HTTPException(status_code=404, detail="Invoice not found.")
+        
+        invoice, status = result
+
+        if status != InvoiceStatus.COMPLETED:
+            raise HTTPException(status_code=400, detail="Only completed invoices are downloadable.")
+
+        content = FormatterFactory().serialize(invoice, format)
+
+        media_type = "application/json" if format == "json" else "application/xml"
+        filename = f"{invoice.id}.{format}"
+        return content, media_type, filename

@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Invoice>
+	<customization_id>urn:...:ubl:invoice</customization_id>
+	<profile_id>urn:...:profile</profile_id>
+	<invoice_id>INV-001</invoice_id>
+	<issue_date>2024-01-10</issue_date>
+	<invoice_type_code>380</invoice_type_code>
+	<document_currency_code>AUD</document_currency_code>
+	<due_date>2024-01-31</due_date>
+	<buyer_reference>REF123</buyer_reference>
+	<order_reference>
+		<id>ORD-123</id>
+	</order_reference>
+	<accounting_supplier_party>
+		<party_name>
+			<name>Supplier Co</name>
+		</party_name>
+		<postal_address>
+			<street_name>123 Supply St</street_name>
+			<city_name>Sydney</city_name>
+			<postal_zone>2000</postal_zone>
+			<country>
+				<identification_code>AU</identification_code>
+			</country>
+		</postal_address>
+		<party_tax_scheme>
+			<company_id>123456789</company_id>
+			<tax_scheme_id>GST</tax_scheme_id>
+		</party_tax_scheme>
+		<party_legal_entity>
+			<registration_name>Supplier Co Pty Ltd</registration_name>
+		</party_legal_entity>
+		<contact>
+			<name>John Smith</name>
+		</contact>
+	</accounting_supplier_party>
+	<accounting_customer_party>
+		<party_name>
+			<name>Customer Pty</name>
+		</party_name>
+		<postal_address>
+			<street_name>456 Customer Rd</street_name>
+			<city_name>Melbourne</city_name>
+			<postal_zone>3000</postal_zone>
+			<country>
+				<identification_code>AU</identification_code>
+			</country>
+		</postal_address>
+		<party_tax_scheme>
+			<company_id>987654321</company_id>
+			<tax_scheme_id>GST</tax_scheme_id>
+		</party_tax_scheme>
+		<party_legal_entity>
+			<registration_name>Customer Pty Ltd</registration_name>
+		</party_legal_entity>
+		<contact>
+			<name>Jane Doe</name>
+		</contact>
+	</accounting_customer_party>
+	<legal_monetary_total>
+		<line_extension_amount>1000.0</line_extension_amount>
+		<tax_exclusive_amount>1000.0</tax_exclusive_amount>
+		<tax_inclusive_amount>1100.0</tax_inclusive_amount>
+		<payable_amount>1100.0</payable_amount>
+	</legal_monetary_total>
+	<invoice_lines>
+		<id>1</id>
+		<invoiced_quantity>10.0</invoiced_quantity>
+		<unit_code>E99</unit_code>
+		<line_extension_amount>1000.0</line_extension_amount>
+		<item>
+			<name>Product A</name>
+			<classified_tax_category>
+				<id>S</id>
+				<percent>10.0</percent>
+				<tax_scheme_id>GST</tax_scheme_id>
+			</classified_tax_category>
+		</item>
+		<price>
+			<price_amount>100.0</price_amount>
+		</price>
+	</invoice_lines>
+</Invoice>
