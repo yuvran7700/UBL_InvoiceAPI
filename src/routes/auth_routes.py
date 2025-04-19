@@ -1,21 +1,22 @@
 """
-API route handler for user assoicated routes.
+API route handler for user assoicated authentication routes.
 """
 
 from fastapi import APIRouter, HTTPException, Query, status
 from fastapi.responses import JSONResponse
+from src.exceptions.auth_exceptions import InvalidCredentialsError, MissingTokenError
 from src.services.auth_service import (
     authenticate_user,
     get_JWT,
     remove_JWT,
     token_logout_valid,
 )
-from src.models.auth_models import LogOutRequest, SessionRequest
+from src.domain.models.auth_models import LogOutRequest, SessionRequest
 
-router = APIRouter(prefix="/v1/users/auth", tags=["auth"])
+router = APIRouter(prefix="/v1/users/auth")
 
 
-@router.post("/login")
+@router.post("/login", tags=["User Authentication"])
 async def login_user(request: SessionRequest):
     """
     Authenticate the user and return a session token.
@@ -25,25 +26,14 @@ async def login_user(request: SessionRequest):
     :raises HTTPException: If there is a server error or invalid credentials
 
     """
-    try:
-        JWT = authenticate_user(request.dict())  # pylint: disable = invalid-name
-        print(f"JWT generated: {JWT}")
-        if not JWT:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials"
-            )
+    JWT = authenticate_user(request.dict())  # pylint: disable = invalid-name
+    print(f"JWT generated: {JWT}")
+    if not JWT:
+        raise InvalidCredentialsError()
 
-        return JSONResponse(status_code=status.HTTP_201_CREATED, content={"JWT": JWT})
-    except HTTPException as e:
-        raise e
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"An error occurred: {str(e)}",
-        )
+    return JSONResponse(status_code=status.HTTP_201_CREATED, content={"JWT": JWT})
 
-
-@router.get("/validate/login", response_model=dict)
+@router.get("/validate/login", response_model=dict, tags=["User Token Validation"])
 async def login_validation(JWT: str = Query(...)):  # pylint: disable = C0103
     """
     Validates if the user is logged in.
@@ -53,24 +43,13 @@ async def login_validation(JWT: str = Query(...)):  # pylint: disable = C0103
     :raises HTTPException: If there is a server error or the token is missing
 
     """
-    try:
-        if not JWT:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED, detail="Token missing"
-            )
-        response = get_JWT(JWT)
-        return JSONResponse(status_code=status.HTTP_201_CREATED, content=response)
-
-    except HTTPException as e:
-        raise e
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"An error occurred: {str(e)}",
-        )
+    if not JWT:
+        raise MissingTokenError()
+    response = get_JWT(JWT)
+    return JSONResponse(status_code=200, content=response)
 
 
-@router.post("/logout")
+@router.post("/logout", tags=["User Authentication"])
 async def logout_user(request: LogOutRequest):
     """
     Invalidates current user session and logs user out.
@@ -80,23 +59,13 @@ async def logout_user(request: LogOutRequest):
     :raises HTTPException: If there is a server error or the token is missing
 
     """
-    try:
-        if not request.JWT:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED, detail="Token missing"
-            )
-        response = remove_JWT(request.JWT)
-        return JSONResponse(status_code=status.HTTP_201_CREATED, content=response)
-    except HTTPException as e:
-        raise e
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"An error occurred: {str(e)}",
-        )
+    if not request.JWT:
+        raise MissingTokenError()
+    response = remove_JWT(request.JWT)
+    return JSONResponse(status_code=200, content=response)
 
 
-@router.get("/validate/logout", response_model=dict)
+@router.get("/validate/logout", response_model=dict,tags=["User Token Validation"])
 async def logout_validation(JWT: str = Query(...)):  # pylint: disable = invalid-name
     """
     Validates that the user logged out.
@@ -106,18 +75,7 @@ async def logout_validation(JWT: str = Query(...)):  # pylint: disable = invalid
     :raises HTTPException: If there is a server error or the token is missing
 
     """
-    try:
-        if not JWT:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED, detail="Token missing"
-            )
-        response = token_logout_valid(JWT)
-        return JSONResponse(status_code=status.HTTP_201_CREATED, content=response)
-
-    except HTTPException as e:
-        raise e
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"An error occurred: {str(e)}",
-        )
+    if not JWT:
+        raise MissingTokenError()
+    response = token_logout_valid(JWT)
+    return JSONResponse(status_code=200, content=response)

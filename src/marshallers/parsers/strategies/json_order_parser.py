@@ -5,7 +5,7 @@ This module contains a concrete parsing strategy for UBL JSON order documents.
 import json
 from typing import Dict, List, Optional, Union
 from fastapi import HTTPException
-from src.models.invoice_update import (
+from src.domain.models.invoice_update import (
     Party, Address, Contact, PartyTaxScheme, Country,
     InvoicePeriod, OrderReference, InvoiceLine, Item, Price
 )

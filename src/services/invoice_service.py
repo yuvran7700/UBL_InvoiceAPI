@@ -5,12 +5,12 @@ Handles the creation and persistence of invoices from orders.
 from typing import List, Optional, Dict
 from datetime import date
 from nanoid import generate
-from fastapi import HTTPException
 # --- Models/Domain Logic ---
-from src.models.invoice_update import InvoiceUpdateModel
-from src.models.invoice_response_models import InvoiceResponse, InvoiceStatus
+from src.domain.models.invoice_update import InvoiceUpdateModel
+from src.domain.models.invoice_response_models import InvoiceResponse, InvoiceStatus
 from src.domain.calculators.monetary_calculations import MonetaryCalculator
 # --- Formatters Logic ---
+from src.exceptions.invoice_exceptions import InvoiceCompletionError, InvoiceDownloadError, InvoiceNotFoundError, InvoiceUpdateNotAllowedError
 from src.marshallers.parsers.marshaller_factory import MarshallerFactory
 from src.marshallers.exporters.formatter_factory import FormatterFactory
 # --- Validators Logic ---
@@ -73,14 +73,14 @@ class InvoiceService:
         # Debuggi - print("Populated Invoice Model:\n", invoice.model_dump_json(indent=2))
          # Ensure the invoice has an ID (draft must already exist)
         if not invoice.id:
-            raise HTTPException(status_code=400, detail="Cannot complete invoice without an existing ID.")
+            raise InvoiceCompletionError("Invoice must include an ID to be completed.")
 
         # 1. Check for missing fields (pass the model, not the dict)
         missing_report = MissingFieldChecker(invoice).run()
 
 
         if missing_report.missing_invoice_fields or missing_report.missing_invoice_lines:
-            raise HTTPException(status_code=400, detail=missing_report.dict())
+            raise InvoiceCompletionError("Invoice has missing required fields.")
 
         # 2. Validate mandatory fields and business rules
         InvoiceValidator.raise_if_invalid(invoice)
@@ -115,7 +115,7 @@ class InvoiceService:
         result = get_invoice_by_id(invoice_id, user_id)
 
         if not result:
-            raise HTTPException(status_code=404, detail="Invoice not found.")
+            raise InvoiceNotFoundError(invoice_id)
 
         invoice, status = result
 
@@ -225,11 +225,11 @@ class InvoiceService:
         # Retrieve the existing draft invoice.
         result = get_invoice_by_id(invoice_id, user_id)
         if not result:
-            raise HTTPException(status_code=404, detail="Invoice not found.")
+            raise InvoiceNotFoundError(invoice_id)
 
         existing_invoice, current_status = result
         if current_status != InvoiceStatus.DRAFT:
-            raise HTTPException(status_code=403, detail="Only draft invoices can be updated.")
+            raise InvoiceUpdateNotAllowedError(invoice_id)
 
         # Merge the update into the existing invoice.
         updated_invoice = existing_invoice.copy(update=update_data.dict(exclude_unset=True))
@@ -253,12 +253,12 @@ class InvoiceService:
         result = get_invoice_by_id(invoice_id, user_id)
 
         if not result:
-            raise HTTPException(status_code=404, detail="Invoice not found.")
+            raise InvoiceNotFoundError(invoice_id)
         
         invoice, status = result
 
         if status != InvoiceStatus.COMPLETED:
-            raise HTTPException(status_code=400, detail="Only completed invoices are downloadable.")
+            raise InvoiceDownloadError()
 
         content = FormatterFactory().serialize(invoice, format)
 

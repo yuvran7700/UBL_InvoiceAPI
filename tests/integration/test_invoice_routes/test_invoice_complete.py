@@ -3,7 +3,7 @@ import copy
 import pytest
 from fastapi.testclient import TestClient
 from src.main import app
-from src.models.invoice_update import InvoiceUpdateModel
+from src.domain.models.invoice_update import InvoiceUpdateModel
 from src.services.auth_service import get_current_user_id
 
 # Override dependency to avoid real auth

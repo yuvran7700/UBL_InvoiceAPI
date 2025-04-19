@@ -1,44 +1,26 @@
-"""
-Custom exceptions for database operations.
-These exceptions handle various database-related errors.
-"""
+from starlette.status import HTTP_500_INTERNAL_SERVER_ERROR, HTTP_404_NOT_FOUND, HTTP_409_CONFLICT
+from .base_exceptions import APIBaseException
 
 
-class DatabaseError(Exception):
-    """Base class for database exceptions."""
+class DatabaseReadError(APIBaseException):
+    def __init__(self, message: str):
+        super().__init__(
+            message=f"Database read failed: {message}",
+            status_code=HTTP_500_INTERNAL_SERVER_ERROR,
+            code="database_read_error"
+        )
 
-    def __init__(self, message="Database operation failed"):
-        self.message = message
-        super().__init__(self.message)
-
-
-class DatabaseConnectionError(DatabaseError):
-    """Raised when database connection fails."""
-
-    def __init__(self, message="Failed to connect to database"):
-        super().__init__(message)
-
-
-class DatabaseWriteError(DatabaseError):
-    """Raised when writing to database fails."""
-
-    def __init__(self, message="Failed to write to database"):
-        super().__init__(message)
-
-
-class DatabaseReadError(DatabaseError):
-    """Raised when reading from database fails."""
-
-    def __init__(self, message="Failed to read from database"):
-        super().__init__(message)
-
-
-class DynamoDBError(DatabaseError):
-    """Raised for DynamoDB specific errors."""
-
-    def __init__(self, operation: str, details: str = None):
-        self.operation = operation
-        message = f"DynamoDB {operation} operation failed"
-        if details:
-            message += f": {details}"
-        super().__init__(message)
+class DatabaseWriteError(APIBaseException):
+    def __init__(self, message: str):
+        super().__init__(
+            message=f"Database write failed: {message}",
+            status_code=HTTP_500_INTERNAL_SERVER_ERROR,
+            code="database_write_error"
+        )
+class ItemNotFoundError(APIBaseException):
+    def __init__(self, item_type: str, key: str):
+        super().__init__(
+            message=f"{item_type} with key '{key}' was not found.",
+            status_code=HTTP_404_NOT_FOUND,
+            code="item_not_found"
+        )

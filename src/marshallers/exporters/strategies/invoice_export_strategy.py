@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from src.models.invoice_update import InvoiceUpdateModel
+from src.domain.models.invoice_update import InvoiceUpdateModel
 
 class InvoiceExportStrategy(ABC):
     @abstractmethod

@@ -8,8 +8,9 @@ from datetime import date
 from fastapi import APIRouter, HTTPException, Query, UploadFile, File
 from fastapi import Depends
 from fastapi.responses import JSONResponse, StreamingResponse
-from src.models.invoice_response_models import InvoiceResponse, InvoiceStatus, DeleteInvoicesRequest
-from src.models.invoice_update import InvoiceUpdateModel
+from src.domain.models.invoice_response_models import InvoiceResponse, InvoiceStatus, DeleteInvoicesRequest
+from src.domain.models.invoice_update import InvoiceUpdateModel
+from src.exceptions.invoice_exceptions import InvalidInvoiceFormatError
 from src.services.invoice_service import InvoiceService
 from src.services.auth_service import get_current_user_id
 
@@ -18,7 +19,7 @@ router = APIRouter()
 invoice_service = InvoiceService()
 
 
-@router.post("/v1/user/invoices/upload", response_model=InvoiceResponse)
+@router.post("/v1/user/invoices/upload", response_model=InvoiceResponse, tags=["Invoice Creation"])
 async def upload_invoice_order(
     file: UploadFile = File(...), user_id: str = Depends(get_current_user_id)
 ):
@@ -36,16 +37,12 @@ async def upload_invoice_order(
     elif filename.endswith(".json"):
         file_type = "application/json"
     else:
-        raise HTTPException(
-            status_code=415,
-            detail="Unsupported file type. Only XML and JSON are supported."
-        )
-
+        raise InvalidInvoiceFormatError()
     # Delegate to the service with content and MIME type
     return invoice_service.generate_draft_invoice(content, file_type, user_id)
 
 
-@router.post("/v1/user/invoices/complete", response_model=InvoiceResponse)
+@router.post("/v1/user/invoices/complete", response_model=InvoiceResponse, tags=["Invoice Management"])
 async def complete_invoice_route(
     invoice_data: InvoiceUpdateModel,
     user_id: str = Depends(get_current_user_id)
@@ -58,7 +55,7 @@ async def complete_invoice_route(
     return invoice_service.complete_invoice(invoice_data, user_id)
 
 
-@router.get("/v1/user/invoices/{invoice_id}", response_model=InvoiceResponse)
+@router.get("/v1/user/invoices/{invoice_id}", response_model=InvoiceResponse, tags=["Invoice Retrieval and Download"])
 async def get_invoice(invoice_id: str, user_id: str = Depends(get_current_user_id)):
     """
     Retrieves a specific invoice by ID for the current user.
@@ -67,7 +64,7 @@ async def get_invoice(invoice_id: str, user_id: str = Depends(get_current_user_i
     return invoice_service.get_invoice(invoice_id, user_id)
 
 
-@router.get("/v1/user/invoices", response_model=List[InvoiceResponse])
+@router.get("/v1/user/invoices", response_model=List[InvoiceResponse], tags=["Invoice Retrieval and Download"])
 async def list_invoices(
     status: Optional[InvoiceStatus] = Query(None, description="Filter invoices by status"),
     issue_date_from: Optional[date] = Query(None, description="Start of issue date range (YYYY-MM-DD)"),
@@ -84,7 +81,7 @@ async def list_invoices(
         issue_date_to=issue_date_to,
     )
 
-@router.delete("/v1/user/invoices", response_model=dict)
+@router.delete("/v1/user/invoices", response_model=dict, tags=["Invoice Management"])
 async def delete_invoices(
     request: DeleteInvoicesRequest,
     user_id: str = Depends(get_current_user_id)
@@ -98,7 +95,7 @@ async def delete_invoices(
     return result
 
 
-@router.patch("/v1/user/invoices/{invoice_id}", response_model=InvoiceResponse)
+@router.patch("/v1/user/invoices/{invoice_id}", response_model=InvoiceResponse, tags=["Invoice Management"])
 async def update_invoice_route(
     invoice_id: str,
     invoice_update: InvoiceUpdateModel,
@@ -111,7 +108,7 @@ async def update_invoice_route(
     return invoice_service.update_draft_invoice(invoice_id, invoice_update, user_id)
 
 
-@router.get("/v1/user/invoices/{invoice_id}/download")
+@router.get("/v1/user/invoices/{invoice_id}/download", tags=["Invoice Retrieval and Download"])
 async def download_invoice(
     invoice_id: str,
     format: Literal["json", "xml"] = Query("json"),
@@ -130,4 +127,3 @@ async def download_invoice(
         )
     except HTTPException as e:
         raise e
-

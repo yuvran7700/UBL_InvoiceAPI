@@ -1,6 +1,13 @@
 #src/routes/user_routes.py
+
+"""
+user_routes.py
+This module defines the API routes for user account creation and management.
+It includes endpoints for user registration, password updates, business name updates,
+and email updates.
+"""
 from fastapi import APIRouter, HTTPException, status
-from src.models.user_models import (
+from src.domain.models.user_models import (
     UpdateEmailRequest,
     UpdatePasswordRequest,
     UpdateUsernameRequest,
@@ -14,7 +21,7 @@ from src.services.user_service import (
     update_user_password,
 )
 
-router = APIRouter(prefix="/v1/users", tags=["user"])
+router = APIRouter(prefix="/v1/users", tags=["Account Creation and Management"])
 
 
 @router.post("/register", response_model=UserOut)
@@ -22,25 +29,16 @@ async def register(user_in: UserIn):
     """
     Registers a new user.
 
-    Args:
+    **Args:**
         user_in (UserIn): The user input data containing registration details.
 
-    Returns:
+    **Returns:**
         UserOut: The registered user details.
 
-    Raises:
-        HTTPException: If an error occurs during user creation.
+    **Raises:**
+        Custom Exception Errors: If an error occurs during user creation.
     """
-    try:
-        user = create_user(user_in)  # Call service layer
-    except HTTPException as e:
-        raise e
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"An error occurred: {str(e)}",
-        )
-    return user
+    return create_user(user_in)
 
 
 @router.put("/update-password")
@@ -57,15 +55,7 @@ async def update_password(request: UpdatePasswordRequest):
     Raises:
         HTTPException: If an error occurs during the password update.
     """
-    try:
-        update_user_password(request)  # Call service layer
-    except HTTPException as e:
-        raise e
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"An error occurred: {str(e)}",
-        )
+    update_user_password(request)
     return {"message": "Password updated successfully"}
 
 
@@ -83,18 +73,8 @@ async def update_business_name(request: UpdateUsernameRequest):
     Raises:
         HTTPException: If an error occurs during the business name update.
     """
-    try:
-        update_user_business_name(request)  # Call service layer
-        return {"message": "Business name updated successfully"}
-    except HTTPException as e:
-        print(f"HTTP Exception: {e.detail}")
-        raise e
-    except Exception as e:
-        print(f"Unexpected error: {str(e)}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"An error occurred: {str(e)}",
-        )
+    update_user_business_name(request)
+    return {"message": "Business name updated successfully"}
 
 
 @router.put("/update-email")
@@ -111,15 +91,5 @@ async def update_email(request: UpdateEmailRequest):
     Raises:
         HTTPException: If an error occurs during the email update.
     """
-    try:
-        update_user_email(request)  # Call service layer
-        return {"message": "Email updated successfully"}
-    except HTTPException as e:
-        print(f"HTTP Exception: {e.detail}")
-        raise e
-    except Exception as e:
-        print(f"Unexpected error: {str(e)}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"An error occurred: {str(e)}",
-        )
+    update_user_email(request)
+    return {"message": "Email updated successfully"}

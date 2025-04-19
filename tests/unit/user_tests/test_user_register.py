@@ -7,7 +7,8 @@ Modules Tested:
 """
 from fastapi import HTTPException
 import pytest
-from src.models.user_models import UserIn, UserInDB
+from src.domain.models.user_models import UserIn, UserInDB
+from src.exceptions.user_exceptions import ABNValidationError, PasswordValidationError
 from src.services.user_service import create_user
 from src.utils.user_helpers import hash_password
 from src.validators.user_validator import validate_abn, validate_password
@@ -68,54 +69,35 @@ def test_model_to_dict_conversion(sample_user_json):
 
 @pytest.mark.unit
 def test_invalid_abn():
-    """
-    Test that the ABN validation correctly handles an invalid ABN.
-    """
     invalid_abn = "12345678901"
-
-    # Assuming validate_abn raises HTTPException when ABN is invalid
-    with pytest.raises(HTTPException) as exc_info:
+    with pytest.raises(ABNValidationError) as exc_info:
         validate_abn(invalid_abn)
-
-    assert exc_info.value.status_code == 400
-    assert exc_info.value.detail == "Invalid ABN format"
+    expected_message = "The ABN '12345678901' is invalid. It must be 11 digits and pass ABN checksum validation."
+    assert exc_info.value.message == expected_message
 
 
 @pytest.mark.unit
 def test_invalid_password():
-    """Test that the password function returns correct error messages"""
-    with pytest.raises(HTTPException) as exc_info:
-        validate_password("paAsw1")  # Password is too short
-    assert exc_info.value.status_code == 400
-    assert exc_info.value.detail == "Password must be at least 8 characters long"
+    with pytest.raises(PasswordValidationError) as exc_info:
+        validate_password("paAsw1")  # too short
+    assert exc_info.value.message == "Password is invalid: Password must be at least 8 characters long."
 
-    # Test for empty password
-    with pytest.raises(HTTPException) as exc_info:
-        validate_password("")  # Empty password is invalid
-    assert exc_info.value.status_code == 400
-    assert exc_info.value.detail == "Password must be at least 8 characters long"
+    with pytest.raises(PasswordValidationError) as exc_info:
+        validate_password("")  # empty password
+    assert exc_info.value.message == "Password is invalid: Password must be at least 8 characters long."
 
-    # Test for password without a number
-    with pytest.raises(HTTPException) as exc_info:
-        validate_password("PasswordWithoutNumber")  # No digits in password
-    assert exc_info.value.status_code == 400
-    assert exc_info.value.detail == "Password must contain at least one number"
+    with pytest.raises(PasswordValidationError) as exc_info:
+        validate_password("PasswordWithoutNumber")  # no digit
+    assert exc_info.value.message == "Password is invalid: Password must contain at least one number."
 
-    # Test for password without an uppercase letter
-    with pytest.raises(HTTPException) as exc_info:
-        validate_password("password1")  # No uppercase letter
-    assert exc_info.value.status_code == 400
-    assert (
-        exc_info.value.detail == "Password must contain at least one uppercase letter"
-    )
+    with pytest.raises(PasswordValidationError) as exc_info:
+        validate_password("password1")  # no uppercase
+    assert exc_info.value.message == "Password is invalid: Password must contain at least one uppercase letter."
 
-    # Test for password without a lowercase letter
-    with pytest.raises(HTTPException) as exc_info:
-        validate_password("PASSWORD1")  # No lowercase letter
-    assert exc_info.value.status_code == 400
-    assert (
-        exc_info.value.detail == "Password must contain at least one lowercase letter"
-    )
+    with pytest.raises(PasswordValidationError) as exc_info:
+        validate_password("PASSWORD1")  # no lowercase
+    assert exc_info.value.message == "Password is invalid: Password must contain at least one lowercase letter."
+
 
 
 @pytest.mark.unit

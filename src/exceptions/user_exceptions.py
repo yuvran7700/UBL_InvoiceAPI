@@ -1,60 +1,36 @@
-from fastapi import HTTPException, status
-from src.exceptions.validation_exceptions import ValidationError
+# src.exceptions/user.py
 
-'''ValidationError in validation_expections
-class ValidationError(Exception):
-    """Base class for validation exceptions."""
+from starlette.status import HTTP_422_UNPROCESSABLE_ENTITY, HTTP_404_NOT_FOUND, HTTP_409_CONFLICT
+from .base_exceptions import APIBaseException
 
-    def __init__(self, message="Validation failed"):
-        self.message = message
-        super().__init__(self.message)
+class ABNValidationError(APIBaseException):
+    def __init__(self, abn: str):
+        super().__init__(
+            message=f"The ABN '{abn}' is invalid. It must be 11 digits and pass ABN checksum validation.",
+            status_code=HTTP_422_UNPROCESSABLE_ENTITY,
+            code="invalid_abn"
+        )
 
-'''
+class EmailAlreadyRegisteredError(APIBaseException):
+    def __init__(self, email: str):
+        super().__init__(
+            message=f"Email '{email}' is already registered.",
+            status_code=HTTP_409_CONFLICT,
+            code="email_exists"
+        )
 
+class PasswordValidationError(APIBaseException):
+    def __init__(self, reason: str):
+        super().__init__(
+            message=f"Password is invalid: {reason}",
+            status_code=HTTP_422_UNPROCESSABLE_ENTITY,
+            code="invalid_password"
+        )
 
-class ABNValidationError(ValidationError):
-    """Raised when the ABN is invalid."""
-
-    def __init__(self, field_name: str = None, message: str = None):
-        self.field_name = field_name
-        if not message:
-            message = f"ABN validation failed"
-            if field_name:
-                message += f" for field: {field_name}"
-        super().__init__(message)
-
-
-class PasswordValidationError(ValidationError):
-    """Raised when the password does not meet the requirements."""
-
-    def __init__(self, field_name: str = None, message: str = None):
-        self.field_name = field_name
-        if not message:
-            message = f"Password validation failed"
-            if field_name:
-                message += f" for field: {field_name}"
-        super().__init__(message)
-
-
-class EmailAlreadyRegisteredError(ValidationError):
-    """Raised when the email is already registered."""
-
-    def __init__(self, field_name: str = None, message: str = None):
-        self.field_name = field_name
-        if not message:
-            message = f"Account creation failed"
-            if field_name:
-                message += f" for field: {field_name}"
-        super().__init__(message)
-
-
-class UserNotFoundError(ValidationError):
-    """Raised when the password does not meet the requirements."""
-
-    def __init__(self, field_name: str = None, message: str = None):
-        self.field_name = field_name
-        if not message:
-            message = f"User search failed"
-            if field_name:
-                message += f" for field: {field_name}"
-        super().__init__(message)
+class UserNotFoundError(APIBaseException):
+    def __init__(self, email: str):
+        super().__init__(
+            message=f"User with email '{email}' was not found.",
+            status_code=HTTP_404_NOT_FOUND,
+            code="user_not_found"
+        )

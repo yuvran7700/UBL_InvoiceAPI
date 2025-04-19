@@ -1,7 +1,7 @@
 # marshallers/exporters/strategies/xml_exporter.py
 import xml.dom.minidom
 from xml.etree.ElementTree import Element, SubElement, tostring, ElementTree, register_namespace
-from src.models.invoice_update import InvoiceUpdateModel
+from src.domain.models.invoice_update import InvoiceUpdateModel
 from src.marshallers.exporters.strategies.invoice_export_strategy import InvoiceExportStrategy
 
 UBL_NS = "urn:oasis:names:specification:ubl:schema:xsd:Invoice-2"

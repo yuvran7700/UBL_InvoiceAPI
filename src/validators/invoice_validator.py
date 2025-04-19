@@ -1,6 +1,6 @@
 from fastapi import HTTPException
 from datetime import date
-from src.models.invoice_update import InvoiceUpdateModel
+from src.domain.models.invoice_update import InvoiceUpdateModel
 
 class InvoiceValidator:
     """

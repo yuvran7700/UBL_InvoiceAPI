@@ -5,8 +5,9 @@ Encapsulates all interactions with DynamoDB for invoice operations using query o
 
 from typing import List, Optional
 from boto3.dynamodb.conditions import Key
-from src.models.invoice_update import InvoiceUpdateModel
-from src.models.invoice_response_models import InvoiceStatus
+from src.domain.models.invoice_update import InvoiceUpdateModel
+from src.domain.models.invoice_response_models import InvoiceStatus
+from src.exceptions.db_exceptions import DatabaseWriteError
 from src.utils.dynamodb_data_converter import convert_data_for_dynamodb
 from src.db.dynamodb_client import invoices_table
 
@@ -31,7 +32,7 @@ def save_invoice(invoice: InvoiceUpdateModel, user_id: str, status: InvoiceStatu
     try:
         invoices_table.put_item(Item=invoice_dict)
     except Exception as e:
-        raise Exception(f"Failed to store invoice in DynamoDB: {e}")
+        raise DatabaseWriteError(f"Failed to store invoice in DynamoDB: {e}")
 
 
 def get_invoice_by_id(invoice_id: str, user_id: str) -> tuple[InvoiceUpdateModel, str] | None:
@@ -111,20 +112,5 @@ def delete_invoices_by_id(invoice_ids: List[str], user_id: str) -> None:
                     }
                 )
     except Exception as e:
-        raise Exception(f"Failed to batch delete invoices: {e}")
-
-
-def update_invoice_fields(user_id: str, invoice_id: str, updates: dict) -> dict:
-    """
-    Updates the invoice in DynamoDB.
-    """
-    update_expr, expr_values, expr_names = get_update_params(updates)
-    response = invoices_table.update_item(
-        Key={"user_id": user_id, "invoice_id": invoice_id},
-        UpdateExpression=update_expr,
-        ExpressionAttributeValues=expr_values,
-        ExpressionAttributeNames=expr_names,
-        ConditionExpression="attribute_exists(invoice_id)",
-        ReturnValues="ALL_NEW",
-    )
-    return response.get("Attributes")
+        raise DatabaseWriteError(f"Failed to batch delete invoices: {e}")
+    

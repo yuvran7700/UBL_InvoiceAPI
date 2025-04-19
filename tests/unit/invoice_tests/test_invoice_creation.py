@@ -8,7 +8,7 @@ from src.marshallers.parsers.strategies.xml_order_parser import XmlOrderParser
 from src.marshallers.parsers.invoice_marshaller import InvoiceMarshaller
 from src.services.invoice_service import InvoiceService
 from src.validators.missing_field_checker import MissingFieldChecker
-from src.models.invoice_response_models import InvoiceResponse, InvoiceStatus
+from src.domain.models.invoice_response_models import InvoiceResponse, InvoiceStatus
 
 def test_generate_draft_invoice_json(sample_order_json):
     service = InvoiceService()

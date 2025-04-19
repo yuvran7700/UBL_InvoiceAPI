@@ -1,7 +1,7 @@
 import uuid
 import logging
 from passlib.context import CryptContext
-from src.models.user_models import (
+from src.domain.models.user_models import (
     UpdateEmailRequest,
     UpdatePasswordRequest,
     UpdateUsernameRequest,

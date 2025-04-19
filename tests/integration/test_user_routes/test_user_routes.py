@@ -28,64 +28,60 @@ def auto_cleanup():
 
 @pytest.mark.routes
 def test_invalid_abn(sample_user_json):
-    """
-    Test that the user registration endpoint correctly handles an invalid ABN.
-    """
     sample_user_json["abn"] = "12345678901"
     response = client.post("/v1/users/register", json=sample_user_json)
-    assert response.status_code == 400
-    assert response.json()["detail"] == "Invalid ABN format"
+    assert response.status_code == 422
+    assert (
+        response.json()["error"]["message"]
+        == "The ABN '12345678901' is invalid. It must be 11 digits and pass ABN checksum validation."
+    )
 
 
 @pytest.mark.routes
 def test_invalid_password_missing_number(sample_user_json):
-    """
-    Test that the user registration endpoint correctly handles a password without a number.
-    """
     sample_user_json["password"] = "PasswordS"
     response = client.post("/v1/users/register", json=sample_user_json)
-    assert response.status_code == 400
-    assert response.json()["detail"] == "Password must contain at least one number"
+    assert response.status_code == 422
+    assert (
+        response.json()["error"]["message"]
+        == "Password is invalid: Password must contain at least one number."
+    )
 
 
 @pytest.mark.routes
 def test_invalid_password_too_short(sample_user_json):
-    """
-    Test that the user registration endpoint correctly handles a password that is too short.
-    """
     sample_user_json["password"] = "Pa1"
     response = client.post("/v1/users/register", json=sample_user_json)
-    assert response.status_code == 400
-    assert response.json()["detail"] == "Password must be at least 8 characters long"
+    assert response.status_code == 422
+    assert response.json()["error"]["code"] == "validation_error"
+    assert response.json()["error"]["message"] == "Input validation failed"
+    assert any(
+        d["msg"] == "ensure this value has at least 8 characters"
+        for d in response.json()["error"]["details"]
+    )
+
 
 
 @pytest.mark.routes
 def test_invalid_password_no_uppercase(sample_user_json):
-    """
-    Test that the user registration endpoint correctly handles a password without uppercase letters.
-    """
     sample_user_json["password"] = "password1"
     response = client.post("/v1/users/register", json=sample_user_json)
-    assert response.status_code == 400
+    assert response.status_code == 422
     assert (
-        response.json()["detail"]
-        == "Password must contain at least one uppercase letter"
+        response.json()["error"]["message"]
+        == "Password is invalid: Password must contain at least one uppercase letter."
     )
 
 
 @pytest.mark.routes
 def test_invalid_password_no_lowercase(sample_user_json):
-    """
-    Test that the user registration endpoint correctly handles a password without lowercase letters.
-    """
     sample_user_json["password"] = "PASSWORD1"
     response = client.post("/v1/users/register", json=sample_user_json)
-    assert response.status_code == 400
+    assert response.status_code == 422
     assert (
-        response.json()["detail"]
-        == "Password must contain at least one lowercase letter"
+        response.json()["error"]["message"]
+        == "Password is invalid: Password must contain at least one lowercase letter."
     )
-
 
 @pytest.mark.routes
 def test_password_hashed(sample_user_json):

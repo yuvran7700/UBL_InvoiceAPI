@@ -5,8 +5,8 @@ import pytest
 from datetime import date
 from src.services.invoice_service import InvoiceService
 from src.repositories.invoice_repository import get_invoices_by_user
-from src.models.invoice_response_models import InvoiceResponse, InvoiceStatus
-from src.models.invoice_update import InvoiceUpdateModel
+from src.domain.models.invoice_response_models import InvoiceResponse, InvoiceStatus
+from src.domain.models.invoice_update import InvoiceUpdateModel
 
 
 #Testing the service method

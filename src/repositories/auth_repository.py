@@ -1,6 +1,6 @@
-from fastapi import HTTPException, status
 from datetime import datetime, timezone, timedelta
 from src.db.dynamodb_client import user_table, session_table
+from src.exceptions.db_exceptions import DatabaseReadError, DatabaseWriteError
 from src.repositories.user_repository import get_user
 
 MAX_FAILED_ATTEMPTS = 3
@@ -18,30 +18,23 @@ def save_user_to_dynamodb(user_item: dict):
     """Save user data to DynamoDB"""
     try:
         user_table.put_item(Item=user_item)
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error saving user to DynamoDB: {str(e)}",
-        )
 
+    except Exception as e:
+        raise DatabaseWriteError(f"Error saving user to DB: {str(e)}")
 
 def save_session_to_dynamodb(email: str, JWT: dict):
     """Save session data to DynamoDB"""
     try:
         session_table.put_item(Item={"JWT": JWT, "email": email})
     except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error updating item: {str(e)}",
-        )
-
+        raise DatabaseWriteError(f"Error saving session to DB: {str(e)}")
 
 def get_token(JWT: str):
     try:
         response = session_table.get_item(Key={"JWT": JWT})
         return response["Item"]
-    except Exception:
-        return {}
+    except Exception as e:
+        raise DatabaseReadError(f"Error reading session from DB: {str(e)}")
 
 
 def remove_session_from_dynamodb(JWT: str):
@@ -49,10 +42,8 @@ def remove_session_from_dynamodb(JWT: str):
     try:
         session_table.delete_item(Key={"JWT": JWT})
     except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error updating item: {str(e)}",
-        )
+        raise DatabaseWriteError(f"Error deleting session from DB: {str(e)}")
+
 
 
 def add_failed_attempts(email: str, attempts: int):
