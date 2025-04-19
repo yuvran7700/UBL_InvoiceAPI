@@ -3,7 +3,7 @@ from typing import Dict, List, Optional, Union
 from fastapi import HTTPException
 from datetime import datetime
 
-from src.models.invoice_update import (
+from src.domain.models.invoice_update import (
     Party, Address, Contact, PartyTaxScheme, Country,
     InvoicePeriod, OrderReference, InvoiceLine, Item, Price
 )

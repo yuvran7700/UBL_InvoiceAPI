@@ -6,7 +6,7 @@ Defines the abstract strategy interface for parsing UBL order data
 from abc import ABC, abstractmethod
 from typing import Dict, List, Optional, Any, Union
 
-from src.models.invoice_update import (
+from src.domain.models.invoice_update import (
     Address, Contact, InvoiceLine, Item, Party, PartyTaxScheme,
     InvoicePeriod, OrderReference
 )

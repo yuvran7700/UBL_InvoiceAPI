@@ -3,8 +3,8 @@ import pytest
 from datetime import date
 from unittest.mock import patch
 from src.services.invoice_service import InvoiceService
-from src.models.invoice_response_models import InvoiceStatus
-from src.models.invoice_update import InvoiceUpdateModel
+from src.domain.models.invoice_response_models import InvoiceStatus
+from src.domain.models.invoice_update import InvoiceUpdateModel
 from src.repositories.invoice_repository import delete_invoices_by_id
 
 # Dummy batch writer to simulate DynamoDB's batch_writer.

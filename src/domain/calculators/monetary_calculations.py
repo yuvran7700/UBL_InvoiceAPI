@@ -1,6 +1,6 @@
 # src/calculators/monetary_calculations.py
 
-from src.models.invoice_update import InvoiceUpdateModel
+from src.domain.models.invoice_update import InvoiceUpdateModel
 
 class MonetaryCalculator:
     """

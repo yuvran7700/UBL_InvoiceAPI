@@ -1,5 +1,5 @@
 import json
-from src.models.invoice_update import InvoiceUpdateModel
+from src.domain.models.invoice_update import InvoiceUpdateModel
 from src.marshallers.exporters.strategies.invoice_export_strategy import InvoiceExportStrategy
 
 class JsonInvoiceFormatter(InvoiceExportStrategy):

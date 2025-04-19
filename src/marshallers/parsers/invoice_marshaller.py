@@ -1,7 +1,7 @@
 """
 Strategy context class that orchestrates the construction of an Invoice object from XML or JSON.
 """
-from src.models.invoice_update import InvoiceUpdateModel, MonetaryTotal, OrderReference
+from src.domain.models.invoice_update import InvoiceUpdateModel, MonetaryTotal, OrderReference
 from src.marshallers.parsers.strategies.order_parsing_strategy import OrderParsingStrategy
 
 class InvoiceMarshaller:

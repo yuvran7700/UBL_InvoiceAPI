@@ -2,7 +2,7 @@ from fastapi import HTTPException
 from src.marshallers.exporters.strategies.invoice_export_strategy import InvoiceExportStrategy
 from src.marshallers.exporters.strategies.json_format import JsonInvoiceFormatter
 from src.marshallers.exporters.strategies.xml_format import XmlInvoiceFormatter
-from src.models.invoice_update import InvoiceUpdateModel
+from src.domain.models.invoice_update import InvoiceUpdateModel
 
 
 class FormatterFactory:

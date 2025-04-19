@@ -2,8 +2,8 @@
 
 from typing import List
 from pydantic import BaseModel
-from src.models.invoice_update import InvoiceUpdateModel
-from src.models.invoice_response_models import MissingFieldsReport
+from src.domain.models.invoice_update import InvoiceUpdateModel
+from src.domain.models.invoice_response_models import MissingFieldsReport
 
 class MissingFieldChecker:
     def __init__(self, invoice: InvoiceUpdateModel):

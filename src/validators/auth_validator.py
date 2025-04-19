@@ -3,7 +3,7 @@ Vaildation methods to assist with auth services
 """
 
 from datetime import datetime, timezone
-from fastapi import HTTPException, status
+from src.exceptions.auth_exceptions import MissingTokenError, TokenExpiredError
 
 # This file handles all the validation required for account creation
 
@@ -20,10 +20,10 @@ def session_validation(response: dict):
 
     """
     if not response:
-        raise HTTPException(status_code=401, detail="Invalid token")
+        raise MissingTokenError()
 
     expiration_time = response["expires_at"]
     if expiration_time and (
         datetime.fromisoformat(expiration_time) < datetime.now(timezone.utc)
     ):
-        raise HTTPException(status_code=401, detail="Token expired")
+        raise TokenExpiredError()

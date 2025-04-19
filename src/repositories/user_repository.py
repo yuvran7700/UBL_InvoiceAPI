@@ -1,8 +1,9 @@
 from boto3.dynamodb.conditions import Key
 from src.db.dynamodb_client import user_table
+from src.exceptions.base_exceptions import APIBaseException
 from src.exceptions.db_exceptions import DatabaseReadError, DatabaseWriteError
-from src.exceptions.error_handler import DatabaseErrorHandler, ErrorContext
-from src.models.user_models import UserInDB
+from src.domain.models.user_models import UserInDB
+from src.exceptions.user_exceptions import UserNotFoundError
 
 
 def save_user(user_in_db: UserInDB) -> None:
@@ -19,10 +20,7 @@ def save_user(user_in_db: UserInDB) -> None:
         user_in_db_dic = user_in_db.dict()
         user_table.put_item(Item=user_in_db_dic)
     except Exception as e:
-        error_handler = ErrorContext(DatabaseErrorHandler())
-        error_handler.handle_error(
-            DatabaseWriteError(f"Error putting user by email: {str(e)}")
-        )
+        raise DatabaseWriteError(f"Failed to save user in save_user(): {str(e)}")
 
 
 def get_user(email: str) -> UserInDB:
@@ -51,13 +49,8 @@ def get_user(email: str) -> UserInDB:
         if items:
             return UserInDB(**items[0])
         return None
-
     except Exception as e:
-        error_handler = ErrorContext(DatabaseErrorHandler())
-        error_handler.handle_error(
-            DatabaseReadError(f"Error retrieving user by email: {str(e)}")
-        )
-        raise
+        raise DatabaseReadError(f"Failed to get user by email in get_user(): {str(e)}")
 
 
 def update_user_password_in_db(user_id: str, new_hashed_password: str):
@@ -75,11 +68,8 @@ def update_user_password_in_db(user_id: str, new_hashed_password: str):
             ReturnValues="UPDATED_NEW",
         )
     except Exception as e:
-        error_handler = ErrorContext(DatabaseErrorHandler())
-        error_handler.handle_error(
-            DatabaseWriteError(f"Error updating user password: {str(e)}")
-        )
-        raise
+        raise DatabaseWriteError(f"Failed to update password in update_user_password_in_db(): {str(e)}")
+
 
 
 def update_username_in_db(user_id: str, new_username: str):
@@ -97,11 +87,8 @@ def update_username_in_db(user_id: str, new_username: str):
             ReturnValues="UPDATED_NEW",
         )
     except Exception as e:
-        error_handler = ErrorContext(DatabaseErrorHandler())
-        error_handler.handle_error(
-            DatabaseWriteError(f"Error updating business name: {str(e)}")
-        )
-        raise
+        raise DatabaseWriteError(f"Failed to update business name in update_username_in_db(): {str(e)}")
+
 
 
 def update_email_in_db(user_id: str, new_email: str):
@@ -120,34 +107,37 @@ def update_email_in_db(user_id: str, new_email: str):
         )
 
     except Exception as e:
-        error_handler = ErrorContext(DatabaseErrorHandler())
-        error_handler.handle_error(
-            DatabaseWriteError(f"Error updating email: {str(e)}")
-        )
-        raise
+        raise DatabaseWriteError(f"Failed to update email in update_email_in_db(): {str(e)}")
+
 
 
 def delete_all_users():
     """Deletes all items from the DynamoDB users table."""
-    response = user_table.scan()  # Get all items from the table
-    items = response.get("Items", [])
+    try:
+        response = user_table.scan()  # Get all items from the table
+        items = response.get("Items", [])
 
-    while "LastEvaluatedKey" in response:  # Continue if there are more items
-        response = user_table.scan(ExclusiveStartKey=response["LastEvaluatedKey"])
-        items.extend(response.get("Items", []))
+        while "LastEvaluatedKey" in response:  # Continue if there are more items
+            response = user_table.scan(ExclusiveStartKey=response["LastEvaluatedKey"])
+            items.extend(response.get("Items", []))
 
-    # Batch delete (DynamoDB limits batch writes to 25 items per request)
-    with user_table.batch_writer() as batch:
-        for item in items:
-            print(f"Deleting user with email: {item['email']}")  # Debugging line
-            batch.delete_item(Key={"user_id": item["user_id"]})
-
+        # Batch delete (DynamoDB limits batch writes to 25 items per request)
+        with user_table.batch_writer() as batch:
+            for item in items:
+                print(f"Deleting user with email: {item['email']}")  # Debugging line
+                batch.delete_item(Key={"user_id": item["user_id"]})
+    except Exception as e:
+        raise DatabaseWriteError(f"Failed to delete all users in delete_all_users(): {str(e)}")
 
 def get_user_item(email: str):
     try:
         user = get_user(email)
+        if not user:
+            raise UserNotFoundError(email=email)
         user_id = user.user_id
         response = user_table.get_item(Key={"user_id": user_id})
         return response["Item"]
-    except Exception:
-        return {}
+    except APIBaseException:
+        raise 
+    except Exception as e:
+        raise DatabaseReadError(f"Failed to get user item in get_user_item(): {str(e)}")
