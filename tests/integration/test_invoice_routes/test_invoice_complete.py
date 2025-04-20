@@ -49,5 +49,7 @@ def test_complete_invoice_missing_required_field(sample_invoice_json):
     assert response.status_code == 400
     data = response.json()
     # Confirm expected error structure
-    assert "missing_invoice_fields" in data["detail"]
-    assert "accounting_supplier_party.party_legal_entity.registration_name" in data["detail"]["missing_invoice_fields"]
+    assert response.status_code == 400
+    assert response.json()["error"]["code"] == "invoice_completion_failed"
+    assert "missing" in response.json()["error"]["message"].lower()
+

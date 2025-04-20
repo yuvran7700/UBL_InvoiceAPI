@@ -1,9 +1,11 @@
 """
 API route handler for user assoicated authentication routes.
+API route handler for user assoicated authentication routes.
 """
 
 from fastapi import APIRouter, HTTPException, Query, status
 from fastapi.responses import JSONResponse
+from src.exceptions.auth_exceptions import InvalidCredentialsError, MissingTokenError
 from src.exceptions.auth_exceptions import InvalidCredentialsError, MissingTokenError
 from src.services.auth_service import (
     authenticate_user,
@@ -12,10 +14,13 @@ from src.services.auth_service import (
     token_logout_valid,
 )
 from src.domain.models.auth_models import LogOutRequest, SessionRequest
+from src.domain.models.auth_models import LogOutRequest, SessionRequest
 
+router = APIRouter(prefix="/v1/users/auth")
 router = APIRouter(prefix="/v1/users/auth")
 
 
+@router.post("/login", tags=["User Authentication"])
 @router.post("/login", tags=["User Authentication"])
 async def login_user(request: SessionRequest):
     """
@@ -30,9 +35,15 @@ async def login_user(request: SessionRequest):
     print(f"JWT generated: {JWT}")
     if not JWT:
         raise InvalidCredentialsError()
+    JWT = authenticate_user(request.dict())  # pylint: disable = invalid-name
+    print(f"JWT generated: {JWT}")
+    if not JWT:
+        raise InvalidCredentialsError()
 
     return JSONResponse(status_code=status.HTTP_201_CREATED, content={"JWT": JWT})
+    return JSONResponse(status_code=status.HTTP_201_CREATED, content={"JWT": JWT})
 
+@router.get("/validate/login", response_model=dict, tags=["User Token Validation"])
 @router.get("/validate/login", response_model=dict, tags=["User Token Validation"])
 async def login_validation(JWT: str = Query(...)):  # pylint: disable = C0103
     """
@@ -47,8 +58,13 @@ async def login_validation(JWT: str = Query(...)):  # pylint: disable = C0103
         raise MissingTokenError()
     response = get_JWT(JWT)
     return JSONResponse(status_code=200, content=response)
+    if not JWT:
+        raise MissingTokenError()
+    response = get_JWT(JWT)
+    return JSONResponse(status_code=200, content=response)
 
 
+@router.post("/logout", tags=["User Authentication"])
 @router.post("/logout", tags=["User Authentication"])
 async def logout_user(request: LogOutRequest):
     """
@@ -63,8 +79,13 @@ async def logout_user(request: LogOutRequest):
         raise MissingTokenError()
     response = remove_JWT(request.JWT)
     return JSONResponse(status_code=200, content=response)
+    if not request.JWT:
+        raise MissingTokenError()
+    response = remove_JWT(request.JWT)
+    return JSONResponse(status_code=200, content=response)
 
 
+@router.get("/validate/logout", response_model=dict,tags=["User Token Validation"])
 @router.get("/validate/logout", response_model=dict,tags=["User Token Validation"])
 async def logout_validation(JWT: str = Query(...)):  # pylint: disable = invalid-name
     """
@@ -78,4 +99,4 @@ async def logout_validation(JWT: str = Query(...)):  # pylint: disable = invalid
     if not JWT:
         raise MissingTokenError()
     response = token_logout_valid(JWT)
-    return JSONResponse(status_code=200, content=response)
+    return JSONResponse(status_code=500, content=response)

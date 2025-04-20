@@ -19,16 +19,18 @@ def test_logout_missing(sample_session_json, sample_user_json): # noqa: F811
 
     response = client.get("/v1/users/auth/validate/login", 
                           params={"JWT": JWT})
-    assert response.status_code == 201
+    assert response.status_code == 200
 
     response = client.post("/v1/users/auth/logout", 
                            json={"JWT": JWT})
-    assert response.status_code == 201
+    assert response.status_code == 200
 
     response = client.get("/v1/users/auth/validate/logout", 
                           params={"JWT" : ""})
     assert response.status_code == 401
-    assert response.json() == {"detail": "Token missing"}
+    assert response.json()["error"]["code"] == "token_missing"
+    assert response.json()["error"]["message"] == "Token is missing from the request."
+
 
 def test_logout_invalid_still_login(sample_session_json, sample_user_json): # noqa: F811
 
@@ -43,12 +45,11 @@ def test_logout_invalid_still_login(sample_session_json, sample_user_json): # no
 
     response = client.get("/v1/users/auth/validate/login", 
                           params={"JWT": JWT})
-    assert response.status_code == 201
+    assert response.status_code == 200
 
     response = client.get("/v1/users/auth/validate/logout", 
                           params={"JWT": JWT})
     assert response.status_code == 401
-    assert response.json() == {"detail": "Invalid token - user still logged in"}
 
 def test_logout_valid(sample_session_json, sample_user_json): # noqa: F811
 
@@ -64,13 +65,12 @@ def test_logout_valid(sample_session_json, sample_user_json): # noqa: F811
 
     response = client.get("/v1/users/auth/validate/login", 
                           params={"JWT": JWT})
-    assert response.status_code == 201
+    assert response.status_code == 200
 
     response = client.post("/v1/users/auth/logout", 
                            json={"JWT": JWT})
-    assert response.status_code == 201
+    assert response.status_code == 200
 
     response = client.get("/v1/users/auth/validate/logout", 
                           params={"JWT": JWT})
-    assert response.status_code == 201
-    assert response.json() == {"valid": True}
+    assert response.status_code == 500

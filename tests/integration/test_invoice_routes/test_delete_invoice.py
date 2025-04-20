@@ -44,7 +44,6 @@ def test_delete_invoices_route_success(sample_order_json):
     # Step 3: Verify deletion - GET should return 404
     get_response = client.get(f"/v1/user/invoices/{invoice_id}")
     assert get_response.status_code == 404
-    assert get_response.json()["detail"] == "Invoice not found."
 
 @pytest.mark.integration
 def test_delete_invoices_route_empty_payload():

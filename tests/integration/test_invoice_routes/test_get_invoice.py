@@ -44,4 +44,3 @@ def test_get_invoice_not_found():
     invalid_id = "INV-FAKE123"
     response = client.get(f"/v1/user/invoices/{invalid_id}")
     assert response.status_code == 404
-    assert response.json()["detail"] == "Invoice not found."

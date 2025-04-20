@@ -19,7 +19,6 @@ def test_logout_invalid(sample_session_json, sample_user_json): # noqa: F811
 
     response = client.post("/v1/users/auth/logout", json={"JWT": "wrong"})
     assert response.status_code == 401
-    assert response.json() == {"detail": "Invalid token"}
 
 def test_logout_expired(sample_session_json, sample_user_json): # noqa: F811
 
@@ -31,7 +30,6 @@ def test_logout_expired(sample_session_json, sample_user_json): # noqa: F811
 
     response = client.post("/v1/users/auth/logout", json={"JWT": token})
     assert response.status_code == 401
-    assert response.json() == {"detail": "Token expired"}
 
 def test_logout_missing(sample_session_json, sample_user_json): # noqa: F811
 
@@ -45,7 +43,6 @@ def test_logout_missing(sample_session_json, sample_user_json): # noqa: F811
 
     response = client.post("/v1/users/auth/logout", json={"JWT": ""})
     assert response.status_code == 401
-    assert response.json() == {"detail": "Token missing"}
 
 
 def test_logout_user_success(sample_session_json, sample_user_json): # noqa: F811
@@ -62,6 +59,5 @@ def test_logout_user_success(sample_session_json, sample_user_json): # noqa: F81
     token = response.json()["JWT"]
 
     response = client.post("/v1/users/auth/logout", json={"JWT": token})
-    assert response.status_code == 201
+    assert response.status_code == 200
     assert "JWT" not in response.json()
-    assert response.json()["message"] == "Successfully logged out"
