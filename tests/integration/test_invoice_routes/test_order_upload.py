@@ -92,5 +92,7 @@ def test_order_upload_invalid_file_type():
         headers={"Authorization": "Bearer test-token"}
     )
 
-    assert response.status_code == 415
-    assert response.json()["detail"] == "Unsupported file type. Only XML and JSON are supported."
+    assert response.status_code == 400
+    assert response.json()["error"]["code"] == "invalid_invoice_format"
+    assert "unsupported file type" in response.json()["error"]["message"].lower()
+
