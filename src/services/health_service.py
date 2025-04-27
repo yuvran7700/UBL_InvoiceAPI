@@ -4,6 +4,7 @@
 Module responsible for tracking the readiness status of various subsystems in the application. 
 Called by: health_check_routes.py
 """
+import httpx
 
 class HealthService:
     """
@@ -20,6 +21,10 @@ class HealthService:
             "dynamo.sessions": False,
             "external_ready": True  # Defaulted to true unless integrated later
         }
+        self._external_services_health = {
+            "propelauth": False  # Default False until checked
+        }
+        self.auth_url = "https://39356306333.propelauthtest.com"
 
     def set_ready(self, key: str, value: bool = True):
         """
@@ -53,3 +58,14 @@ class HealthService:
             "status": "ready" if self.is_ready() else "not_ready",
             "details": self._subsystems_ready.copy() 
         }
+    
+    async def check_external_services(self):
+        """
+        Asynchronously pings external services like PropelAuth.
+        """
+        async with httpx.AsyncClient(timeout=3) as client:
+            try:
+                response = await client.get(f"{self.auth_url}/health")
+                self._external_services_health["propelauth"] = response.status_code == 200
+            except Exception:
+                self._external_services_health["propelauth"] = False

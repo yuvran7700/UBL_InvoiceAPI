@@ -6,7 +6,7 @@ import json
 from typing import Dict, List, Optional, Union
 from fastapi import HTTPException
 from src.domain.models.invoice_update import (
-    Party, Address, Contact, PartyTaxScheme, Country,
+    Party, Address, Contact, PartyLegalEntity, PartyTaxScheme, Country,
     InvoicePeriod, OrderReference, InvoiceLine, Item, Price
 )
 from src.marshallers.parsers.strategies.order_parsing_strategy import OrderParsingStrategy
@@ -69,6 +69,15 @@ class JsonOrderParser(OrderParsingStrategy):
             return json.loads(data)
         except json.JSONDecodeError:
             raise HTTPException(status_code=400, detail="Invalid JSON content")
+        
+    def extract_person(self, person_elum) -> Optional[str]:
+        if person_elum is None:
+            return None
+        first_name = self.get_text(person_elum, "./cbc:FirstName") or ""
+        last_name = self.get_text(person_elum, "./cbc:FamilyName") or ""
+        name_parts = [first_name.strip(), last_name.strip()]
+        name = " ".join(part for part in name_parts if part)
+        return name
 
     def extract_contact(self, contact_elem: dict) -> Optional[Contact]:
         if not contact_elem:
@@ -78,6 +87,14 @@ class JsonOrderParser(OrderParsingStrategy):
             telephone=self.unwrap(contact_elem.get("Telephone")),
             electronic_mail=self.unwrap(contact_elem.get("ElectronicMail")),
         )
+    
+    def extract_party_legal_entity(self, party_legal_entity_elem) -> Optional[PartyLegalEntity]:
+        if party_legal_entity_elem is None:
+            return None
+        return PartyLegalEntity(
+            registration_name = self.get_text(party_legal_entity_elem, "./cbc:RegistrationName"),
+            company_id = self.get_text(party_legal_entity_elem, "./cbc:CompanyID")
+    )
 
     def extract_party_tax_scheme(self, party_tax_scheme_elem) -> Optional[PartyTaxScheme]:
         if not party_tax_scheme_elem:

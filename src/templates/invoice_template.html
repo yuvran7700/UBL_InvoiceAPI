@@ -1,0 +1,113 @@
+<!-- The following template was made using bootstaps freely available resources 
+https://www.bootdey.com/snippets/view/invoice-with-client-info-description-amount-and-pay-now-button,
+changes have been made. -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Invoice {{ invoice.id }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { 
+            background-color: #ffffff; 
+            margin-top: 20px;
+            color: #000000 !important; /* Add this line */
+        }
+        /* Force all text to be black */
+        * {
+            color: #000000 !important;
+        }
+    </style>
+</head>
+<div class="container mt-6 mb-7">
+    <div class="row justify-content-center">
+    <div class="col-lg-12 col-xl-7">
+        <div class="card">
+        <div class="card-body p-5">
+            <h2>
+            Hey {{ invoice.accounting_customer_party.party_name.name }},
+            </h2>
+            <p class="fs-sm">
+            This is the receipt for a payment of <strong>${{ invoice.legal_monetary_total.payable_amount }}</strong> 
+            (AUD) you made to {{ invoice.accounting_supplier_party.party_name.name }} order on {{ invoice.issue_date }}.
+            </p>
+
+            <div class="border-top border-gray-200 pt-4 mt-4">
+            <div class="row">
+                <div class="col-md-6" style="width: 50%;">
+                <div class="text-muted mb-2">Payment No.</div>
+                <strong>#{{ invoice.id }}</strong>
+                </div>
+                <div class="col-md-6 text-end" style="width: 50%;">
+                <div class="text-muted mb-2">Payment Date</div>
+                <strong>{{ invoice.due_date }}</strong>
+                </div>
+            </div>
+            </div>
+
+            <div class="border-top border-gray-200 mt-4 py-4">
+            <div class="row">
+                <div class="col-md-6" style="width: 50%;">
+                <div class="text-muted mb-2">Client</div>
+                <strong>
+                    {{ invoice.accounting_customer_party.party_name.name }}
+                </strong>
+                <p class="fs-sm">
+                    {{ invoice.accounting_customer_party.postal_address.street_name }}, 
+                    {{ invoice.accounting_customer_party.postal_address.city_name }}, 
+                    {{ invoice.accounting_customer_party.postal_address.postal_zone }}, 
+                    {{ invoice.accounting_customer_party.postal_address.country.identification_code }}
+                    <br>
+                </p>
+                </div>
+                <div class="col-md-6 text-end" style="width: 50%;">
+                <div class="text-muted mb-2">Payment To</div>
+                <strong>
+                    {{ invoice.accounting_supplier_party.party_name.name }}
+                </strong>
+                <p class="fs-sm">
+                    {{ invoice.accounting_supplier_party.postal_address.street_name }}, 
+                    {{ invoice.accounting_supplier_party.postal_address.city_name }}, 
+                    {{ invoice.accounting_supplier_party.postal_address.postal_zone }}, 
+                    {{ invoice.accounting_supplier_party.postal_address.country.identification_code }}
+                    <br>
+                </p>
+                </div>
+            </div>
+            </div>
+
+            <table class="table border-bottom border-gray-200 mt-3">
+            <thead>
+                <tr>
+                <th scope="col" class="fs-sm text-dark text-uppercase-bold-sm px-0">Description</th>
+                <th scope="col" class="fs-sm text-dark text-uppercase-bold-sm px-0">Quantity</th>
+                <th scope="col" class="fs-sm text-dark text-uppercase-bold-sm px-0">Amount</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for line in invoice.invoice_lines %}
+                    <tr>
+                        <td class="px-0">{{line.item.name}}</td>
+                        <td class="px-0">{{line.invoiced_quantity}}</td>
+                        <td class="px-0">${{line.line_extension_amount}}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+            </table>
+
+            <div class="mt-5">
+            <div class="d-flex justify-content-end">
+                <p class="text-muted me-3">Subtotal:</p>
+                <span>${{ invoice.legal_monetary_total.line_extension_amount }}</span>
+            </div>
+            <div class="d-flex justify-content-end">
+                <p class="text-muted me-3">Tax:</p>
+                <span>${{ tax }}</span>
+            </div>
+            <div class="d-flex justify-content-end mt-3">
+                <h5 class="me-3">Total:</h5>
+                <h5 class="text-success">${{ invoice.legal_monetary_total.payable_amount }}</h5>
+            </div>
+            </div>
+    </div>
+    </div>
+</div>

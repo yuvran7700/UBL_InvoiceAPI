@@ -8,7 +8,7 @@ from fastapi.testclient import TestClient
 from src.main import app
 import pytest
 from tests.conftest import sample_user_json
-from src.repositories.user_repository import delete_all_users
+from src.repositories.v1.user_repository import delete_all_users
 
 client = TestClient(app)
 

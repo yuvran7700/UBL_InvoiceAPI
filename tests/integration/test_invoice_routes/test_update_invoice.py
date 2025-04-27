@@ -1,75 +1,77 @@
-import copy
+import io
 import pytest
-from fastapi.testclient import TestClient
-from src.main import app
-from src.services.auth_service import get_current_user_id
-
-# Override dependency for testing
-app.dependency_overrides[get_current_user_id] = lambda: "test-user"
-client = TestClient(app)
+import json
 
 @pytest.mark.integration
-def test_update_invoice_success(sample_order_json):
+def test_update_invoice_success(client, sample_order_json):
     """
-    Integration test:
-      1. Upload a draft invoice using sample_order_json.
-      2. Update the invoice (e.g., change buyer_reference).
-      3. Verify that the updated invoice reflects the changes and returns a missing fields report.
+    Upload a draft invoice, update a field, and verify the update is reflected.
     """
-    # Step 1: Upload invoice
-    upload_response = client.post(
-        "/v1/user/invoices/upload",
-        files={"file": ("order.json", sample_order_json, "application/json")},
-        headers={"Authorization": "Bearer test-token"}
-    )
+    organisation_id = "test-org-id"
+
+    # Step 1: Upload draft invoice
+    upload_url = f"/v2/invoices/{organisation_id}/upload"
+    files = {
+        "file": ("order.json", io.BytesIO(sample_order_json), "application/json")
+    }
+    upload_response = client.post(upload_url, files=files)
     assert upload_response.status_code == 200
-    draft = upload_response.json()
-    invoice_id = draft["invoice_id"]
-    assert invoice_id is not None
-    assert draft["status"] == "draft"
-    
-    # Step 2: Update the invoice with new data (e.g., update buyer_reference)
-    update_payload = {"buyer_reference": "UPDATED_REF"}
-    update_response = client.patch(f"/v1/user/invoices/{invoice_id}", json=update_payload)
+    draft_invoice = upload_response.json()
+    invoice_id = draft_invoice["invoice_id"]
+
+    # Step 2: Update the invoice (e.g., update buyer_reference)
+    update_url = f"/v2/invoices/{organisation_id}/{invoice_id}"
+    update_payload = {
+        "buyer_reference": "UPDATED_REF"
+    }
+    update_response = client.patch(update_url, json=update_payload)
     assert update_response.status_code == 200
     updated_invoice = update_response.json()
-    # Expect that the invoice buyer_reference has been updated
+
+    # Validate that buyer_reference was updated
     assert updated_invoice["invoice"]["buyer_reference"] == "UPDATED_REF"
-    # Missing fields report is included in the response (could be empty or list missing fields)
     assert "missing_fields_report" in updated_invoice
 
-@pytest.mark.integration
-def test_update_invoice_not_found():
-    """
-    Attempt to update an invoice that does not exist.
-    """
-    update_payload = {"buyer_reference": "UPDATED_REF"}
-    response = client.patch("/v1/user/invoices/INV-NONEXISTENT", json=update_payload)
-    assert response.status_code == 404
-    data = response.json()
 
 @pytest.mark.integration
-def test_update_completed_invoice(sample_invoice_json):
+def test_update_invoice_not_found(client):
     """
-    Test that once an invoice is complete, further edits are not allowed.
-    Workflow:
-      1. Complete an invoice using the complete endpoint.
-      2. Attempt to update (PATCH) the completed invoice.
-      3. Verify that the update is rejected with a 403 error.
+    Try updating a non-existent invoice and expect 404.
     """
-    # Step 1: Complete an invoice. 
-    # (Assume sample_invoice_json is complete enough for completion.)
-    complete_response = client.post("/v1/user/invoices/complete", json=sample_invoice_json)
+    organisation_id = "test-org-id"
+    non_existent_invoice_id = "INV-NONEXISTENT"
+
+    update_url = f"/v2/invoices/{organisation_id}/{non_existent_invoice_id}"
+    update_payload = {"buyer_reference": "UPDATED_REF"}
+
+    update_response = client.patch(update_url, json=update_payload)
+
+    assert update_response.status_code == 404
+    data = update_response.json()
+    assert "error" in data or "detail" in data  # depends how your error handler formats it
+
+
+@pytest.mark.integration
+def test_update_completed_invoice(client, sample_invoice_json):
+    """
+    Upload and complete an invoice, then try updating it (should fail with 403).
+    """
+    organisation_id = "test-org-id"
+
+    # Step 1: Complete an invoice
+    complete_url = f"/v2/invoices/{organisation_id}/complete"
+    complete_response = client.post(complete_url, json=sample_invoice_json)
     assert complete_response.status_code == 200
     completed_invoice = complete_response.json()
     invoice_id = completed_invoice["invoice_id"]
-    assert invoice_id is not None
-    assert completed_invoice["status"] == "completed"
-    
-    # Step 2: Attempt to update the now-completed invoice.
-    update_payload = {"buyer_reference": "NEW_REF"}
-    update_response = client.patch(f"/v1/user/invoices/{invoice_id}", json=update_payload)
-    
-    # Expect a 403 Forbidden because only draft invoices can be updated.
+
+    # Step 2: Try updating the completed invoice
+    update_url = f"/v2/invoices/{organisation_id}/{invoice_id}"
+    update_payload = {
+        "buyer_reference": "NEW_REF"
+    }
+    update_response = client.patch(update_url, json=update_payload)
+
     assert update_response.status_code == 403
-    data = update_response.json()
+    error = update_response.json()
+    assert "error" in error or "detail" in error

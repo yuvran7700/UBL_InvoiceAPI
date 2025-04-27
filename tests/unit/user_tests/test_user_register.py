@@ -9,7 +9,7 @@ from fastapi import HTTPException
 import pytest
 from src.domain.models.user_models import UserIn, UserInDB
 from src.exceptions.user_exceptions import ABNValidationError, PasswordValidationError
-from src.services.user_service import create_user
+from src.services.v1.user_service import create_user
 from src.utils.user_helpers import hash_password
 from src.validators.user_validator import validate_abn, validate_password
 from tests.conftest import sample_user_json

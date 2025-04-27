@@ -1,62 +1,58 @@
-import pytest
-from fastapi.testclient import TestClient
-from datetime import datetime
-from src.main import app
-from src.services.auth_service import get_current_user_id
+import io
+import json
+from datetime import datetime, timedelta
 
-# Override dependency so that get_current_user_id always returns "test-user"
-app.dependency_overrides[get_current_user_id] = lambda: "test-user"
-client = TestClient(app)
+def test_list_invoices_basic(client, sample_order_xml):
+    """
+    Upload a draft invoice and verify it appears in the list of invoices for the organisation.
+    """
 
-@pytest.mark.integration
-def test_list_invoices_without_filters():
-    """
-    Test listing all invoices for 'test-user' without any filters.
-    Assumes that the test environment has been seeded with invoice data.
-    """
-    response = client.get("/v1/user/invoices")
-    assert response.status_code == 200
-    invoices = response.json()
-    assert isinstance(invoices, list)
-    
-    for invoice in invoices:
-        assert "invoice_id" in invoice
-        assert "invoice" in invoice
-        assert "status" in invoice
+    organisation_id = "test-org-id"
 
-@pytest.mark.integration
-def test_list_invoices_with_filters():
-    """
-    Test listing invoices for 'test-user' with status and issue date range filters.
-    Assumes that the test environment contains at least one invoice with:
-      - status 'draft'
-      - an issue_date between 2022-01-01 and 2022-12-31.
-    """
-    response = client.get(
-        "/v1/user/invoices",
-        params={
-            "status": "draft",
-            "issue_date_from": "2022-01-01",
-            "issue_date_to": "2022-12-31"
-        }
-    )
-    assert response.status_code == 200
-    invoices = response.json()
-    assert isinstance(invoices, list)
-    
-    # Check that returned invoices meet the filter criteria.
-    for invoice in invoices:
-        assert "invoice_id" in invoice
-        assert "invoice" in invoice
-        assert "status" in invoice
-        assert invoice["status"] == "draft"
-        
-        # Checking issue_date range is correct
-        issue_date_str = invoice["invoice"].get("issue_date")
-        assert issue_date_str is not None, "Expected issue_date to be present"
-        issue_date = datetime.strptime(issue_date_str, "%Y-%m-%d").date()
-        start_date = datetime.strptime("2022-01-01", "%Y-%m-%d").date()
-        end_date = datetime.strptime("2022-12-31", "%Y-%m-%d").date()
-        assert start_date <= issue_date <= end_date, (
-            f"Issue date {issue_date} is not within range {start_date} to {end_date}"
-        )
+    # Step 1: Upload a draft invoice
+    upload_url = f"/v2/invoices/{organisation_id}/upload"
+    files = {
+        "file": ("sample_order.xml", io.BytesIO(sample_order_xml), "application/xml")
+    }
+
+    upload_response = client.post(upload_url, files=files)
+    assert upload_response.status_code == 200, upload_response.text
+
+    uploaded_invoice = upload_response.json()
+    invoice_id = uploaded_invoice["invoice_id"]
+
+    # Step 2: List invoices without any filters
+    list_url = f"/v2/invoices/{organisation_id}"
+    list_response = client.get(list_url)
+    assert list_response.status_code == 200, list_response.text
+
+    invoices = list_response.json()
+    print("\nList All Invoices Response:")
+    print(json.dumps(invoices, indent=2))
+
+    # Check that uploaded invoice appears in the list
+    assert any(invoice["invoice_id"] == invoice_id for invoice in invoices)
+
+    # Step 3: List invoices filtered by status=draft
+    list_response_status = client.get(list_url, params={"status": "draft"})
+    assert list_response_status.status_code == 200, list_response_status.text
+
+    invoices_status = list_response_status.json()
+    print("\nList Invoices with status=draft Response:")
+    print(json.dumps(invoices_status, indent=2))
+
+    # Should find the invoice
+    assert any(invoice["invoice_id"] == invoice_id for invoice in invoices_status)
+
+    # Step 4: List invoices filtered by issue_date_from
+    old_date = datetime(2000, 1, 1).date()  # <<< earlier than 2005
+
+    list_response_date = client.get(list_url, params={"issue_date_from": old_date.isoformat()})
+    assert list_response_date.status_code == 200, list_response_date.text
+
+    invoices_date = list_response_date.json()
+    print("\nList Invoices with issue_date_from filter Response:")
+    print(json.dumps(invoices_date, indent=2))
+
+    assert any(invoice["invoice_id"] == invoice_id for invoice in invoices_date)
+

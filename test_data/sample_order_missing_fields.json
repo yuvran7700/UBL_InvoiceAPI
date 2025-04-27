@@ -1,0 +1,139 @@
+{
+    "order": {
+      "note": "Order note string",
+      "documentCurrencyCode": "AUD",
+      "accountingCostCode": "ACC-2024-001",
+      "validityEndDate": "2025-12-31",
+      "quotationDocumentReferenceId": "QDR-456789",
+      "orderDocumentReferenceId": "ORD-987654",
+      "originatorDocumentReferenceId": "ORG-123456",
+      "contractType": "Service Agreement",
+      "contractId": 20240501
+    },
+    "buyer": {
+      "name": "Buyer Name",
+      "postalAddress": {
+        "postBox": "PO box 123",
+        "streetName": "Example street",
+        "additionalStreetName": "Additional example",
+        "buildingNumber": "45A",
+        "department": "Sales",
+        "cityName": "Sydney",
+        "postalZone": "2000",
+        "countrySubentity": "SYD",
+        "countryCode": "AU"
+      },
+      "taxScheme": "VAT",
+      "contact": {
+        "telephone": "+61 412 345 678",
+        "telefax": "+61 412 345 678",
+        "email": "buyer@example.com"
+      },
+      "person": {
+        "firstName": "John",
+        "middleName": "Adam",
+        "familyName": "Smith",
+        "jobTitle": "Example Manager"
+      },
+      "deliveryContact": {
+        "name": "Jane Smith",
+        "telephone": "12345",
+        "telefax": "12345",
+        "email": "janesmith@example.com"
+      }
+    },
+    "seller": {
+      "sellerId": "1234567890123",
+      "name": "Seller Name",
+      "postalAddress": {
+        "postBox": "PO box 123",
+        "streetName": "Example street",
+        "additionalStreetName": "Additional example",
+        "buildingNumber": "45A",
+        "department": "Sales",
+        "cityName": "Sydney",
+        "postalZone": "2000",
+        "countrySubentity": "SYD",
+        "countryCode": "AU"
+      },
+      "contact": {
+        "telephone": "+61 412 345 678",
+        "telefax": "+61 412 345 678",
+        "email": "seller@example.com"
+      },
+      "person": {
+        "firstName": "John",
+        "middleName": "Adam",
+        "familyName": "Smith",
+        "jobTitle": "Example Manager"
+      }
+    },
+    "delivery": {
+      "deliveryAddress": {
+        "postBox": "PO box 123",
+        "streetName": "Example street",
+        "additionalStreetName": "Additional example",
+        "buildingName": "Building name",
+        "buildingNumber": "45A",
+        "department": "Sales",
+        "cityName": "Sydney",
+        "postalZone": "2000",
+        "countrySubentity": "SYD",
+        "countryCode": "AU"
+      },
+      "requestedDeliveryPeriod": {
+        "startDate": "2025-04-21",
+        "endDate": "2025-04-21"
+      },
+      "deliveryParty": {
+        "deliveryPartyId": 12345,
+        "name": "Delivery Party Name",
+        "telephone": "1300 123 456",
+        "email": "delivertparty@example.com",
+        "telefax": "1300 123 456"
+      }
+    },
+    "monetaryTotal": {
+      "lineExtensionAmount": 1500,
+      "taxTotal": 300,
+      "allowanceCharge": [
+        {
+          "chargeIndicator": true,
+          "allowanceChargeReason": "Example discount",
+          "amount": 50
+        }
+      ]
+    },
+    "orderLines": [
+      {
+        "note": "Order note string",
+        "lineItem": {
+          "quantity": 10,
+          "totalTaxAmount": 75,
+          "price": 15,
+          "baseQuantity": {
+            "quantity": 1,
+            "unitCode": "unit123"
+          },
+          "item": {
+            "itemId": 12345,
+            "description": "Example item description",
+            "name": "Example item name",
+            "properties": {
+              "Color": "Black"
+            }
+          }
+        }
+      }
+    ],
+    "additionalDocumentReference": [
+      {
+        "documentType": "Example document",
+        "attachment": {
+          "uri": "https://example.com/document.pdf",
+          "binaryObject": "QmFzZTY0RW5jb2RlZFN0cmluZw==",
+          "mimeCode": "application/pdf"
+        }
+      }
+    ]
+  }

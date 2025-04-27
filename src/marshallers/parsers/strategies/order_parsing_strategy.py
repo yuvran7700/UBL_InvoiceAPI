@@ -7,7 +7,7 @@ from abc import ABC, abstractmethod
 from typing import Dict, List, Optional, Any, Union
 
 from src.domain.models.invoice_update import (
-    Address, Contact, InvoiceLine, Item, Party, PartyTaxScheme,
+    Address, Contact, InvoiceLine, Item, Party, PartyLegalEntity, PartyTaxScheme,
     InvoicePeriod, OrderReference
 )
 class OrderParsingStrategy(ABC):
@@ -24,9 +24,22 @@ class OrderParsingStrategy(ABC):
         """
         pass
 
+    @abstractmethod
+    def extract_person(self, person_elum: Any) -> Optional[str]:
+        """
+        Extracts person details from the provided element.
+
+        Args:
+            persona_elem (any): The element containing person] information.
+            ns (any, optional): Namespace information, if applicable.
+
+        Returns:
+            Optional[Contact]: A `Contact` object if data is available, otherwise `None`.
+        """
+        pass
 
     @abstractmethod
-    def extract_contact(self, contact_elem: Any) -> Optional[Contact]:
+    def extract_contact(self, contact_elem: Any, party_elem: Any) -> Optional[Contact]:
         """
         Extracts contact details from the provided element.
 
@@ -39,6 +52,19 @@ class OrderParsingStrategy(ABC):
         """
         pass
 
+    @abstractmethod
+    def extract_party_legal_entity(self, party_legal_entity_elemL: Any) -> Optional[PartyLegalEntity]:
+        """
+        Extracts party legal entity details from the provided element.
+
+        Args:
+            party_legal_entity_elem (any): The element containing party tax scheme information.
+            ns (any, optional): Namespace information, if applicable.
+
+        Returns: Optional[PartyTaxScheme]:
+            A `PartyLegalEntity` object if data is available, otherwise `None`.
+        """
+        pass
 
     @abstractmethod
     def extract_party_tax_scheme(self, party_tax_scheme_elem: Any) -> Optional[PartyTaxScheme]:
