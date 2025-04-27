@@ -2,7 +2,7 @@
 Exception classes related to invoice operations and rules.
 """
 
-from starlette.status import HTTP_400_BAD_REQUEST, HTTP_403_FORBIDDEN, HTTP_404_NOT_FOUND
+from starlette.status import HTTP_400_BAD_REQUEST, HTTP_403_FORBIDDEN, HTTP_404_NOT_FOUND, HTTP_415_UNSUPPORTED_MEDIA_TYPE
 from src.exceptions.base_exceptions import APIBaseException
 
 
@@ -19,7 +19,7 @@ class InvalidInvoiceFormatError(APIBaseException):
     def __init__(self, details: str = "Unsupported file type. Only XML and JSON are supported."):
         super().__init__(
             message=details,
-            status_code=HTTP_400_BAD_REQUEST,
+            status_code=HTTP_415_UNSUPPORTED_MEDIA_TYPE,
             code="invalid_invoice_format"
         )
 

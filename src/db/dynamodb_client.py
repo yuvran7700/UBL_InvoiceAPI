@@ -1,4 +1,4 @@
-#src.src/db/dynamodb_client.py
+#src/db/dynamodb_client.py
 """
 DynamoDB client initialization and connection testing.
 """

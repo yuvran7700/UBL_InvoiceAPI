@@ -1,0 +1,177 @@
+<Order>
+  <Note>Order note string</Note>
+  <DocumentCurrencyCode>AUD</DocumentCurrencyCode>
+  <AccountingCostCode>ACC-2024-001</AccountingCostCode>
+  <ValidityEndDate>2025-12-31</ValidityEndDate>
+  <QuotationDocumentReference>
+    <ID>QDR-456789</ID>
+  </QuotationDocumentReference>
+  <OrderDocumentReference>
+    <ID>ORD-987654</ID>
+  </OrderDocumentReference>
+  <OriginatorDocumentReference>
+    <ID>ORG-123456</ID>
+  </OriginatorDocumentReference>
+  <Contract>
+    <ContractType>Service Agreement</ContractType>
+    <ID>20240501</ID>
+  </Contract>
+
+  <BuyerCustomerParty>
+    <Party>
+      <PartyIdentification>
+        <ID>1234567890123</ID>
+      </PartyIdentification>
+      <PartyName>
+        <Name>Buyer Name</Name>
+      </PartyName>
+      <PostalAddress>
+        <Postbox>PO box 123</Postbox>
+        <StreetName>Example street</StreetName>
+        <AdditionalStreetName>Additional example</AdditionalStreetName>
+        <BuildingNumber>45A</BuildingNumber>
+        <Department>Sales</Department>
+        <CityName>Sydney</CityName>
+        <PostalZone>2000</PostalZone>
+        <CountrySubentity>SYD</CountrySubentity>
+        <Country>
+          <IdentificationCode>AU</IdentificationCode>
+        </Country>
+      </PostalAddress>
+      <PartyTaxScheme>
+        <TaxScheme>
+          <Name>VAT</Name>
+        </TaxScheme>
+      </PartyTaxScheme>
+      <Contact>
+        <Telephone>+61 412 345 678</Telephone>
+        <Telefax>+61 412 345 678</Telefax>
+        <ElectronicMail>buyer@example.com</ElectronicMail>
+      </Contact>
+      <Person>
+        <FirstName>John</FirstName>
+        <MiddleName>Adam</MiddleName>
+        <FamilyName>Smith</FamilyName>
+        <JobTitle>Example Manager</JobTitle>
+      </Person>
+      <DeliveryContact>
+        <Name>Jane Smith</Name>
+        <Telephone>12345</Telephone>
+        <Telefax>12345</Telefax>
+        <ElectronicMail>janesmith@example.com</ElectronicMail>
+      </DeliveryContact>
+    </Party>
+  </BuyerCustomerParty>
+
+  <SellerSupplierParty>
+    <Party>
+      <PartyIdentification>
+        <ID>1234567890123</ID>
+      </PartyIdentification>
+      <PartyName>
+        <Name>Seller Name</Name>
+      </PartyName>
+      <PostalAddress>
+        <Postbox>PO box 123</Postbox>
+        <StreetName>Example street</StreetName>
+        <AdditionalStreetName>Additional example</AdditionalStreetName>
+        <BuildingNumber>45A</BuildingNumber>
+        <Department>Sales</Department>
+        <CityName>Sydney</CityName>
+        <PostalZone>2000</PostalZone>
+        <CountrySubentity>SYD</CountrySubentity>
+        <Country>
+          <IdentificationCode>AU</IdentificationCode>
+        </Country>
+      </PostalAddress>
+      <Contact>
+        <Telephone>+61 412 345 678</Telephone>
+        <Telefax>+61 412 345 678</Telefax>
+        <ElectronicMail>seller@example.com</ElectronicMail>
+      </Contact>
+      <Person>
+        <FirstName>John</FirstName>
+        <MiddleName>Adam</MiddleName>
+        <FamilyName>Smith</FamilyName>
+        <JobTitle>Example Manager</JobTitle>
+      </Person>
+    </Party>
+  </SellerSupplierParty>
+
+  <Delivery>
+    <DeliveryAddress>
+      <Postbox>PO box 123</Postbox>
+      <StreetName>Example street</StreetName>
+      <AdditionalStreetName>Additional example</AdditionalStreetName>
+      <BuildingName>Building name</BuildingName>
+      <BuildingNumber>45A</BuildingNumber>
+      <Department>Sales</Department>
+      <CityName>Sydney</CityName>
+      <PostalZone>2000</PostalZone>
+      <CountrySubentity>SYD</CountrySubentity>
+      <Country>
+        <IdentificationCode>AU</IdentificationCode>
+      </Country>
+    </DeliveryAddress>
+    <RequestedDeliveryPeriod>
+      <StartDate>2025-04-21</StartDate>
+      <EndDate>2025-04-21</EndDate>
+    </RequestedDeliveryPeriod>
+    <DeliveryParty>
+      <PartyIdentification>
+        <ID>12345</ID>
+      </PartyIdentification>
+      <PartyName>
+        <Name>Delivery Party Name</Name>
+      </PartyName>
+      <Contact>
+        <Telephone>1300 123 456</Telephone>
+        <Telefax>1300 123 456</Telefax>
+        <ElectronicMail>delivertparty@example.com</ElectronicMail>
+      </Contact>
+    </DeliveryParty>
+  </Delivery>
+
+  <AnticipatedMonetaryTotal>
+    <LineExtensionAmount>1500</LineExtensionAmount>
+    <TaxExclusiveAmount>300</TaxExclusiveAmount>
+    <AllowanceCharge>
+      <ChargeIndicator>true</ChargeIndicator>
+      <AllowanceChargeReason>Example discount</AllowanceChargeReason>
+      <Amount>50</Amount>
+    </AllowanceCharge>
+  </AnticipatedMonetaryTotal>
+
+  <OrderLine>
+    <Note>Order note string</Note>
+    <LineItem>
+      <Quantity>10</Quantity>
+      <TotalTaxAmount>75</TotalTaxAmount>
+      <Price>
+        <PriceAmount>15</PriceAmount>
+        <BaseQuantity unitCode="unit123">1</BaseQuantity>
+      </Price>
+      <Item>
+        <ID>12345</ID>
+        <Description>Example item description</Description>
+        <Name>Example item name</Name>
+        <AdditionalItemProperty>
+          <Name>Color</Name>
+          <Value>Black</Value>
+        </AdditionalItemProperty>
+      </Item>
+    </LineItem>
+  </OrderLine>
+
+  <AdditionalDocumentReference>
+    <DocumentType>Example document</DocumentType>
+    <Attachment>
+      <ExternalReference>
+        <URI>https://example.com/document.pdf</URI>
+      </ExternalReference>
+      <EmbeddedDocumentBinaryObject mimeCode="application/pdf">
+        QmFzZTY0RW5jb2RlZFN0cmluZw==
+      </EmbeddedDocumentBinaryObject>
+    </Attachment>
+  </AdditionalDocumentReference>
+</Order>

@@ -5,7 +5,7 @@ from datetime import datetime
 
 from src.domain.models.invoice_update import (
     Party, Address, Contact, PartyTaxScheme, Country,
-    InvoicePeriod, OrderReference, InvoiceLine, Item, Price
+    InvoicePeriod, OrderReference, InvoiceLine, Item, Price, PartyLegalEntity
 )
 from src.marshallers.parsers.strategies.order_parsing_strategy import OrderParsingStrategy
 
@@ -33,20 +33,43 @@ class XmlOrderParser(OrderParsingStrategy):
         if required:
             raise HTTPException(status_code=400, detail=f"Missing required: {path}")
         return None
+    
+    def extract_person(self, person_elum) -> Optional[str]:
+        if person_elum is None:
+            return None
+        first_name = self.get_text(person_elum, "./cbc:FirstName") or ""
+        last_name = self.get_text(person_elum, "./cbc:FamilyName") or ""
+        name_parts = [first_name.strip(), last_name.strip()]
+        name = " ".join(part for part in name_parts if part)
+        return name
 
-    def extract_contact(self, contact_elem) -> Optional[Contact]:
+    def extract_contact(self, contact_elem, party_elem) -> Optional[Contact]:
         if contact_elem is None:
             return None
+        name=self.get_text(contact_elem, "./cbc:Name")
+        if not name: 
+            name = self.extract_person(party_elem.find("./cac:Person", self.NAMESPACES))
         return Contact(
-            name=self.get_text(contact_elem, "./cbc:Name"),
+            name=name,
             telephone=self.get_text(contact_elem, "./cbc:Telephone"),
             electronic_mail=self.get_text(contact_elem, "./cbc:ElectronicMail")
+        )
+    
+    def extract_party_legal_entity(self, party_legal_entity_elem) -> Optional[PartyLegalEntity]:
+        if party_legal_entity_elem is None:
+            return None
+        return PartyLegalEntity(
+            registration_name = self.get_text(party_legal_entity_elem, "./cbc:RegistrationName"),
+            company_id = self.get_text(party_legal_entity_elem, "./cbc:CompanyID")
         )
 
     def extract_party_tax_scheme(self, party_tax_scheme_elem) -> Optional[PartyTaxScheme]:
         if party_tax_scheme_elem is None:
             return None
-        tax_scheme_elem = party_tax_scheme_elem.find("./cac:TaxScheme", self.NAMESPACES)
+        if (party_tax_scheme_elem.find("./cac:TaxScheme", self.NAMESPACES)):
+            tax_scheme_elem = party_tax_scheme_elem.find("./cac:TaxScheme", self.NAMESPACES)
+        if (party_tax_scheme_elem.find("./cbc:TaxScheme", self.NAMESPACES)):
+            tax_scheme_elem = party_tax_scheme_elem.find("./cbc:TaxScheme", self.NAMESPACES)
         return PartyTaxScheme(
             company_id=self.get_text(party_tax_scheme_elem, "./cbc:CompanyID"),
             tax_scheme_id=self.get_text(tax_scheme_elem, "./cbc:ID") if tax_scheme_elem else None
@@ -56,6 +79,8 @@ class XmlOrderParser(OrderParsingStrategy):
         if address_elem is None:
             return None
         country_elem = address_elem.find("./cac:Country", self.NAMESPACES)
+        if country_elem is None:
+            country_elem = address_elem.find("./cbc:Country", self.NAMESPACES)
         return Address(
             street_name=self.get_text(address_elem, "./cbc:StreetName"),
             additional_street_name=self.get_text(address_elem, "./cbc:AdditionalStreetName"),
@@ -78,8 +103,8 @@ class XmlOrderParser(OrderParsingStrategy):
             party_name={"name": self.get_text(party_elem, "./cac:PartyName/cbc:Name")},
             postal_address=self.extract_address(party_elem.find("./cac:PostalAddress", self.NAMESPACES)),
             party_tax_scheme=self.extract_party_tax_scheme(party_elem.find("./cac:PartyTaxScheme", self.NAMESPACES)),
-            party_legal_entity=None,
-            contact=self.extract_contact(party_elem.find("./cac:Contact", self.NAMESPACES))
+            party_legal_entity=self.extract_party_legal_entity(party_elem.find("./cac:PartyLegalEntity", self.NAMESPACES)),
+            contact=self.extract_contact(party_elem.find("./cac:Contact", self.NAMESPACES), party_elem)
         )
 
 
@@ -118,6 +143,10 @@ class XmlOrderParser(OrderParsingStrategy):
         for order_line_elem in lines_data:
             line_item_elem = order_line_elem.find("./cac:LineItem", self.NAMESPACES)
             price_elem = line_item_elem.find("./cac:Price", self.NAMESPACES) if line_item_elem is not None else None
+            if price_elem is None:
+                price_elem = line_item_elem.find("./cbc:Price", self.NAMESPACES)
+            else:
+                price_elem = None
             invoice_lines.append(
                 InvoiceLine(
                     id=self.get_text(line_item_elem, "./cbc:ID"),

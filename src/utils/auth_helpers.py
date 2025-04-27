@@ -4,8 +4,8 @@ Helper methods to assist with auth services
 
 from datetime import datetime, timedelta, timezone
 from passlib.context import CryptContext
-from fastapi import HTTPException, status
-from jose import JWTError, jwt
+from jose import jwt
+from src.exceptions.auth_exceptions import InvalidCredentialsError
 
 SECRET_KEY = "a3eddf3292bac4ac269ed39a74e6760ed3c34ff3a15f4cb17c61520da8c88b05"
 ALGORITHM = "HS256"
@@ -68,8 +68,5 @@ def decode_token(JWT: str):  # pylint: disable = invalid-name
     try:
         payload = jwt.decode(JWT, SECRET_KEY, algorithms=[ALGORITHM])
         return payload
-    except JWTError:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid token",
-        )
+    except Exception as e:
+        raise InvalidCredentialsError("Invalid Token")

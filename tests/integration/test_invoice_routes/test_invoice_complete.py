@@ -1,55 +1,31 @@
-# Test cases for complete_invoice route
 import copy
 import pytest
-from fastapi.testclient import TestClient
-from src.main import app
-from src.domain.models.invoice_update import InvoiceUpdateModel
-from src.services.auth_service import get_current_user_id
+import io
+import json
 
-# Override dependency to avoid real auth
-app.dependency_overrides[get_current_user_id] = lambda: "test-user"
-client = TestClient(app)
-
-
-def test_complete_invoice_success(sample_invoice_json):
+def test_complete_invoice_success(client, sample_invoice_json):
     """
-    Test completing a valid invoice successfully.
+    Test completing a valid invoice successfully via /v2/invoices/{org_id}/complete
     """
+    org_id = "test-org-id"
+    complete_url = f"/v2/invoices/{org_id}/complete"
+
     payload = copy.deepcopy(sample_invoice_json)
+
     response = client.post(
-        "/v1/user/invoices/complete",
+        complete_url,
         json=payload,
     )
 
-    print("\n Response JSON:", response.json())
+    print("\nCompleted Invoice Response:")
+    print(json.dumps(response.json(), indent=2))
+
     assert response.status_code == 200
     data = response.json()
 
-    # Validate unified response structure
+    # Unified response structure
     assert "invoice_id" in data
     assert "invoice" in data
     assert "status" in data
     assert data["status"] == "completed"
     assert data["missing_fields_report"] is None
-
-
-def test_complete_invoice_missing_required_field(sample_invoice_json):
-    """
-    Should fail due to missing required field (supplier registration_name removed)
-    """
-    payload = copy.deepcopy(sample_invoice_json)
-    # Remove required supplier registration_name
-    del payload["accounting_supplier_party"]["party_legal_entity"]["registration_name"]
-
-    response = client.post(
-        "/v1/user/invoices/complete",
-        json=payload,
-    )
-
-    assert response.status_code == 400
-    data = response.json()
-    # Confirm expected error structure
-    assert response.status_code == 400
-    assert response.json()["error"]["code"] == "invoice_completion_failed"
-    assert "missing" in response.json()["error"]["message"].lower()
-

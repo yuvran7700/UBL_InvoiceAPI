@@ -6,7 +6,7 @@ from tests.utils.utils_test import (
     delete_all_session_items,
     reset_too_many_attemps,
 )
-from src.repositories.user_repository import delete_all_users
+from src.repositories.v1.user_repository import delete_all_users
 
 client = TestClient(app)
 

@@ -1,6 +1,6 @@
 from fastapi.testclient import TestClient
 from src.main import app
-from src.repositories.user_repository import delete_all_users
+from src.repositories.v1.user_repository import delete_all_users
 from tests.conftest import sample_user_json, sample_session_json # noqa: F401
 from tests.utils.utils_test import (
                                     delete_all_session_items, 

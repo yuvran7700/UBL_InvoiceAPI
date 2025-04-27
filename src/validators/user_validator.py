@@ -9,7 +9,7 @@ from src.exceptions.user_exceptions import (
     PasswordValidationError,
     UserNotFoundError,
 )
-from src.repositories.user_repository import get_user
+from src.repositories.v1.user_repository import get_user
 
 
 def validate_abn(abn_value: str):

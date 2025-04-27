@@ -3,11 +3,8 @@
 import pytest
 import copy
 from fastapi.testclient import TestClient
-from src.main import app
-from src.services.auth_service import get_current_user_id
+from src.testing_main import app
 
-# Override auth for test isolation
-app.dependency_overrides[get_current_user_id] = lambda: "test-user"
 client = TestClient(app)
 
 
@@ -16,16 +13,18 @@ def test_download_invoice_json_success(sample_invoice_json):
     """
     Test completing and downloading an invoice in JSON format.
     """
+    organisation_id = "test-org-id"
+
     payload = copy.deepcopy(sample_invoice_json)
 
-    # Complete invoice
-    complete_response = client.post("/v1/user/invoices/complete", json=payload)
+    # Complete the invoice
+    complete_response = client.post(f"/v2/invoices/{organisation_id}/complete", json=payload)
     assert complete_response.status_code == 200
     complete_data = complete_response.json()
     invoice_id = complete_data["invoice_id"]
 
     # Download as JSON
-    response = client.get(f"/v1/user/invoices/{invoice_id}/download?format=json")
+    response = client.get(f"/v2/invoices/{organisation_id}/{invoice_id}/download?format=json")
     assert response.status_code == 200
     assert response.headers["Content-Type"] == "application/json"
     assert f"filename={invoice_id}.json" in response.headers["Content-Disposition"]
@@ -43,16 +42,18 @@ def test_download_invoice_xml_success(sample_invoice_json):
     """
     Test completing and downloading an invoice in XML format.
     """
+    organisation_id = "test-org-id"
+
     payload = copy.deepcopy(sample_invoice_json)
 
-    # Complete invoice
-    complete_response = client.post("/v1/user/invoices/complete", json=payload)
+    # Complete the invoice
+    complete_response = client.post(f"/v2/invoices/{organisation_id}/complete", json=payload)
     assert complete_response.status_code == 200
     complete_data = complete_response.json()
     invoice_id = complete_data["invoice_id"]
 
     # Download as XML
-    response = client.get(f"/v1/user/invoices/{invoice_id}/download?format=xml")
+    response = client.get(f"/v2/invoices/{organisation_id}/{invoice_id}/download?format=xml")
     assert response.status_code == 200
     assert response.headers["Content-Type"] == "application/xml"
     assert f"filename={invoice_id}.xml" in response.headers["Content-Disposition"]

@@ -1,10 +1,10 @@
 import boto3
-from src.repositories.auth_repository import save_session_to_dynamodb
+from src.repositories.v1.auth_repository import save_session_to_dynamodb
 from datetime import datetime, timezone
 from jose import jwt
 import os
 
-from src.repositories.user_repository import get_user
+from src.repositories.v1.user_repository import get_user
 
 # Load AWS region from environment variables (default to us-east-1)
 AWS_REGION = os.getenv("AWS_REGION", "us-east-1")
