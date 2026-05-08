@@ -1,484 +1,242 @@
-# 🕛 Git Setup & Project Overview <!-- omit in toc -->
+# UBL Invoice API
 
-- [1. Git Setup](#1-git-setup)
-  - [1.1. Generating an SSH key and adding it to GitLab](#11-generating-an-ssh-key-and-adding-it-to-gitlab)
-  - [1.2. Setting your Git Identity](#12-setting-your-git-identity)
-- [2. Using Git and GitLab](#2-using-git-and-gitlab)
-  - [2.1. Cloning](#21-cloning)
-  - [2.2. Making a Commit](#22-making-a-commit)
-  - [2.3. Working With Others](#23-working-with-others)
-  - [2.4. Summary](#24-summary)
-  - [2.5. Branching](#25-branching)
-  - [2.6. Merging](#26-merging)
-  - [2.7. Merge Conflicts](#27-merge-conflicts)
-  - [2.8. Resolving a Merge Conflict](#28-resolving-a-merge-conflict)
-- [3. Project Setup](#3-project-setup)
-  - [3.1. Prerequisites](#31-prerequisites)
-  - [3.2. Cloning the Repository](#32-cloning-the-repository)
-  - [3.3. Setting Up the Python Environment](#33-setting-up-the-python-environment)
-  - [3.4. Running the Application](#34-running-the-application)
-  - [3.5. Running Tests](#35-running-tests)
-- [4. Overview of the SENG2011 Invoicing Task](#4-overview-of-the-seng2011-invoicing-task)
-  - [4.1. Task Description](#41-task-description)
-  - [4.2. Key Features](#42-key-features)
-  - [4.3. Project Structure](#43-project-structure)
-  - [4.4. Testing](#44-testing)
+A RESTful API that enables Small to Medium-sized Enterprises (SMEs) to generate ATO-compliant UBL invoices from UBL order documents. Built with Python and FastAPI, deployed on Heroku, with Amazon DynamoDB for persistence.
 
 ---
 
-## 1. Git Setup
+## Table of Contents
 
-> This will need to be done on any machine you want to git clone from.
+- [Overview](#overview)
+- [Tech Stack](#tech-stack)
+- [Getting Started](#getting-started)
+- [API Reference](#api-reference)
+  - [Account Management](#account-management)
+  - [Order Document Upload](#order-document-upload)
+  - [Invoice Generation](#invoice-generation)
+  - [Invoice Management](#invoice-management)
+- [Features](#features)
+- [Non-Functional Requirements](#non-functional-requirements)
 
-You will need to have installed Git on your local machine if it doesn't already have it.
+---
 
-### 1.1. Generating an SSH key and adding it to GitLab
+## Overview
 
-> You can skip this if you have already generated a key and added it to GitLab.
+With the rise of Industry 4.0, SMEs struggle to participate in digital collaborations due to the high cost and complexity of compliant invoicing systems. This API addresses that by:
 
-1. Run `ssh-keygen -t ed25519` in your terminal and hit enter until it stops prompting. Note the path where it is creating the key.
-2. Navigate to the path where the key has been created. This will typically be in `~/.ssh`.
-3. Print the public key to the terminal so it can be copied by running `cat ~/.ssh/id_ed25519.pub`
+- Accepting UBL order documents (XML/JSON) and automatically converting them into ATO-compliant invoices
+- Validating invoices against ATO regulations, UBL 2.1, PEPPOL, and Australian Business Rules (ABR) schemas
+- Allowing users to manually edit, tag, store, and manage invoices
+- Supporting advanced features like partial payments, instalment plans, credit/debit notes, and invoice analytics
 
-The key should look like the following:
+---
+
+## Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Application | Python |
+| Service | FastAPI |
+| Persistence | Amazon DynamoDB |
+| Deployment | Heroku |
+
+---
+
+## Getting Started
+
+### Prerequisites
+
+- Python 3.9+
+- AWS credentials configured (for DynamoDB)
+- Heroku CLI (for deployment)
+
+### Installation
 
 ```bash
-ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKkgchK4ok0W+GvU+q7jjnQ51dr2ztCowMxbwoFItT/h DESKTOP-ATFKE8N
+# Clone the repository
+git clone https://github.com/yuvran7700/UBL_InvoiceAPI.git
+cd UBL_InvoiceAPI
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Run the development server
+uvicorn main:app --reload
 ```
 
-> **NOTE: Do not share your private key with anyone**
+### Environment Variables
 
-4. Add the copied key to [https://nw-syd-gitlab.cseunsw.tech/-/profile/keys](https://nw-syd-gitlab.cseunsw.tech/-/profile/keys).
+Create a `.env` file in the root directory:
 
-### 1.2. Setting your Git Identity
-
-Whenever you make a commit, your current identity is associated with it.
-
-To properly set up your identity so your commits are tagged with your name and email, run the following commands (replacing the placeholders with your information):
-
-```bash
-git config --global user.name "Your Name"
-git config --global user.email "yourName@student.unsw.edu.au"
+```
+AWS_ACCESS_KEY_ID=your_access_key
+AWS_SECRET_ACCESS_KEY=your_secret_key
+AWS_REGION=your_region
+DYNAMODB_TABLE=your_table_name
+JWT_SECRET=your_jwt_secret
 ```
 
 ---
 
-## 2. Using Git and GitLab
+## API Reference
 
-> If you've taken COMP1531 recently and/or are relatively fluent in git, then feel free to move on and skip this.
+Authentication is handled via JWT tokens. Include the token in the `authToken` parameter or Authorization header where required.
 
-### 2.1. Cloning
+### Account Management
 
-Cloning a _repository_ (a repository or repo is just a directory that is linked with git) copies to your computer all the files in the repo as well as a complete history of what changes, or _commits_, created those files. Cloning a repo is necessary before you can start making your own changes.
+| Method | Route | Description |
+|---|---|---|
+| POST | `/v1/admin/register` | Register a new user with business name, email, password, and ABN |
+| POST | `/v1/admin/login` | Log in and receive an auth token |
+| POST | `/v1/admin/logout` | Invalidate the current session token |
+| PUT | `/v1/admin/password` | Reset password via email |
+| PUT | `/v1/admin/email` | Update account email |
+| PUT | `/v1/admin/username` | Update account username |
+| GET | `/v1/admin/abn/validate` | Validate an ABN via the ATO ABN Lookup API |
+| GET | `/v1/admin/email/validate` | Check if an email exists in the system |
+| POST | `/v1/admin/user/password/validate` | Validate username/password combination |
+| GET | `/v1/admin/validate/login` | Verify a token is valid and active |
+| GET | `/v1/admin/validate/user` | Extract and validate user identity from a token |
+| GET | `/v1/admin/validate/logout` | Confirm a token has been invalidated |
 
-For each lab and assignment in this course, a repo will be created for you on _GitLab_. You will use it to store your work as you complete it. To clone this week's repo run:
+### Order Document Upload
 
-```bash
-git clone git@nw-syd-gitlab.cseunsw.tech:COMP2511/24T2/students/z5555555/lab01.git
-```
+| Method | Route | Description |
+|---|---|---|
+| POST | `/v1/admin/order/upload` | Upload a UBL order document (XML or JSON) |
+| POST | `/v1/admin/duplicate/validate` | Check for duplicate order submissions |
+| POST | `/v1/admin/file/validate` | Validate uploaded file format |
 
-### 2.2. Making a Commit
+### Invoice Generation
 
-Now that you have cloned the repo, you are ready to work on the codebase locally.
+#### Parsing & Draft Generation
 
-A commit represents a set of changes to the files in a repository as well as a message describing those changes for human readers. A good use of git involves a lot of commits with detailed messages.
+| Method | Route | Description |
+|---|---|---|
+| POST | `/v1/admin/order/parse` | Extract relevant fields from the order document |
+| POST | `/v1/admin/order/generate-draft-invoice` | Generate a draft invoice from parsed order data |
 
-Before you can commit, you have to _stage_ your changes, effectively telling git what changes you actually want to commit and what changes you don't.
+#### Data Transfer (Order → Invoice)
 
-Making commits doesn't actually replicate your changes to the remote repository on GitLab. For that you need to _push_ your commits, uploading them to the remote server. When collaborating with others, it is important not only to commit frequently, but also to push often.
+| Method | Route | Description |
+|---|---|---|
+| GET | `/v1/invoice/validation-summary` | View validation report after data transfer |
+| PUT | `/v1/invoice/edit-errors` | Manually correct errors in the draft invoice |
+| PUT | `/v1/invoice/copy-buyer-seller` | Copy buyer/seller details from order to invoice |
+| PUT | `/v1/invoice/copy-payment-terms` | Copy payment terms from order to invoice |
+| PUT | `/v1/invoice/copy-delivery-info` | Copy delivery information from order to invoice |
+| PUT | `/v1/invoice/copy-invoice-lines` | Copy line items from order to invoice |
+| PUT | `/v1/invoice/copy-total` | Calculate and copy line extension totals |
+| PUT | `/v1/invoice/copy-tax-currency` | Copy tax and currency data, calculate TaxTotal |
+| PUT | `/v1/invoice/copy-notes` | Copy notes from order to invoice |
+| PUT | `/v1/invoice/calculate-line-amount` | Calculate line extension amount per line item |
 
-In general, the commands to commit and push are as follows:
+#### Transfer Validation
 
-```bash
-git add [files_to_commit] # Stage
-git commit -m"Detailed message describing the changes" # Commit
-git push # Push
-```
+| Method | Route | Description |
+|---|---|---|
+| GET | `/v1/invoice/validate-tax-currency` | Validate tax/currency data was transferred correctly |
+| GET | `/v1/invoice/validate-payment-terms` | Validate payment terms were copied |
+| GET | `/v1/invoice/validate-notes` | Validate notes were transferred |
+| GET | `/v1/invoice/validate-line-extension` | Validate line extension amounts were copied |
+| GET | `/v1/invoice/validate-line-extension-calculation` | Validate line extension calculations are correct |
+| GET | `/v1/invoice/validate-invoice-lines` | Validate all invoice lines were copied |
+| GET | `/v1/invoice/validate-delivery-info` | Validate delivery info was transferred |
+| GET | `/v1/invoice/validate-buyer-seller` | Validate buyer/seller info was transferred |
 
-Follow these steps to see them in action:
+#### User-Input Invoice Fields
 
-1. Add a new file called `HelloWorld.java` in the repo directory
-2. Add the following lines of code to the file using your favourite text editor and save.
+| Method | Route | Description |
+|---|---|---|
+| PUT | `/v1/invoice/update` | Update payment terms on the invoice |
+| POST | `/v1/invoice/create-id` | Generate a unique Invoice ID |
+| POST | `/v1/invoice/create-issue-date` | Set the invoice issue date |
+| POST | `/v1/invoice/create-due-date` | Calculate and set the payment due date |
+| POST | `/v1/invoice/calculate-totals` | Calculate tax-exclusive, tax-inclusive, and payable amounts |
+| POST | `/v1/invoice/create-tax-details` | Calculate and add TaxTotal and TaxSubtotal |
+| POST | `/v1/invoice/create-payment-terms` | Add payment terms and due date to the invoice |
+| POST | `/v1/invoice/create-quantity` | Record invoiced quantity per line item |
+| POST | `/v1/invoice/create-allowance-charges` | Add allowances/charges (discounts, fees) |
+| POST | `/v1/invoice/create-payment-method` | Specify payment method and bank account details |
+| POST | `/v1/invoice/create-payment-instructions` | Add payment instructions |
+| POST | `/v1/invoice/create-legal-reference` | Set invoice type code (commercial invoice, credit note, etc.) |
+| POST | `/v1/invoice/create-contract-reference` | Add contract reference if applicable |
+| POST | `/v1/invoice/create-order-reference` | Add order and delivery note references |
+| GET | `/v1/invoice/display` | Display a finalised invoice for review |
 
-```java
-class HelloWorld {
-    public static void main(String[] args) {
-        System.out.println("Hello, Welcome to COMP2511!");
-    }
-}
-```
+#### Schema Compliance Validation
 
-3. Go back to your terminal and enter the following commands:
+| Method | Route | Description |
+|---|---|---|
+| GET | `/v1/invoice/validate-syntax-schema` | Validate XML structure and required tags |
+| GET | `/v1/invoice/validate-header` | Validate required invoice header elements |
+| GET | `/v1/invoice/validate-abr` | Validate against Australian Business Rules (ABN, GST, currency) |
+| GET | `/v1/invoice/validate-peppol` | Validate against PEPPOL e-invoicing standard |
+| GET | `/v1/invoice/validate-xsd` | Validate against UBL 2.1 XSD schema |
 
-```bash
-git add HelloWorld.java
-git commit -m "Created first java program HelloWorld.java"
-git push
-```
+### Invoice Management
 
-4. **MAKE SURE YOU UNDERSTAND THE PURPOSE OF EACH OF THE 3 ABOVE COMMANDS!** If you are unsure about any of them, ask your tutor or lab assistant.
-5. Go back to GitLab and confirm that your changes have been pushed to the server.
+#### Storage & Organisation
 
-### 2.3. Working With Others
+| Method | Route | Description |
+|---|---|---|
+| POST | `/v1/admin/invoice/store` | Store invoice linked to user profile |
+| GET | `/v1/admin/invoice/list` | List all invoices for the authenticated user |
+| PUT | `/v1/admin/invoice/tag` | Apply a tag to an invoice (e.g. overdue, credit, debit) |
+| PUT | `/v1/admin/invoice/partial-pay` | Record partial payments on an invoice |
+| PUT | `/v1/admin/invoice/add-credit-debit` | Attach credit or debit note to an invoice |
 
-Usually when you are using git, it is in a team. That means that you will not be the only one who is making the changes. If someone else makes a change and pushes it to the server, your local repo will not have the most up-to-date version of the files. Luckily, git makes it easy to update our local copy with the `git pull` command.
+#### Medium Features
 
-This command checks the remote server that your local repo is linked to and makes sure that all of your files are up to date. This ensures that you don't accidentally do things like implement the same thing someone else has already done and also lets you use other people's work (e.g. new functions) when developing.
+| Method | Route | Description |
+|---|---|---|
+| PUT | `/v1/admin/invoice/installment-plan` | Set up an instalment payment schedule |
+| PUT | `/v1/admin/invoice/password-protection` | Password-protect an invoice |
+| GET | `/v1/admin/invoice/filter` | Filter invoices by tag or ID |
+| PUT | `/v1/admin/invoice/credit-debit/update` | Update existing credit/debit notes |
 
-Pulling regularly is one of the **most important practices** in git!
+#### Stretch Features
 
-Unfortunately, at the moment you are just working individually. But GitLab still gives us a nice way to practice a `git pull`.
-
-### 2.4. Summary
-
-1. View your repo on GitLab.
-2. Click on the `HelloWorld.java` file
-3. Click 'Edit' on the right-hand side.
-4. Add a Java comment to the top of the file as shown below and click the 'Commit Changes' button at the bottom of the screen
-
-```java
-// A simple Java Program
-```
-
-5. This will have changed the `HelloWorld.java` file on the server but not on your local environment. To fetch these changes use the git pull command from your terminal
-6. Confirm that your version of `HelloWorld.java` now has the changes you made on the web page
-
-### 2.5. Branching
-
-# Git Branching Guide
-
-This guide outlines how to create and manage branches following our team's naming conventions for better collaboration and JIRA tracking.
-
-## Git Best Practices
-
-- **Deploy Branch Layer**:  
-  You need to have an additional layer called `deploy` in your Git workflow.  
-  - Always pull and push from/to `deploy`, **NOT `main`**.  
-  - This ensures that the `main` pipeline is never failing and remains stable for production releases.
-
-- **Branch Naming Convention**:  
-  Follow the naming conventions outlined above to ensure consistency across your repository and improve collaboration.
-
-## Branch Naming Convention
-
-Each branch should follow this format:
-```
-Category          Meaning
-------------------------------------------------------
-hotfix            Quickly fixing critical issues,
-                  usually with a temporary solution
-bugfix            Fixing a bug
-feature           Adding, removing, or modifying a feature
-test              Experimenting with something which is not an issue
-wip               Work in progress
-
-```
-```
-feature/M15A-<JIRA-TICKET-ID>-<feature-name>
-fix/M15A-<JIRA-TICKET-ID>-<bug-fix-description>
-hotfix/M15A-<JIRA-TICKET-ID>-<critical-fix-description>
-```
-
-### Examples:
-- `feature/M15A-135-account-registration`
-- `fix/M15A-142-password-validation`
-- `hotfix/M15A-150-auth-token-expiry`
-
+| Method | Route | Description |
+|---|---|---|
+| POST | `/v1/admin/notify` | Send a notification to a user |
+| PUT | `/v1/admin/external-email` | Grant external email access to an invoice |
+| POST | `/v1/admin/analytics` | Generate an invoice analytics report |
+| POST | `/v1/admin/merge` | Merge two invoices into one |
 
 ---
 
-**Branches** are a vital part of git and are used so people can work on separate parts of the codebase and not interfere with one another or risk breaking a product that is visible to the client. Breaking something on one branch does not have an impact on any other.
+## Features
 
-Good use of git will involve separating parts of the project that can be worked on separately and having them in their own feature branch. These branches can then be merged when they are ready.
+**MVP**
+- User account creation with ABN validation via the ATO Lookup API
+- JWT-based authentication and session management
+- UBL order document upload (XML/JSON) with duplicate detection
+- Automatic conversion of order documents to draft UBL 2.1 invoices
+- Full validation against ATO, ABR, PEPPOL, and UBL XSD schemas
 
-Useful commands for branches:
+**Major**
+- Invoice storage linked to user profiles
+- Partial payment support
+- Invoice tagging (overdue, credit, debit, etc.)
+- Credit and debit note creation
 
-```bash
-git checkout -b [new_branch_name] # Create a new branch and switch to it
-git branch                        # List all current branches
-git checkout [branch_name]        # Switch to an existing branch
-```
+**Medium**
+- Instalment payment plans
+- Password-protected invoices
+- Invoice filtering by tag or ID
+- Credit/debit note maintenance
 
-Follow these instructions to create a branch:
-
-1. Make your new branch with: `git checkout -b first_new_branch`
-2. List your branches to see that you have indeed swapped (use the above commands)
-3. Open the `HelloWorld.java` file and change the comment at the top of the file to Javadoc style comment as shown below:
-
-```java
-/**
-* A simple java program that prints a hello world message to the console
-*/
-```
-
-4. Try to push your changes to the server using the commands you learnt in the _Making a commit_ section
-5. The above step should have given you the following error:
-
-```
-fatal: The current branch first_new_branch has no upstream branch.
-```
-
-This means that the branch you tried to make a change on doesn’t exist on the server yet which makes sense because we only created it on our local machine.
-
-6. To fix this, we need to add a copy of our branch on the server and link them up so git knows that this new branch maps to a corresponding branch on the server
-
-```bash
-git push -u origin first_new_branch
-```
-
-**Note**: The final step only needs to be done for the first time you try to push using a new branch. After you have run this once, you should go back to simply using git push
-
-### 2.6. Merging
-
-Merging branches is used to combine the work done on two different branches and is where git's magic really comes in. Git will compare the changes done on both branches and decide (based on what changes were done to what sections of the file and when) what to keep. Merges are most often done when a feature branch is complete and ready to be integrated with the master branch.
-
-Since we have finished all that we are going to do (and think there are no bugs) on our _first_new_branch_ we can merge it back into master.
-
-**NOTE**: It is strongly recommended, both in this course and in general, to always ensure the code on the `master` branch compiles and is free of bugs. The latter is naturally harder to achieve than the former, but you should endeavour to keep master as _stable_ as possible.
-
-Another recommendation is to merge master into your branch before merging your branch into master as this will ensure that any merge into master will go smoothly.
-
-In general, merges are done by:
-
-```bash
-git merge [target] # Merge the target branch into current
-```
-
-**Note**: A successful merge automatically uses the commits from the source branch. This means that the commits have already been made, you just need to push these to the server (`git push`)
-
-To merge your changes from above:
-
-1. Switch back to the master branch using one of the commands from the above section
-2. Merge in the changes you made in the other branch `git merge first_new_branch`
-3. Push the successful merge to the server to update the master branch on the server
-
-
-### 2.7. Merge Conflicts
-
-Merge conflicts are the one necessary downside to git. Luckily, they can be avoided most of the time through good use of techniques like branches and regular commits, pushes and pulls. They happen when git cannot work out which particular change to a file you really want.
-
-For this step we will engineer one so you can get a taste of what they are, how they occur and how to fix them. This will be the LAST time you will want one. The process may seem involved but it is quite common when multiple people are working at a time.
-
-Follow these steps:
-
-1. Change line 3 of `HelloWorld.java` to
-
-```java
-System.out.println("Hello, Welcome to Java!");
-```
-
-2. Add, commit and push your changes
-3. Switch to your `first_new_branch`
-4. Change line 3 of `HelloWorld.java`
-
-```java
-System.out.println("Hello, Welcome to merge conflicts!");
-```
-
-5. Add, commit and push your changes
-6. Merge master into your current branch
-7. This sequence of steps should make a merge conflict at the third line of `HelloWorld.java`
-
-### 2.8. Resolving a Merge Conflict
-
-Resolving a merge conflict is as simple as editing the file normally, choosing what you want to have in the places git wasn't sure.
-
-A merge conflict is physically shown in the file in which it occurs. `<<<<<<<` marks the beginning of the conflicting changes made on the **current** (merged into) branch. `=======` marks the beginning of the conflicting changes made on the **target** (merged) branch. `>>>>>>>` marks the end of the conflict zone.
-
-e.g.,
-
-```
-This line could be merged automatically.
-There was no change here either
-<<<<<<< current:sample.txt
-Merges are too hard. This change was on the 'merged into' branch
-=======
-Merges are easy. This change was made on the 'merged' branch
->>>>>>> target:sample.txt
-This is another line that could be merged automatically
-```
-
-This above example could be solved in many ways, one way would be to just use the changes made on the target branch and delete those made on the current branch. Once we have decided on this we just need to remove the syntax. The resolved file would be as follows
-
-```
-This line could be merged automatically.
-There was no change here either
-Merges are easy. This change was made on the 'merged' branch
-This is another line that could be merged automatically
-```
-
-We would then just commit the resolved file and the merge conflict is finished!
-
-To fix the conflict you created:
-
-1. Open the `HelloWorld.java` file and decide which change you want to keep
-2. Remove the merge conflict syntax
-3. Add, commit and push the resolved merge conflict
+**Stretch**
+- User notifications
+- External email access sharing
+- Invoice analytics and reporting
+- Invoice merging
 
 ---
 
-## 3. Project Setup
+## Non-Functional Requirements
 
-### 3.1. Prerequisites
-
-Before setting up the project, ensure you have the following installed:
-
-- **Python 3.x** (recommended: Python 3.8 or higher)
-- **pip** (Python package manager)
-- **Git** (for cloning the repository)
-
-### 3.2. Cloning the Repository
-
-To get started, clone the repository to your local machine:
-
-```bash
-git clone git@nw-syd-gitlab.cseunsw.tech:COMP2511/24T2/students/z5555555/invoiceapi.git
-cd invoiceapi
-```
-
-### 3.3. Setting Up the Python Environment
-
-1. **Create a virtual environment** (optional but recommended):
-
-   ```bash
-   python3 -m venv .venv
-   source venv/bin/activate  # On Windows, use `venv\Scripts\activate`
-   ```
-
-2. **Install dependencies**:
-
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-   If you don’t have a `requirements.txt` file, install the necessary packages manually:
-
-   ```bash
-   pip install flask pytest
-   ```
-
-### 3.4. Running the Application
-
-To run the Flask application:
-
-```bash
-python src/main.py
-```
-
-The application should start running at `http://127.0.0.1:5000`.
-
-### 3.5. Running Tests
-
-To run the tests, ensure you are in the project root directory and execute:
-
-```bash
-pytest
-```
-
-If you encounter import errors, ensure the `src/` directory is included in the Python path:
-
-```bash
-PYTHONPATH=$PYTHONPATH:./src pytest
-```
-
-### 3.6. Linting with Ruff
-
-[Ruff](https://github.com/charliermarsh/ruff) is a fast Python linter that combines the functionality of tools like Flake8, isort, and more. To lint your code:
-
-1. Install Ruff (if not already installed):
-
-   ```bash
-   pip install ruff
-   ```
-
-2. Run Ruff to lint your project:
-
-   ```bash
-   ruff check .
-   ```
-
-   To automatically fix linting errors:
-
-   ```bash
-   ruff check --fix .
-   ```
-
-### 3.7. Coverage with Coverage.py
-
-[Coverage.py](https://coverage.readthedocs.io/) measures code coverage during test execution. To use it:
-
-1. Install Coverage.py (if not already installed):
-
-   ```bash
-   pip install coverage
-   ```
-
-2. Run tests with coverage:
-
-   ```bash
-   coverage run -m pytest
-   ```
-
-3. Generate a coverage report:
-
-   ```bash
-   coverage report
-   ```
-
-   To generate an HTML report (for a more detailed view):
-
-   ```bash
-   coverage html
-   ```
-
-   Open the generated `htmlcov/index.html` file in your browser to view the coverage report.
-
----
-
-## 4. Overview of the SENG2011 Invoicing Task
-
-### 4.1. Task Description
-
-The SENG2011 Invoicing Task involves building a simple invoicing system using Python and Flask. The system allows users to create, manage, and view invoices. It is designed to teach fundamental software engineering principles, including:
-
-- **Modular code organization**
-- **API design**
-- **Testing and continuous integration**
-
-### 4.2. Key Features
-
-- **Create Invoices**: Add new invoices with details such as customer name, date, and items.
-- **View Invoices**: Retrieve and display existing invoices.
-- **Edit Invoices**: Modify existing invoice details.
-- **Delete Invoices**: Remove invoices from the system.
-
-### 4.3. Project Structure
-
-The project follows a standard Python project structure:
-
-```
-project-root/
-│── src/                    
-│   │── routes/             # 📂 API route handlers
-│   │── models/             # 📂 Pydantic models for data validation
-│   │── services/           # 📂 Business logic & CRUD operations
-│   │── db/                 # 📂 Database connection & queries (DynamoDB)
-│   │── utils/              # 📂 Helper utilities (parsers, validators, etc.)
-│   │── validators/             
-│   │── exceptions/   
-│── tests/                  
-│   │── fixtures/           # 📂 Stores reusable pytest fixtures
-│── test_data/
-
-```
-
-### 4.4. Testing
-
-Testing is a critical part of the project. The `tests/` directory contains unit and integration tests to ensure the application works as expected. To run tests:
-
-```bash
-pytest
-```
-
-Tests are automatically executed in the CI pipeline to ensure code quality and functionality.
-```
+- **Scalability:** Supports high volumes of invoice processing without performance degradation
+- **Security:** JWT authentication; sensitive financial data protected in compliance with ATO regulations
+- **Performance:** Invoice creation and validation completed in under 2 seconds per request
+- **Error Handling:** Detailed validation feedback for all incorrect or missing fields
